@@ -8,6 +8,9 @@ import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/enterprises/presentation/enterprise_detail_screen.dart';
+import '../../features/enterprises/presentation/enterprise_list_screen.dart';
+import '../../features/enterprises/presentation/register_enterprise_screen.dart';
 import '../../shared/models/user_profile.dart';
 
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
@@ -100,7 +103,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Phase 2+ (Enterprise Management, Consultant Portfolio, etc).
       GoRoute(
         path: '/admin',
-        builder: (context, state) => const _RoleHomePlaceholder(label: 'Admin home'),
+        builder: (context, state) => const EnterpriseListScreen(),
+        routes: [
+          GoRoute(
+            path: 'enterprises/new',
+            builder: (context, state) => const RegisterEnterpriseScreen(),
+          ),
+          GoRoute(
+            path: 'enterprises/:enterpriseId',
+            builder: (context, state) => EnterpriseDetailScreen(
+              enterpriseId: state.pathParameters['enterpriseId']!,
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/consultant',
