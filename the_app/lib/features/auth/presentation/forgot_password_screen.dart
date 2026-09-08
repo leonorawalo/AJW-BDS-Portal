@@ -55,13 +55,24 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         leading: BackButton(onPressed: () => context.go('/login')),
         title: const Text('Reset password'),
       ),
-      body: SafeArea(
+            body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: _emailSent ? _buildConfirmation(context) : _buildForm(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/ajw_logo.png',
+                    height: 64,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 24),
+                  _emailSent ? _buildConfirmation(context) : _buildForm(context),
+                ],
+              ),
             ),
           ),
         ),

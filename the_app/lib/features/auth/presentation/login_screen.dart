@@ -62,9 +62,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               padding: const EdgeInsets.all(24),
               child: Form(
                 key: _formKey,
-                child: Column(
+                                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Center(
+                      child: Image.asset(
+                        'assets/images/ajw_logo.png',
+                        height: 64,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text('AJW BDS Portal', style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 8),
                     const Text('Sign in to continue'),

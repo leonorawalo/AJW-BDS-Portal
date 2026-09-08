@@ -21,7 +21,7 @@ class EnterpriseDetailScreen extends ConsumerWidget {
       ),
       body: enterpriseAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Could not load this enterprise.')),
+        error: (_, _) => const Center(child: Text('Could not load this enterprise.')),
         data: (enterprise) {
           if (enterprise == null) {
             return const Center(child: Text('Enterprise not found.'));

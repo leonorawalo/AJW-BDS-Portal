@@ -60,13 +60,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             roleName: _selectedRole,
           );
 
+            final response = await ref.read(authRepositoryProvider).signUp(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+            roleName: _selectedRole,
+          );
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created. Check your email to confirm, then sign in.'),
-          ),
-        );
-        context.go('/login');
+        if (response.session != null) {
+          // Confirm-email is off: the account is already active and
+          // signed in. Let the router's redirect send them to their
+          // role home instead of bouncing back to /login.
+          context.go('/');
+        } else {
+          // Confirm-email is on: no session yet until they click the
+          // link in their inbox.
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created. Check your email to confirm, then sign in.'),
+            ),
+          );
+          context.go('/login');
+        }
       }
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
@@ -87,12 +105,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             constraints: const BoxConstraints(maxWidth: 400),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_errorMessage != null) ...[
+                              child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Image.asset(
+                          'assets/images/ajw_logo.png',
+                          height: 64,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (_errorMessage != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(

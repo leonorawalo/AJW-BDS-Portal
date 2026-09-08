@@ -13,6 +13,8 @@ import '../../features/enterprises/presentation/enterprise_list_screen.dart';
 import '../../features/enterprises/presentation/register_enterprise_screen.dart';
 import '../../shared/models/user_profile.dart';
 
+import 'role_home_placeholder.dart';
+
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
 /// as a stream. This bridges the two: every auth event calls
 /// notifyListeners(), which GoRouter is watching via `refreshListenable`,
@@ -68,7 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         // this redirect re-runs automatically once the FutureProvider
         // resolves because it's watched inside currentUserProfileProvider.
         loading: () => null,
-        error: (_, __) => '/login',
+        error: (_, _) => '/login',
         data: (profile) {
           if (profile == null) return '/login';
 
@@ -119,23 +121,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/consultant',
-        builder: (context, state) => const _RoleHomePlaceholder(label: 'Consultant home'),
+        builder: (context, state) => const RoleHomePlaceholder(
+          label: 'Consultant',
+        ),
       ),
       GoRoute(
         path: '/owner',
-        builder: (context, state) => const _RoleHomePlaceholder(label: 'Owner home'),
+        builder: (context, state) => const RoleHomePlaceholder(label: 'Enterprise Owner'),
       ),
     ],
   );
 });
 
-class _RoleHomePlaceholder extends StatelessWidget {
-  const _RoleHomePlaceholder({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text(label)));
-  }
-}
