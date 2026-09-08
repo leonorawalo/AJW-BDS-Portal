@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// AJW brand palette, sampled from the AJW Africa logo/website
-/// (ajwafrica.org). Values below are a first-pass visual estimate —
-/// swap in exact hex codes once available from the original logo file
-/// (a designer or brand guide can pull these precisely; this file is
-/// the only place that needs updating).
+/// AJW brand palette — sampled directly from the pixel data of the
+/// official AJW Africa logo file (not estimated from a screenshot).
+/// If the logo is ever re-exported, re-sample and update here; every
+/// other file in the app reads colors from this one.
 ///
 /// Deliberate design rule (locked decision, see project ERD notes):
 /// [brandRed] is reserved for identity — logo, primary buttons, active
-/// nav states. [errorRed] is a different, more saturated red reserved
-/// strictly for errors and "Overdue" status. The two must stay visually
-/// distinct so a user never confuses "this is a branded button" with
-/// "something went wrong."
+/// nav states. [errorRed] is a distinctly different red — brighter and
+/// more orange-leaning — reserved strictly for errors and "Overdue"
+/// status, so a user never mistakes a branded element for a warning.
 class AppColors {
   AppColors._();
 
   // --- Brand identity ---
-  static const brandRed = Color(0xFFB3352B);
-  static const charcoal = Color(0xFF2B2B2E);
-  static const lightGray = Color(0xFFB0B0B0);
+  // charcoal/lightGray are exact logo pixel values. brandRed is
+  // deliberately deepened from the logo's flat red (#D13B3B) into a
+  // wine/maroon tone for UI use — richer, more "classy operations tool,"
+  // and puts real distance between it and errorRed so the two never
+  // read as the same color doing different jobs. The logo image itself
+  // still shows its original flat red; this only affects buttons/links.
+  static const brandRed = Color(0xFF7A1F2B);
+  static const charcoal = Color(0xFF494949);
+  static const lightGray = Color(0xFFB2B2B2);
 
-  // --- Semantic (never brandRed) ---
-  static const errorRed = Color(0xFFE53935);
+  // --- Semantic (deliberately distinct from brandRed — see note above) ---
+  static const errorRed = Color(0xFFFF3B30);
   static const successGreen = Color(0xFF2E7D32);
   static const pendingAmber = Color(0xFFF9A825);
 

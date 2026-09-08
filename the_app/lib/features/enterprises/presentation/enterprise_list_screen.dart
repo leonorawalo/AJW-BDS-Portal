@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
 
+import '../../auth/providers/auth_providers.dart';
+
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
 
@@ -12,8 +14,17 @@ class EnterpriseListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Enterprises')),
+        return Scaffold(
+      appBar: AppBar(
+        title: const Text('Enterprises'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            onPressed: () => ref.read(authRepositoryProvider).signOut(),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/admin/enterprises/new'),
         icon: const Icon(Icons.add),

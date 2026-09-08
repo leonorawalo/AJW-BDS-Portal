@@ -19,6 +19,11 @@ import 'role_home_placeholder.dart';
 /// as a stream. This bridges the two: every auth event calls
 /// notifyListeners(), which GoRouter is watching via `refreshListenable`,
 /// so it re-runs `redirect` right after a sign-in/sign-out.
+///
+/// [refresh] is exposed publicly (notifyListeners() itself is protected)
+/// so routerProvider can also trigger a re-check when the *profile*
+/// fetch resolves — not just the raw auth event — closing a race where
+/// the two don't land in the same tick (see routerProvider below).
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
@@ -26,6 +31,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 
   late final StreamSubscription<dynamic> _subscription;
+
+  void refresh() => notifyListeners();
 
   @override
   void dispose() {
@@ -49,10 +56,18 @@ const _publicPaths = ['/login', '/register', '/forgot-password'];
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepo = ref.watch(authRepositoryProvider);
+  final refreshNotifier = GoRouterRefreshStream(authRepo.authStateChanges);
+
+  // The auth-stream event and the profile fetch completing don't always
+  // land in the same tick — without this, redirect could fire while the
+  // fetch is still in flight and briefly act on the *previous* session's
+  // cached profile. Re-triggering redirect explicitly once the fetch
+  // actually resolves closes that race for good.
+  ref.listen(currentUserProfileProvider, (_, __) => refreshNotifier.refresh());
 
   return GoRouter(
     initialLocation: '/login',
-    refreshListenable: GoRouterRefreshStream(authRepo.authStateChanges),
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final isPublicRoute = _publicPaths.contains(state.matchedLocation);
       final user = authRepo.currentUser;
@@ -66,9 +81,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final profileAsync = ref.read(currentUserProfileProvider);
 
       return profileAsync.when(
-        // Profile still loading (first frame after sign-in): stay put,
-        // this redirect re-runs automatically once the FutureProvider
-        // resolves because it's watched inside currentUserProfileProvider.
+        // Profile still loading (first frame after sign-in, or a fresh
+        // refetch after switching accounts): stay put. The ref.listen
+        // above guarantees redirect re-runs the moment this resolves.
         loading: () => null,
         error: (_, _) => '/login',
         data: (profile) {
@@ -87,9 +102,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             return homePath;
           }
 
-          // TODO(Module 1 milestone check): once /admin, /consultant,
-          // /owner have real feature routes, also guard here so e.g. a
-          // Consultant can't navigate into an /admin/* path directly.
+          // Cross-role guard: block navigating into another role's
+          // section entirely, not just the initial post-login redirect.
+          // e.g. a Consultant manually typing /admin/... in the address
+          // bar gets bounced back to their own home, not allowed to
+          // view Admin screens. startsWith (not ==) so this also covers
+          // nested routes like /admin/enterprises/new.
+          if (!state.matchedLocation.startsWith(homePath)) {
+            return homePath;
+          }
+
           return null;
         },
       );
@@ -101,8 +123,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-      // Placeholder home routes — replaced by real feature screens in
-      // Phase 2+ (Enterprise Management, Consultant Portfolio, etc).
       GoRoute(
         path: '/admin',
         builder: (context, state) => const EnterpriseListScreen(),
@@ -121,9 +141,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/consultant',
-        builder: (context, state) => const RoleHomePlaceholder(
-          label: 'Consultant',
-        ),
+        builder: (context, state) => const RoleHomePlaceholder(label: 'Consultant'),
       ),
       GoRoute(
         path: '/owner',
@@ -132,4 +150,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-

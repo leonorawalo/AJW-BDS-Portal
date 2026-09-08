@@ -112,7 +112,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     children: [
                       Center(
                         child: Image.asset(
-                          'assets/images/ajw_logo.png',
+                          'assets/images/ajw_logo.webp',
                           height: 64,
                           fit: BoxFit.contain,
                         ),
