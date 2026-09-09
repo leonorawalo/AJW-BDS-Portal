@@ -12,6 +12,18 @@ UserRole userRoleFromName(String roleName) {
       throw ArgumentError('Unknown role_name: $roleName');
   }
 }
+extension UserRoleLabel on UserRole {
+  String get label {
+    switch (this) {
+      case UserRole.administrator:
+        return 'Administrator';
+      case UserRole.consultant:
+        return 'Consultant';
+      case UserRole.enterpriseOwner:
+        return 'Enterprise Owner';
+    }
+  }
+}
 
 class UserProfile {
   const UserProfile({

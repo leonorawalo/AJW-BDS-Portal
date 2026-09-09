@@ -6,6 +6,8 @@ import '../../enterprises/providers/enterprise_providers.dart';
 
 import '../../enterprises/models/enterprise.dart'; //fix for the ".label" error that was occuring in line 55 (was line 53 before) of this file. The Enterprise model was not imported, so the compiler could not find the "label" property of the lifecycleStatus enum.
 
+import '../../../core/widgets/user_profile_badge.dart';
+
 /// Reuses enterprisesListProvider — the *same* query Admin's screen uses.
 /// What comes back differs per role purely because of RLS
 /// ("enterprises_select_assigned_consultant"), not because of any
@@ -22,6 +24,7 @@ class ConsultantPortfolioScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My portfolio'),
         actions: [
+          const UserProfileBadge(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',

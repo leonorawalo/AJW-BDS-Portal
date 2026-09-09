@@ -15,9 +15,16 @@ class EnterpriseDetailScreen extends ConsumerWidget {
     final enterpriseAsync = ref.watch(enterpriseDetailProvider(enterpriseId));
 
     return Scaffold(
-      appBar: AppBar(
+            appBar: AppBar(
         title: const Text('Enterprise details'),
         leading: BackButton(onPressed: () => context.go('/admin')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt),
+            tooltip: 'Assign consultant',
+            onPressed: () => context.push('/admin/enterprises/${enterpriseId}/assign-consultant'),
+          ),
+        ],
       ),
       body: enterpriseAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

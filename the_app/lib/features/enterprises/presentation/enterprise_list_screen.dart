@@ -6,6 +6,7 @@ import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
 
 import '../../auth/providers/auth_providers.dart';
+import '../../../core/widgets/user_profile_badge.dart';
 
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
@@ -18,6 +19,7 @@ class EnterpriseListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Enterprises'),
         actions: [
+            const UserProfileBadge(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',

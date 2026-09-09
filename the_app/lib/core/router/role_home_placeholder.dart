@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
 
+import '../../../core/widgets/user_profile_badge.dart';
+
 /// Placeholder home screen shown until each role gets its real feature
 /// screens (Phase 2+). Includes a sign-out button purely so you can
 /// switch between test accounts without closing the app — the real
@@ -18,6 +20,7 @@ class RoleHomePlaceholder extends ConsumerWidget {
       appBar: AppBar(
         title: Text(label),
         actions: [
+          const UserProfileBadge(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
