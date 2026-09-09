@@ -8,6 +8,8 @@ import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/consultants/presentation/assign_consultant_screen.dart';
+import '../../features/consultants/presentation/consultant_portfolio_screen.dart';
 import '../../features/enterprises/presentation/enterprise_detail_screen.dart';
 import '../../features/enterprises/presentation/enterprise_list_screen.dart';
 import '../../features/enterprises/presentation/register_enterprise_screen.dart';
@@ -136,12 +138,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => EnterpriseDetailScreen(
               enterpriseId: state.pathParameters['enterpriseId']!,
             ),
+            routes: [
+              GoRoute(
+                path: 'assign-consultant',
+                builder: (context, state) => AssignConsultantScreen(
+                  preselectedEnterpriseId: state.pathParameters['enterpriseId'],
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'assign-consultant',
+            builder: (context, state) => const AssignConsultantScreen(),
           ),
         ],
       ),
       GoRoute(
         path: '/consultant',
-        builder: (context, state) => const RoleHomePlaceholder(label: 'Consultant'),
+        builder: (context, state) => const ConsultantPortfolioScreen(),
       ),
       GoRoute(
         path: '/owner',
