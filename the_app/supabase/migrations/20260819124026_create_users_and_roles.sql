@@ -14,7 +14,7 @@ create table public.roles (
 insert into public.roles (role_name, description) values
   ('Administrator', 'AJW Africa staff — full platform access'),
   ('Consultant', 'Assigned to a portfolio of enterprises'),
-  ('Enterprise Owner', 'MSME owner receiving BDS support');
+  ('Enterprise Owner', 'MSME owner receiving BAGS support');
 
 -- ---------- USERS ----------
 -- Mirrors auth.users 1:1. id is the same UUID Supabase Auth issues,

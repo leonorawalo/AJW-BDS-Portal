@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "745290415237",
+    "project_id": "ajwafrica-bags-portal",
+    "storage_bucket": "ajwafrica-bags-portal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745290415237:android:a9c6eae1cdec93f8377dec",
+        "android_client_info": {
+          "package_name": "com.ajwafrica.the_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_IKyXeZ5HxajVvLhLRWeqLpkBxBOY3S4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -15,11 +15,11 @@ class EnterpriseListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
-        return Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Enterprises'),
         actions: [
-            const UserProfileBadge(),
+          const UserProfileBadge(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',

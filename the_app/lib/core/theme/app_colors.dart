@@ -33,4 +33,16 @@ class AppColors {
   static const surfaceLight = Color(0xFFF7F7F7);
   static const textOnLight = charcoal;
   static const textMuted = Color(0xFF6B6B6E);
+
+  // --- Chart series (multi-line/bar data only — not brand/status colors) ---
+  // AJW's brand palette only has one identity hue (brandRed) plus the
+  // status triad above, so it can't supply two CVD-safe, mutually
+  // distinguishable series for a 2-line trend chart on its own — a
+  // brandRed/charcoal pairing was tried and failed automated CVD
+  // validation (deutan ΔE 4.9, normal-vision ΔE 12.5, both below the
+  // ≥15 floor). These are slots 1–2 of the dataviz skill's validated
+  // default categorical palette instead (worst adjacent CVD ΔE 9.1
+  // light-mode, normal-vision ΔE 19.6 — both clear their floors).
+  static const chartSeriesOne = Color(0xFF2A78D6); // blue
+  static const chartSeriesTwo = Color(0xFFEB6834); // orange
 }

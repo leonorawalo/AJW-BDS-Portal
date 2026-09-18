@@ -4,6 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  firebase_core
+  pdfx
   url_launcher_windows
 )
 

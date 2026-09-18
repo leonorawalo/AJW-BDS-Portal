@@ -6,12 +6,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_providers.dart';
 
 // NOTE: The SRS's real flow (FR-002) is Admin-driven invites, not open
-// self-registration with a role picker — that's Module 9 (User
-// Management). This screen lets you pick a role for now purely so you
-// can create one test account per role and hit Phase 1's milestone
-// check ("each role logs in and lands on the correct home screen").
-// Swap the role dropdown out once the invite flow exists.
+// self-registration with a role picker — that's Module 9. This screen
+// lets you pick a role for now purely so you can create one test
+// account per role and hit Phase 1's milestone check. Swap the role
+// dropdown out once the invite flow exists.
 const _roleOptions = ['Administrator', 'Consultant', 'Enterprise Owner'];
+const _specializationOptions = ['Legal', 'Accounting', 'Marketing'];
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -29,6 +29,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
 
   String _selectedRole = _roleOptions.last; // defaults to Enterprise Owner
+  String? _selectedSpecialization;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -51,22 +52,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     try {
-      await ref.read(authRepositoryProvider).signUp(
+      final response = await ref.read(authRepositoryProvider).signUp(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
             roleName: _selectedRole,
-          );
-
-            final response = await ref.read(authRepositoryProvider).signUp(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            roleName: _selectedRole,
+            specialization: _selectedRole == 'Consultant' ? _selectedSpecialization : null,
           );
 
       if (mounted) {
@@ -105,20 +98,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             constraints: const BoxConstraints(maxWidth: 400),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-                              child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Image.asset(
-                          'assets/images/ajw_logo.webp',
-                          height: 64,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      if (_errorMessage != null) ...[
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_errorMessage != null) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -186,14 +171,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRole,
-                      decoration: const InputDecoration(labelText: 'Role (dev/testing only)'),
+                      decoration: const InputDecoration(labelText: 'Role'),
                       items: _roleOptions
                           .map((role) => DropdownMenuItem(value: role, child: Text(role)))
                           .toList(),
                       onChanged: (value) {
-                        if (value != null) setState(() => _selectedRole = value);
+                        if (value != null) {
+                          setState(() {
+                            _selectedRole = value;
+                            if (value != 'Consultant') _selectedSpecialization = null;
+                          });
+                        }
                       },
                     ),
+                    if (_selectedRole == 'Consultant') ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedSpecialization,
+                        decoration: const InputDecoration(labelText: 'Specialization'),
+                        items: _specializationOptions
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (v) => setState(() => _selectedSpecialization = v),
+                        validator: (v) => v == null ? 'Required for consultants' : null,
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _isSubmitting ? null : _submit,

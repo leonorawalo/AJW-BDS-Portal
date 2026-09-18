@@ -78,6 +78,9 @@ class Enterprise {
     required this.goingConcernStatus,
     this.goingConcernAchievedAt,
     required this.enrolledAt,
+    this.annualTurnover,
+    this.businessStartedDate,
+    this.loanPurpose,
   });
 
   factory Enterprise.fromMap(Map<String, dynamic> map) {
@@ -98,6 +101,11 @@ class Enterprise {
           ? DateTime.parse(map['going_concern_achieved_at'] as String)
           : null,
       enrolledAt: DateTime.parse(map['enrolled_at'] as String),
+      annualTurnover: (map['annual_turnover'] as num?)?.toDouble(),
+      businessStartedDate: map['business_started_date'] != null
+          ? DateTime.parse(map['business_started_date'] as String)
+          : null,
+      loanPurpose: map['loan_purpose'] as String?,
     );
   }
 
@@ -115,6 +123,11 @@ class Enterprise {
   final GoingConcernStatus goingConcernStatus;
   final DateTime? goingConcernAchievedAt;
   final DateTime enrolledAt;
+
+  // ---- Loan-readiness facts with no other source in the schema ----
+  final double? annualTurnover;
+  final DateTime? businessStartedDate;
+  final String? loanPurpose;
 
   /// Months since enrolment — used to surface the TOR's "50% Going Concern
   /// within 3 months" KPI against the same baseline for every enterprise.

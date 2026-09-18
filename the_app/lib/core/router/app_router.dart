@@ -10,12 +10,13 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/consultants/presentation/assign_consultant_screen.dart';
 import '../../features/consultants/presentation/consultant_portfolio_screen.dart';
-import '../../features/enterprises/presentation/enterprise_detail_screen.dart';
 import '../../features/enterprises/presentation/enterprise_list_screen.dart';
+import '../../features/enterprises/presentation/enterprise_workspace_screen.dart';
 import '../../features/enterprises/presentation/register_enterprise_screen.dart';
+import '../../features/legal_workstream/presentation/consultant_workstream_screen.dart';
+import '../../features/legal_workstream/presentation/owner_workstream_screen.dart';
+import '../../features/legal_workstream/presentation/task_detail_screen.dart';
 import '../../shared/models/user_profile.dart';
-
-import 'role_home_placeholder.dart';
 
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
 /// as a stream. This bridges the two: every auth event calls
@@ -65,7 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   // fetch is still in flight and briefly act on the *previous* session's
   // cached profile. Re-triggering redirect explicitly once the fetch
   // actually resolves closes that race for good.
-  ref.listen(currentUserProfileProvider, (_, __) => refreshNotifier.refresh());
+  ref.listen(currentUserProfileProvider, (_, _) => refreshNotifier.refresh());
 
   return GoRouter(
     initialLocation: '/login',
@@ -110,7 +111,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           // bar gets bounced back to their own home, not allowed to
           // view Admin screens. startsWith (not ==) so this also covers
           // nested routes like /admin/enterprises/new.
-          if (!state.matchedLocation.startsWith(homePath)) {
+          //
+          // /workstream/... is a deliberate exception: Task Detail is
+          // shared by Consultant AND Owner (and now Admin), reached from
+          // three different role homes, so it can never start with any
+          // single homePath. RLS — not this route match — is the actual
+          // security boundary for what's inside it.
+          final isSharedWorkstreamRoute = state.matchedLocation.startsWith('/workstream');
+          if (!isSharedWorkstreamRoute && !state.matchedLocation.startsWith(homePath)) {
             return homePath;
           }
 
@@ -135,7 +143,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'enterprises/:enterpriseId',
-            builder: (context, state) => EnterpriseDetailScreen(
+            builder: (context, state) => EnterpriseWorkspaceScreen(
               enterpriseId: state.pathParameters['enterpriseId']!,
             ),
             routes: [
@@ -156,10 +164,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/consultant',
         builder: (context, state) => const ConsultantPortfolioScreen(),
+        routes: [
+          GoRoute(
+            path: 'enterprises/:enterpriseId',
+            builder: (context, state) => ConsultantWorkstreamScreen(
+              enterpriseId: state.pathParameters['enterpriseId']!,
+              enterpriseName: state.uri.queryParameters['name'] ?? 'Enterprise',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/owner',
-        builder: (context, state) => const RoleHomePlaceholder(label: 'Enterprise Owner'),
+        builder: (context, state) => const OwnerWorkstreamScreen(),
+      ),
+      GoRoute(
+        path: '/workstream/enterprises/:enterpriseId/tasks/:taskId',
+        builder: (context, state) => TaskDetailScreen(
+          taskId: state.pathParameters['taskId']!,
+          readOnly: state.uri.queryParameters['readOnly'] == 'true',
+        ),
       ),
     ],
   );

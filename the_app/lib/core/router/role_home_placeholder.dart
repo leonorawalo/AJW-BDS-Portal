@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
 
-import '../../../core/widgets/user_profile_badge.dart';
+import '../widgets/user_profile_badge.dart';
 
 /// Placeholder home screen shown until each role gets its real feature
 /// screens (Phase 2+). Includes a sign-out button purely so you can

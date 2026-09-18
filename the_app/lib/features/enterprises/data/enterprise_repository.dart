@@ -66,6 +66,63 @@ class EnterpriseRepository {
     return Enterprise.fromMap(row);
   }
 
+  /// Users with the Enterprise Owner role — for linking an enterprise to
+  /// its owner's actual login account. Nothing does this automatically:
+  /// `owner_name` on this table is free text, never matched against
+  /// `users` by name/email, so a new Owner account stays unlinked
+  /// (RLS-invisible to its own enterprise) until an Admin does this
+  /// explicitly.
+  Future<List<Map<String, dynamic>>> fetchOwnerAccounts() async {
+    final rows = await _client
+        .from('users')
+        .select('id, first_name, last_name, email, roles!inner(role_name)')
+        .eq('roles.role_name', 'Enterprise Owner');
+    return (rows as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>?> fetchOwnerAccount(String userId) async {
+    return await _client
+        .from('users')
+        .select('id, first_name, last_name, email')
+        .eq('id', userId)
+        .maybeSingle();
+  }
+
+  Future<Enterprise> linkOwnerAccount({
+    required String enterpriseId,
+    required String ownerUserId,
+  }) async {
+    final row = await _client
+        .from('enterprises')
+        .update({'owner_user_id': ownerUserId})
+        .eq('id', enterpriseId)
+        .select()
+        .single();
+    return Enterprise.fromMap(row);
+  }
+
+  /// Updates the loan-readiness facts nothing else in the schema
+  /// captures (see migration 20260916180000). Pass only the fields
+  /// that changed — omitted ones are left untouched, not nulled out.
+  Future<Enterprise> updateFinancialFacts({
+    required String enterpriseId,
+    double? annualTurnover,
+    DateTime? businessStartedDate,
+    String? loanPurpose,
+  }) async {
+    final row = await _client
+        .from('enterprises')
+        .update({
+          'annual_turnover': ?annualTurnover,
+          'business_started_date': ?businessStartedDate?.toIso8601String(),
+          'loan_purpose': ?loanPurpose,
+        })
+        .eq('id', enterpriseId)
+        .select()
+        .single();
+    return Enterprise.fromMap(row);
+  }
+
   Future<Enterprise> updateGoingConcernStatus({
     required String enterpriseId,
     required GoingConcernStatus status,

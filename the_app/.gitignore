@@ -51,3 +51,7 @@ node_modules/
 build/
 .dart_tool/
 *.zip
+AJW Brand Elements/
+CLAUDE.md
+prompt.txt
+prompt2.txt

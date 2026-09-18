@@ -73,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('AJW BDS Portal', style: Theme.of(context).textTheme.headlineSmall),
+                    Text('AJW BAGS Portal', style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 8),
                     const Text('Sign in to continue'),
                     const SizedBox(height: 32),

@@ -1,3 +1,5 @@
+import '../../../shared/models/user_profile.dart';
+
 enum AssignmentStatus { active, ended }
 
 extension AssignmentStatusX on AssignmentStatus {
@@ -16,6 +18,7 @@ class ConsultantAssignment {
     required this.assignedDate,
     required this.assignedBy,
     required this.status,
+    this.specialization,
     this.consultantName,
     this.enterpriseName,
   });
@@ -33,6 +36,7 @@ class ConsultantAssignment {
       assignedDate: DateTime.parse(map['assigned_date'] as String),
       assignedBy: map['assigned_by'] as String,
       status: AssignmentStatusX.fromDb(map['assignment_status'] as String),
+      specialization: consultantSpecializationFromDb(map['specialization'] as String?),
       consultantName:
           consultant != null ? '${consultant['first_name']} ${consultant['last_name']}' : null,
       enterpriseName: enterprise?['business_name'] as String?,
@@ -45,6 +49,7 @@ class ConsultantAssignment {
   final DateTime assignedDate;
   final String assignedBy;
   final AssignmentStatus status;
+  final ConsultantSpecialization? specialization;
   final String? consultantName;
   final String? enterpriseName;
 }

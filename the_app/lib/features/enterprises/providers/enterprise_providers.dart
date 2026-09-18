@@ -19,3 +19,12 @@ final enterpriseDetailProvider =
     FutureProvider.autoDispose.family<Enterprise?, String>((ref, enterpriseId) {
   return ref.watch(enterpriseRepositoryProvider).fetchById(enterpriseId);
 });
+
+final ownerAccountsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+  return ref.watch(enterpriseRepositoryProvider).fetchOwnerAccounts();
+});
+
+final linkedOwnerAccountProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, userId) {
+  return ref.watch(enterpriseRepositoryProvider).fetchOwnerAccount(userId);
+});

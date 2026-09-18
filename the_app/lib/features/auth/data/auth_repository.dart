@@ -19,9 +19,11 @@ class AuthRepository {
   }
 
   /// [roleName] must match a row in public.roles ('Administrator',
-  /// 'Consultant', 'Enterprise Owner'). It's passed as sign-up metadata,
-  /// which the `handle_new_user` Postgres trigger reads to populate
-  /// public.users — see supabase/migrations/…_create_roles_and_users.sql.
+  /// 'Consultant', 'Enterprise Owner'). [specialization] is only
+  /// meaningful when roleName is 'Consultant' — 'Legal', 'Accounting',
+  /// or 'Marketing', per the ToR's "Trio" model. Both are passed as
+  /// sign-up metadata, which the `handle_new_user` Postgres trigger
+  /// reads to populate public.users.
   Future<AuthResponse> signUp({
     required String email,
     required String password,
@@ -29,6 +31,7 @@ class AuthRepository {
     required String lastName,
     String? phoneNumber,
     required String roleName,
+    String? specialization,
   }) {
     return _client.auth.signUp(
       email: email,
@@ -39,6 +42,7 @@ class AuthRepository {
         if (phoneNumber != null && phoneNumber.isNotEmpty)
           'phone_number': phoneNumber,
         'role_name': roleName,
+        'specialization': ?specialization,
       },
     );
   }
@@ -52,8 +56,8 @@ class AuthRepository {
   }
 
   /// Fetches the row from public.users (not auth.users) — this is where
-  /// role_id / status / names live, and what the router needs to decide
-  /// which home screen to redirect to.
+  /// role_id / status / names / specialization live, and what the
+  /// router needs to decide which home screen to redirect to.
   Future<Map<String, dynamic>?> fetchUserProfile(String userId) async {
     final response = await _client
         .from('users')

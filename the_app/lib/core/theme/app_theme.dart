@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// AJW BDS Portal light theme. Only a light theme exists for now — this
+/// AJW BAGS Portal light theme. Only a light theme exists for now — this
 /// is an internal operations app for staff and MSME owners, not a
 /// consumer product where dark mode is expected by default. Add a dark
 /// variant later only if real user demand shows up for it.
@@ -20,6 +20,11 @@ final ThemeData ajwLightTheme = ThemeData(
     backgroundColor: AppColors.charcoal,
     foregroundColor: Colors.white,
     elevation: 0,
+  ),
+  tabBarTheme: const TabBarThemeData(
+    labelColor: Colors.white,
+    unselectedLabelColor: Colors.white70,
+    indicatorColor: Colors.white,
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(

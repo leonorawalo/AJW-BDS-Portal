@@ -15,3 +15,8 @@ final consultantsListProvider = FutureProvider.autoDispose<List<Map<String, dyna
 final assignmentsListProvider = FutureProvider.autoDispose<List<ConsultantAssignment>>((ref) {
   return ref.watch(consultantAssignmentRepositoryProvider).fetchAll();
 });
+
+final activeAssignmentsForEnterpriseProvider = FutureProvider.autoDispose
+    .family<List<ConsultantAssignment>, String>((ref, enterpriseId) {
+  return ref.watch(consultantAssignmentRepositoryProvider).fetchActiveForEnterprise(enterpriseId);
+});

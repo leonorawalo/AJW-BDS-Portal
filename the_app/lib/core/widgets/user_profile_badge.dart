@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
 
-import '../../shared/models/user_profile.dart';
-//import '../../features/auth/providers/auth_providers.dart';
-
 /// Shown in the AppBar on every authenticated screen (Admin, Consultant,
 /// Owner) — "FirstName.Role", e.g. "Leonora.Enterprise Owner". Uses a
 /// placeholder person icon for now; swap the CircleAvatar's `child` for
@@ -20,7 +17,7 @@ class UserProfileBadge extends ConsumerWidget {
 
     return profileAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
 
@@ -36,7 +33,7 @@ class UserProfileBadge extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${profile.firstName}.${profile.role.label}',
+                '${profile.firstName}.${profile.roleDisplayLabel}',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
               ),
             ],
@@ -44,17 +41,5 @@ class UserProfileBadge extends ConsumerWidget {
         );
       },
     );
-  }
-}
-extension UserRoleLabel on UserRole {
-  String get label {
-    switch (this) {
-      case UserRole.administrator:
-        return 'Administrator';
-      case UserRole.consultant:
-        return 'Consultant';
-      case UserRole.enterpriseOwner:
-        return 'Enterprise Owner';
-    }
   }
 }

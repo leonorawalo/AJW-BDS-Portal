@@ -38,6 +38,12 @@ dependencies:
   go_router: ^14.2.0
   supabase_flutter: ^2.5.6
   flutter_dotenv: ^5.1.0
+  file_picker: ^12.2.0
+  url_launcher: ^6.3.1
+  pdfx: ^2.6.0
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.4
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -57,7 +63,6 @@ dev_dependencies:
 flutter:
 
   assets:
-    - .env
     - assets/images/ajw_logo.webp
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
