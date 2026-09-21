@@ -83,13 +83,13 @@ create policy "enterprises_all_admin"
 create policy "enterprises_select_own_owner"
   on public.enterprises for select
   to authenticated
-  using (owner_user_id = auth.uid());
+  using (owner_user_id = ((select auth.uid())));
 
 create policy "enterprises_update_own_owner"
   on public.enterprises for update
   to authenticated
-  using (owner_user_id = auth.uid())
-  with check (owner_user_id = auth.uid());
+  using (owner_user_id = ((select auth.uid())))
+  with check (owner_user_id = ((select auth.uid())));
 
 -- No insert/delete policy for non-admins: enterprises are registered by
 -- Admins only (FR-009), never self-registered by Owners.

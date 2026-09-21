@@ -6,13 +6,8 @@
 -- they never needed under the old single-consultant model:
 --   1. A way to tell which specialization a task belongs to (for
 --      display — Admin/Owner still see all tasks on an enterprise).
---   2. RLS that actually restricts each consultant to their own
---      tasks. Previously `tasks_all_assigned_consultant` only checked
---      "is this person *an* active consultant on this enterprise" —
---      not whether the task was actually theirs, so e.g. a Marketing
---      consultant could see and edit a Legal consultant's tasks. That
---      was harmless when there was only ever one active consultant;
---      it's a real boundary violation now.
+--   2. RLS that actually restricts each consultant to modifying their own
+--      tasks, while allowing SELECT across all tasks for assigned consultants.
 -- ============================================================
 
 alter table public.tasks
@@ -42,14 +37,30 @@ create trigger tasks_before_insert_specialization
   before insert on public.tasks
   for each row execute function public.set_task_specialization();
 
--- ---------- Narrow consultant access to their own tasks ----------
+-- ---------- Narrow consultant write access to their own tasks ----------
 drop policy if exists "tasks_all_assigned_consultant" on public.tasks;
+drop policy if exists "tasks_all_own_assigned_consultant" on public.tasks;
 
-create policy "tasks_all_own_assigned_consultant"
-  on public.tasks for all
+create policy "tasks_select_assigned_consultant"
+  on public.tasks for select
   to authenticated
-  using (consultant_id = auth.uid() and public.is_assigned_consultant(enterprise_id))
-  with check (consultant_id = auth.uid() and public.is_assigned_consultant(enterprise_id));
+  using (public.is_assigned_consultant(enterprise_id));
+
+create policy "tasks_insert_own_assigned_consultant"
+  on public.tasks for insert
+  to authenticated
+  with check (consultant_id = ((select auth.uid())) and public.is_assigned_consultant(enterprise_id));
+
+create policy "tasks_update_own_assigned_consultant"
+  on public.tasks for update
+  to authenticated
+  using (consultant_id = ((select auth.uid())) and public.is_assigned_consultant(enterprise_id))
+  with check (consultant_id = ((select auth.uid())) and public.is_assigned_consultant(enterprise_id));
+
+create policy "tasks_delete_own_assigned_consultant"
+  on public.tasks for delete
+  to authenticated
+  using (consultant_id = ((select auth.uid())) and public.is_assigned_consultant(enterprise_id));
 
 -- task_comments follow the same boundary — a comment thread belongs to
 -- whichever consultant the task belongs to, not to "anyone assigned to
@@ -63,7 +74,7 @@ create policy "task_comments_all_own_assigned_consultant"
     exists (
       select 1 from public.tasks t
       where t.id = task_comments.task_id
-        and t.consultant_id = auth.uid()
+        and t.consultant_id = ((select auth.uid()))
         and public.is_assigned_consultant(t.enterprise_id)
     )
   )
@@ -71,7 +82,7 @@ create policy "task_comments_all_own_assigned_consultant"
     exists (
       select 1 from public.tasks t
       where t.id = task_comments.task_id
-        and t.consultant_id = auth.uid()
+        and t.consultant_id = ((select auth.uid()))
         and public.is_assigned_consultant(t.enterprise_id)
     )
   );

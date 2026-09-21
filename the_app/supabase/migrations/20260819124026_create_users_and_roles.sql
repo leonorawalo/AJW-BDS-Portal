@@ -99,7 +99,7 @@ as $$
     select 1
     from public.users u
     join public.roles r on r.id = u.role_id
-    where u.id = auth.uid()
+    where u.id = ((select auth.uid()))
       and r.role_name = 'Administrator'
   );
 $$;
@@ -117,18 +117,43 @@ create policy "roles_all_admin"
   using (public.is_admin())
   with check (public.is_admin());
 
--- Users: everyone can read/update their own row; Admins can read/update
--- every row (needed for FR-054/056 user management).
-create policy "users_select_own_or_admin"
+-- Users: everyone can read/update their own row, Admins can read/update
+-- every row, and authenticated collaborators on shared enterprises can
+-- select each other's user details.
+create policy "users_select_own_or_admin_or_collaborator"
   on public.users for select
   to authenticated
-  using (id = auth.uid() or public.is_admin());
+  using (
+    id = ((select auth.uid()))
+    or public.is_admin()
+    or exists (
+      select 1 from public.enterprises e
+      where (
+        e.owner_user_id = ((select auth.uid()))
+        or exists (
+          select 1 from public.consultant_assignments ca1
+          where ca1.enterprise_id = e.id
+            and ca1.consultant_id = ((select auth.uid()))
+            and ca1.assignment_status = 'active'
+        )
+      )
+      and (
+        e.owner_user_id = users.id
+        or exists (
+          select 1 from public.consultant_assignments ca2
+          where ca2.enterprise_id = e.id
+            and ca2.consultant_id = users.id
+            and ca2.assignment_status = 'active'
+        )
+      )
+    )
+  );
 
 create policy "users_update_own_or_admin"
   on public.users for update
   to authenticated
-  using (id = auth.uid() or public.is_admin())
-  with check (id = auth.uid() or public.is_admin());
+  using (id = ((select auth.uid())) or public.is_admin())
+  with check (id = ((select auth.uid())) or public.is_admin());
 
 -- No insert/delete policy for authenticated users: rows are created only
 -- by the handle_new_user trigger (SECURITY DEFINER, bypasses RLS) and

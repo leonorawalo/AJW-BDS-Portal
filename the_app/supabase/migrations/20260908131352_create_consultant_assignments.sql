@@ -37,10 +37,21 @@ create policy "assignments_all_admin"
 create policy "assignments_select_own_consultant"
   on public.consultant_assignments for select
   to authenticated
-  using (consultant_id = auth.uid());
+  using (consultant_id = ((select auth.uid())));
 
--- ---------- Follow-up policy on enterprises (flagged in Phase 2) ----------
--- Now that consultant_assignments exists, a Consultant can see the
+create policy "assignments_select_owner"
+  on public.consultant_assignments for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.enterprises e
+      where e.id = consultant_assignments.enterprise_id
+        and e.owner_user_id = ((select auth.uid()))
+    )
+  );
+
+-- ---------- Follow-up policies on enterprises ----------
+-- Now that consultant_assignments exists, a Consultant can see and update the
 -- enterprises actually assigned to them — nothing more, nothing less.
 create policy "enterprises_select_assigned_consultant"
   on public.enterprises for select
@@ -50,7 +61,29 @@ create policy "enterprises_select_assigned_consultant"
       select 1
       from public.consultant_assignments ca
       where ca.enterprise_id = enterprises.id
-        and ca.consultant_id = auth.uid()
+        and ca.consultant_id = ((select auth.uid()))
+        and ca.assignment_status = 'active'
+    )
+  );
+
+create policy "enterprises_update_assigned_consultant"
+  on public.enterprises for update
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.consultant_assignments ca
+      where ca.enterprise_id = enterprises.id
+        and ca.consultant_id = ((select auth.uid()))
+        and ca.assignment_status = 'active'
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.consultant_assignments ca
+      where ca.enterprise_id = enterprises.id
+        and ca.consultant_id = ((select auth.uid()))
         and ca.assignment_status = 'active'
     )
   );

@@ -16,7 +16,7 @@ as $$
   select exists (
     select 1 from public.consultant_assignments ca
     where ca.enterprise_id = target_enterprise_id
-      and ca.consultant_id = auth.uid()
+      and ca.consultant_id = ((select auth.uid()))
       and ca.assignment_status = 'active'
   );
 $$;
@@ -30,7 +30,7 @@ as $$
   select exists (
     select 1 from public.enterprises e
     where e.id = target_enterprise_id
-      and e.owner_user_id = auth.uid()
+      and e.owner_user_id = ((select auth.uid()))
   );
 $$;
 
