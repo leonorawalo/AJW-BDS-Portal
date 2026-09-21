@@ -33,8 +33,8 @@ alter table public.device_tokens enable row level security;
 create policy "device_tokens_all_own"
   on public.device_tokens for all
   to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- ---------- Grants ----------
 grant select, insert, update, delete on public.device_tokens to authenticated;
