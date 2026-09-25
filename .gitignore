@@ -1,0 +1,4 @@
+.aider*
+
+# Local archives/backups — never commit (GitHub rejects >100MB)
+*.zip
