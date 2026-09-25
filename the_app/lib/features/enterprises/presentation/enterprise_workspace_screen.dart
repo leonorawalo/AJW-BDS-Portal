@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../calendar/presentation/sessions_tab.dart';
 import '../../legal_workstream/presentation/assessment_dashboard_tab.dart';
 import '../../legal_workstream/presentation/documents_tab.dart';
 import '../../legal_workstream/presentation/recommendations_tab.dart';
@@ -24,7 +25,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
     final enterpriseAsync = ref.watch(enterpriseDetailProvider(enterpriseId));
 
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: Text(enterpriseAsync.value?.businessName ?? 'Enterprise'),
@@ -43,6 +44,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
               Tab(text: 'Tasks'),
               Tab(text: 'Recommendations'),
               Tab(text: 'Documents'),
+              Tab(text: 'Sessions'),
               Tab(text: 'Details'),
             ],
           ),
@@ -63,6 +65,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
                 TasksTab(enterpriseId: enterpriseId, readOnly: true, canCreateTasks: true),
                 RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
                 DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
+                SessionsTab(enterpriseId: enterpriseId, canSchedule: false),
                 EnterpriseDetailsTab(enterprise: enterprise),
               ],
             );

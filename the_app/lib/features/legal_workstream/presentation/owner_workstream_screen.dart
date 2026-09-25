@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers/auth_providers.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
+import '../../calendar/presentation/sessions_tab.dart';
 import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
@@ -38,7 +39,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
         final enterprise = enterprises.first;
 
         return DefaultTabController(
-          length: 4,
+          length: 5,
           child: Scaffold(
             appBar: AppBar(
               title: Text(enterprise.businessName),
@@ -48,11 +49,12 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
                 ),
               ],
-              bottom: const TabBar(tabs: [
+              bottom: const TabBar(isScrollable: true, tabs: [
                 Tab(text: 'Dashboard'),
                 Tab(text: 'Tasks'),
                 Tab(text: 'Recommendations'),
                 Tab(text: 'Documents'),
+                Tab(text: 'Sessions'),
               ]),
             ),
             body: TabBarView(children: [
@@ -62,6 +64,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
               TasksTab(enterpriseId: enterprise.id, readOnly: false, canCreateTasks: true),
               RecommendationsTab(enterpriseId: enterprise.id, readOnly: true),
               DocumentsTab(enterpriseId: enterprise.id, readOnly: false),
+              SessionsTab(enterpriseId: enterprise.id, canSchedule: false),
             ]),
           ),
         );

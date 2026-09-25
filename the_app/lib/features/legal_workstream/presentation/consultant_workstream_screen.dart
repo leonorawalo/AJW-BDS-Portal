@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../calendar/presentation/sessions_tab.dart';
 import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
@@ -19,15 +20,16 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(enterpriseName),
-          bottom: const TabBar(tabs: [
+          bottom: const TabBar(isScrollable: true, tabs: [
             Tab(text: 'Dashboard'),
             Tab(text: 'Tasks'),
             Tab(text: 'Recommendations'),
             Tab(text: 'Documents'),
+            Tab(text: 'Sessions'),
           ]),
         ),
         body: TabBarView(children: [
@@ -35,6 +37,7 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
           TasksTab(enterpriseId: enterpriseId, readOnly: false),
           RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
           DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
+          SessionsTab(enterpriseId: enterpriseId, canSchedule: true),
         ]),
       ),
     );
