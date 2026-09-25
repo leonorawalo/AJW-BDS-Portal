@@ -102,8 +102,8 @@ class EnterpriseRepository {
   }
 
   /// Updates the loan-readiness facts nothing else in the schema
-  /// captures (see migration 20260916180000). Pass only the fields
-  /// that changed — omitted ones are left untouched, not nulled out.
+  /// captures (see migration 20260916180000). All three are always
+  /// written — a null clears that fact.
   Future<Enterprise> updateFinancialFacts({
     required String enterpriseId,
     double? annualTurnover,
@@ -113,9 +113,9 @@ class EnterpriseRepository {
     final row = await _client
         .from('enterprises')
         .update({
-          'annual_turnover': ?annualTurnover,
-          'business_started_date': ?businessStartedDate?.toIso8601String(),
-          'loan_purpose': ?loanPurpose,
+          'annual_turnover': annualTurnover,
+          'business_started_date': businessStartedDate?.toIso8601String(),
+          'loan_purpose': loanPurpose,
         })
         .eq('id', enterpriseId)
         .select()

@@ -52,14 +52,17 @@ class TaskDetailScreen extends ConsumerWidget {
                           .toList(),
                       onChanged: (status) async {
                         if (status == null) return;
-                        await ref.read(taskRepositoryProvider).updateTaskStatus(taskId, status);
-                        ref.invalidate(taskProvider(taskId));
-                        // The Tasks tab list AND the loan-readiness
-                        // Dashboard both read tasksProvider(enterpriseId)
-                        // — without this, a status change only ever
-                        // shows up on this single-task screen, never
-                        // propagating back to either of those.
-                        ref.invalidate(tasksProvider(task.enterpriseId));
+                        try {
+                          await ref.read(taskRepositoryProvider).updateTaskStatus(taskId, status);
+                          ref.invalidate(taskProvider(taskId));
+                          ref.invalidate(tasksProvider(task.enterpriseId));
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Could not update status: $e')),
+                            );
+                          }
+                        }
                       },
                     ),
                 ],

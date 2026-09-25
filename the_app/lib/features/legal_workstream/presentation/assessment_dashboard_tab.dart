@@ -262,16 +262,35 @@ class _EditableFacts extends ConsumerStatefulWidget {
 }
 
 class _EditableFactsState extends ConsumerState<_EditableFacts> {
-  late final _turnoverController =
-      TextEditingController(text: widget.enterprise.annualTurnover?.toStringAsFixed(0) ?? '');
-  late final _loanPurposeController = TextEditingController(text: widget.enterprise.loanPurpose ?? '');
+  late TextEditingController _turnoverController;
+  late TextEditingController _loanPurposeController;
   DateTime? _businessStartedDate;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    _turnoverController =
+        TextEditingController(text: widget.enterprise.annualTurnover?.toStringAsFixed(0) ?? '');
+    _loanPurposeController = TextEditingController(text: widget.enterprise.loanPurpose ?? '');
     _businessStartedDate = widget.enterprise.businessStartedDate;
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditableFacts oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enterprise.id != widget.enterprise.id ||
+        oldWidget.enterprise.annualTurnover != widget.enterprise.annualTurnover) {
+      _turnoverController.text = widget.enterprise.annualTurnover?.toStringAsFixed(0) ?? '';
+    }
+    if (oldWidget.enterprise.id != widget.enterprise.id ||
+        oldWidget.enterprise.loanPurpose != widget.enterprise.loanPurpose) {
+      _loanPurposeController.text = widget.enterprise.loanPurpose ?? '';
+    }
+    if (oldWidget.enterprise.id != widget.enterprise.id ||
+        oldWidget.enterprise.businessStartedDate != widget.enterprise.businessStartedDate) {
+      _businessStartedDate = widget.enterprise.businessStartedDate;
+    }
   }
 
   @override
@@ -295,17 +314,38 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
   }
 
   Future<void> _save() async {
+    final rawTurnover = _turnoverController.text.trim().replaceAll(',', '');
+    final turnover = rawTurnover.isEmpty ? null : double.tryParse(rawTurnover);
+    // An unparseable entry must not silently clear the saved turnover.
+    if (rawTurnover.isNotEmpty && turnover == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Annual turnover must be a number.')),
+      );
+      return;
+    }
     setState(() => _isSaving = true);
     try {
+      final rawPurpose = _loanPurposeController.text.trim();
+      final loanPurpose = rawPurpose.isEmpty ? null : rawPurpose;
+
       await ref.read(enterpriseRepositoryProvider).updateFinancialFacts(
             enterpriseId: widget.enterprise.id,
-            annualTurnover: double.tryParse(_turnoverController.text.trim()),
+            annualTurnover: turnover,
             businessStartedDate: _businessStartedDate,
-            loanPurpose: _loanPurposeController.text.trim().isEmpty
-                ? null
-                : _loanPurposeController.text.trim(),
+            loanPurpose: loanPurpose,
           );
       ref.invalidate(enterpriseDetailProvider(widget.enterprise.id));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Financial facts updated.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save financial facts: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
