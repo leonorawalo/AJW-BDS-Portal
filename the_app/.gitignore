@@ -60,3 +60,6 @@ chat-context.txt
 chat_context.txt
 context.txt
 edge-functions.txt
+
+# Built APKs are shared via GitHub Releases, never committed (a 54 MB one was stripped from history before pushing).
+/release/
