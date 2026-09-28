@@ -64,6 +64,9 @@ flutter:
 
   assets:
     - assets/images/ajw_logo.webp
+    # Supabase URL + anon key, read by main() via flutter_dotenv. Removing
+    # this line makes web/Android boot fail (see ConfigErrorApp).
+    - .env
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
