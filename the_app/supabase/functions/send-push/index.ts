@@ -257,8 +257,15 @@ async function sendToToken(fcmToken: string, title: string, body: string): Promi
 }
 
 Deno.serve(async (req) => {
+  // Fail closed: with Verify JWT off, a missing secret would otherwise
+  // leave this function open to anyone who finds the URL.
   const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
-  if (expectedSecret && req.headers.get('x-webhook-secret') !== expectedSecret) {
+  if (!expectedSecret) {
+    console.error('WEBHOOK_SECRET is not set — refusing all calls');
+    return new Response('Server misconfigured', { status: 500 });
+  }
+  if (req.headers.get('x-webhook-secret') !== expectedSecret) {
+    console.error('Rejected call: missing or wrong x-webhook-secret header');
     return new Response('Unauthorized', { status: 401 });
   }
 

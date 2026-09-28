@@ -412,3 +412,17 @@ enabled = true
 # declarative_schema_path = "./schemas"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Per-function JWT verification, applied on every `supabase functions deploy`.
+# send-push: called by Database Webhooks, which authenticate with the
+#   x-webhook-secret header instead of a user JWT.
+# google-oauth: Google's consent redirect carries no JWT; the POST actions
+#   verify the caller's JWT inside the function.
+[functions.send-push]
+verify_jwt = false
+
+[functions.google-oauth]
+verify_jwt = false
+
+[functions.calendar-sessions]
+verify_jwt = true
