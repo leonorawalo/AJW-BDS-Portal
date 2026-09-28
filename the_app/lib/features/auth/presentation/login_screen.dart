@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,12 +21,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _isSubmitting = false;
   String? _errorMessage;
+  StreamSubscription<AuthState>? _authErrorSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // A failed Google sign-in comes back as a redirect carrying the error,
+    // not as an exception from signInWithGoogle(). On Android it arrives on
+    // the auth stream; on web the page reloads with it in the URL.
+    _authErrorSub = ref.read(authRepositoryProvider).authStateChanges.listen(
+      (_) {},
+      onError: (Object e) {
+        if (mounted) setState(() => _errorMessage = _googleErrorMessage(e.toString()));
+      },
+    );
+    final urlError = Uri.base.queryParameters['error_description'];
+    if (urlError != null) _errorMessage = _googleErrorMessage(urlError);
+  }
+
+  /// The handle_new_user trigger rejects Google sign-ins with no matching
+  /// account, which Supabase reports as a generic database error.
+  static String _googleErrorMessage(String raw) {
+    if (raw.contains('Database error saving new user')) {
+      return 'No AJW account uses that Google email. Sign in with your email '
+          'and password, or ask an administrator for an account.';
+    }
+    return 'Google sign-in failed. Please try again.';
+  }
 
   @override
   void dispose() {
+    _authErrorSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      // Browser opens; the session (or an error) comes back via the
+      // auth stream, and routerProvider's redirect takes it from there.
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Couldn\'t open Google sign-in. Check your connection and try again.')),
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -133,6 +177,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Sign in'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isSubmitting ? null : _signInWithGoogle,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Continue with Google'),
                     ),
                     const SizedBox(height: 16),
                     TextButton(

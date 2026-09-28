@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Thin wrapper around Supabase Auth. Keeps every raw Supabase call in one
@@ -16,6 +17,24 @@ class AuthRepository {
     required String password,
   }) {
     return _client.auth.signInWithPassword(email: email, password: password);
+  }
+
+  /// Sign-in only — no Calendar scope, and no Google token is kept.
+  /// Calendar access is a separate, per-consultant connection made through
+  /// the google-oauth Edge Function (Sessions tab).
+  ///
+  /// Only works for an existing account: Supabase links the Google
+  /// identity to the account with the same (confirmed) email, and the
+  /// handle_new_user trigger refuses to create a brand-new user from a
+  /// Google sign-in, since there'd be no way to pick a role.
+  ///
+  /// Opens the browser and returns immediately; the session arrives later
+  /// via [authStateChanges] (deep link on Android, page reload on web).
+  Future<bool> signInWithGoogle() {
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: kIsWeb ? Uri.base.origin : 'ajwbags://login-callback',
+    );
   }
 
   /// [roleName] must match a row in public.roles ('Administrator',
