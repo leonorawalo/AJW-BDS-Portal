@@ -23,12 +23,12 @@ class AssessmentDashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enterpriseAsync = ref.watch(enterpriseDetailProvider(enterpriseId));
-    final tasksAsync = ref.watch(tasksProvider(enterpriseId));
+    final completedAsync = ref.watch(completedLoanReadinessTitlesProvider(enterpriseId));
 
-    if (enterpriseAsync.isLoading || tasksAsync.isLoading) {
+    if (enterpriseAsync.isLoading || completedAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (enterpriseAsync.hasError || tasksAsync.hasError) {
+    if (enterpriseAsync.hasError || completedAsync.hasError) {
       return const Center(child: Text('Could not load loan-readiness data.'));
     }
 
@@ -36,9 +36,9 @@ class AssessmentDashboardTab extends ConsumerWidget {
     if (enterprise == null) {
       return const Center(child: Text('Enterprise not found.'));
     }
-    final tasks = tasksAsync.value ?? const [];
+    final completedTaskTitles = completedAsync.value ?? const <String>{};
 
-    final inputs = LoanReadinessInputs.from(enterprise: enterprise, tasks: tasks);
+    final inputs = LoanReadinessInputs.from(enterprise: enterprise, completedTaskTitles: completedTaskTitles);
     final businessHealth = LoanReadiness.businessHealthScore(inputs);
     final creditReadiness = LoanReadiness.creditReadinessScore(inputs);
     final kcbMet = LoanReadiness.kcbRequirementsMet(inputs);
@@ -56,7 +56,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _KcbProgress(met: kcbMet.length),
+        _KcbProgress(met: kcbMet.length, total: LoanReadiness.kcbRequirements(inputs).length),
         const SizedBox(height: 12),
         _RedFlagsList(flags: flags),
         const SizedBox(height: 24),
@@ -122,9 +122,10 @@ class _ScoreBadge extends StatelessWidget {
 }
 
 class _KcbProgress extends StatelessWidget {
-  const _KcbProgress({required this.met});
+  const _KcbProgress({required this.met, required this.total});
 
   final int met;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
@@ -135,12 +136,12 @@ class _KcbProgress extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('KCB MSME readiness: $met/10', style: Theme.of(context).textTheme.labelLarge),
+            Text('KCB MSME readiness: $met/$total', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: met / 10,
+                value: met / total,
                 minHeight: 8,
                 backgroundColor: AppColors.lightGray.withValues(alpha: 0.3),
                 valueColor: const AlwaysStoppedAnimation(AppColors.charcoal),
@@ -209,24 +210,7 @@ class _DerivedFromTasksList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <(bool, String, String)>[
-      (inputs.isRegistered, 'Business registered', 'Task: Complete business registration'),
-      (inputs.taxCompliant, 'Tax compliant', 'Tasks: Acquire KRA PIN + Confirm monthly KRA returns filed'),
-      (inputs.hasBusinessPermit, 'Valid business permit', 'Task: Acquire trading licenses'),
-      (inputs.hasFinancialRecords, 'Financial record-keeping', 'Task: Set up financial record-keeping system'),
-      (
-        inputs.hasSixMonthsBankStatements,
-        '6 months of bank statements',
-        'Task: Compile 6 months of bank statements',
-      ),
-      (inputs.hasAuditedAccounts, 'Audited accounts (3 yrs)', 'Task: Obtain 3 years of audited accounts'),
-      (
-        inputs.hasCollateral,
-        'Collateral documented',
-        'Task: Document available collateral for financing',
-      ),
-      (inputs.crbChecked, 'CRB status checked', 'Task: Check CRB status'),
-    ];
+    final rows = LoanReadiness.drivers(inputs);
 
     return Card(
       margin: EdgeInsets.zero,

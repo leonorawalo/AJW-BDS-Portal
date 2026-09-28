@@ -33,6 +33,14 @@ final tasksProvider =
   return ref.watch(taskRepositoryProvider).fetchTasks(enterpriseId);
 });
 
+/// Re-fetches whenever tasksProvider is invalidated (e.g. a status change),
+/// so the dashboard stays live without extra invalidate calls.
+final completedLoanReadinessTitlesProvider =
+    FutureProvider.autoDispose.family<Set<String>, String>((ref, enterpriseId) async {
+  await ref.watch(tasksProvider(enterpriseId).future);
+  return ref.watch(taskRepositoryProvider).fetchCompletedLoanReadinessTitles(enterpriseId);
+});
+
 final taskProvider =
     FutureProvider.autoDispose.family<WorkstreamTask, String>((ref, taskId) {
   return ref.watch(taskRepositoryProvider).fetchTask(taskId);

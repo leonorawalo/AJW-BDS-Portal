@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/loan_readiness.dart';
 import '../models/task.dart';
 import '../models/task_template.dart';
 
@@ -15,6 +16,16 @@ class TaskRepository {
         .eq('enterprise_id', enterpriseId)
         .order('due_date', ascending: true);
     return (rows as List).map((r) => WorkstreamTask.fromMap(r as Map<String, dynamic>)).toList();
+  }
+
+  /// Which score-relevant ToR tasks are completed on the enterprise,
+  /// across every discipline — including tasks the caller can't read.
+  Future<Set<String>> fetchCompletedLoanReadinessTitles(String enterpriseId) async {
+    final rows = await _client.rpc('completed_loan_readiness_tasks', params: {
+      'p_enterprise_id': enterpriseId,
+      'p_titles': loanReadinessTaskTitles,
+    }) as List;
+    return rows.map((r) => r as String).toSet();
   }
 
   Future<WorkstreamTask> fetchTask(String taskId) async {

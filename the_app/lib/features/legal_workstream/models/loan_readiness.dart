@@ -1,12 +1,20 @@
 import '../../enterprises/models/enterprise.dart';
-import 'task.dart';
 
-bool _isTaskComplete(List<WorkstreamTask> tasks, String title) {
-  for (final t in tasks) {
-    if (t.title == title && t.status == TaskStatus.completed) return true;
-  }
-  return false;
-}
+/// Every ToR task title the scores below depend on. The dashboard asks the
+/// server which of these are completed (completed_loan_readiness_tasks),
+/// rather than reading tasks directly — consultants can only read their
+/// own discipline's tasks, but the scores span all of them.
+const loanReadinessTaskTitles = [
+  'Complete business registration',
+  'Acquire KRA PIN',
+  'Confirm monthly KRA returns filed',
+  'Acquire trading licenses',
+  'Set up financial record-keeping system',
+  'Compile 6 months of bank statements',
+  'Obtain 3 years of audited accounts',
+  'Document available collateral for financing',
+  'Check CRB status',
+];
 
 /// Everything the loan-readiness dashboard needs, resolved from live
 /// data — ToR task completion (see standardLegalChecklist /
@@ -33,7 +41,7 @@ class LoanReadinessInputs {
 
   factory LoanReadinessInputs.from({
     required Enterprise enterprise,
-    required List<WorkstreamTask> tasks,
+    required Set<String> completedTaskTitles,
   }) {
     return LoanReadinessInputs(
       // registration_number / kraPin (set by Admin at enterprise
@@ -41,15 +49,15 @@ class LoanReadinessInputs {
       // evidence alongside the matching Legal task being marked done —
       // whichever happened first.
       isRegistered:
-          enterprise.registrationNumber != null || _isTaskComplete(tasks, 'Complete business registration'),
-      hasKraPin: enterprise.kraPin != null || _isTaskComplete(tasks, 'Acquire KRA PIN'),
-      filesKraReturns: _isTaskComplete(tasks, 'Confirm monthly KRA returns filed'),
-      hasBusinessPermit: _isTaskComplete(tasks, 'Acquire trading licenses'),
-      hasFinancialRecords: _isTaskComplete(tasks, 'Set up financial record-keeping system'),
-      hasSixMonthsBankStatements: _isTaskComplete(tasks, 'Compile 6 months of bank statements'),
-      hasAuditedAccounts: _isTaskComplete(tasks, 'Obtain 3 years of audited accounts'),
-      hasCollateral: _isTaskComplete(tasks, 'Document available collateral for financing'),
-      crbChecked: _isTaskComplete(tasks, 'Check CRB status'),
+          enterprise.registrationNumber != null || completedTaskTitles.contains('Complete business registration'),
+      hasKraPin: enterprise.kraPin != null || completedTaskTitles.contains('Acquire KRA PIN'),
+      filesKraReturns: completedTaskTitles.contains('Confirm monthly KRA returns filed'),
+      hasBusinessPermit: completedTaskTitles.contains('Acquire trading licenses'),
+      hasFinancialRecords: completedTaskTitles.contains('Set up financial record-keeping system'),
+      hasSixMonthsBankStatements: completedTaskTitles.contains('Compile 6 months of bank statements'),
+      hasAuditedAccounts: completedTaskTitles.contains('Obtain 3 years of audited accounts'),
+      hasCollateral: completedTaskTitles.contains('Document available collateral for financing'),
+      crbChecked: completedTaskTitles.contains('Check CRB status'),
       annualTurnover: enterprise.annualTurnover,
       yearsInOperation: enterprise.businessStartedDate == null
           ? null
@@ -112,20 +120,45 @@ class LoanReadiness {
   /// actually evaluate. States how many are met today — never a
   /// prediction of loan approval (KCB's own decision uses an internal
   /// scoring model this app has no access to).
-  static List<String> kcbRequirementsMet(LoanReadinessInputs i) {
+  static List<(bool, String)> kcbRequirements(LoanReadinessInputs i) {
     return [
-      if (i.isRegistered) 'Registered business',
-      if (i.yearsInOperation != null && i.yearsInOperation! >= 2) '2+ years operating',
-      if (i.annualTurnover != null && i.annualTurnover! >= 500000) 'KSh 500K+ annual turnover',
-      if (i.hasSixMonthsBankStatements) '6 months of bank statements',
-      if (i.hasBusinessPermit) 'Valid business permit',
-      if (i.taxCompliant) 'Tax Compliance Certificate',
-      if (i.crbChecked) 'CRB status checked',
-      if (i.hasFinancialRecords) 'Financial records available',
-      if (i.loanPurpose != null && i.loanPurpose!.trim().isNotEmpty) 'Loan purpose documented',
-      if (i.hasCollateral) 'Security/collateral documented',
+      (i.isRegistered, 'Registered business'),
+      (i.yearsInOperation != null && i.yearsInOperation! >= 2, '2+ years operating'),
+      (i.annualTurnover != null && i.annualTurnover! >= 500000, 'KSh 500K+ annual turnover'),
+      (i.hasSixMonthsBankStatements, '6 months of bank statements'),
+      (i.hasBusinessPermit, 'Valid business permit'),
+      (i.taxCompliant, 'Tax Compliance Certificate'),
+      (i.crbChecked, 'CRB status checked'),
+      (i.hasFinancialRecords, 'Financial records available'),
+      (i.loanPurpose != null && i.loanPurpose!.trim().isNotEmpty, 'Loan purpose documented'),
+      (i.hasCollateral, 'Security/collateral documented'),
     ];
   }
+
+  static List<String> kcbRequirementsMet(LoanReadinessInputs i) =>
+      [for (final (met, label) in kcbRequirements(i)) if (met) label];
+
+  /// Each task-derived criterion: (satisfied, label, which ToR task
+  /// satisfies it) — "why is my score X", for the dashboard and exports.
+  static List<(bool, String, String)> drivers(LoanReadinessInputs i) {
+    return [
+      (i.isRegistered, 'Business registered', 'Task: Complete business registration'),
+      (i.taxCompliant, 'Tax compliant', 'Tasks: Acquire KRA PIN + Confirm monthly KRA returns filed'),
+      (i.hasBusinessPermit, 'Valid business permit', 'Task: Acquire trading licenses'),
+      (i.hasFinancialRecords, 'Financial record-keeping', 'Task: Set up financial record-keeping system'),
+      (i.hasSixMonthsBankStatements, '6 months of bank statements', 'Task: Compile 6 months of bank statements'),
+      (i.hasAuditedAccounts, 'Audited accounts (3 yrs)', 'Task: Obtain 3 years of audited accounts'),
+      (i.hasCollateral, 'Collateral documented', 'Task: Document available collateral for financing'),
+      (i.crbChecked, 'CRB status checked', 'Task: Check CRB status'),
+    ];
+  }
+
+  /// Strong / Developing / Weak, as the dashboard shows it.
+  static String band(double score) => score >= 70
+      ? 'Strong'
+      : score >= 40
+          ? 'Developing'
+          : 'Weak';
 
   /// Risk flags for the consultant to review — informational, never a
   /// pass/fail gate (mirrors CBK guidance that a credit score/flag
