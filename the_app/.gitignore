@@ -55,3 +55,8 @@ AJW Brand Elements/
 CLAUDE.md
 prompt.txt
 prompt2.txt
+client_secret*.json
+chat-context.txt
+chat_context.txt
+context.txt
+edge-functions.txt
