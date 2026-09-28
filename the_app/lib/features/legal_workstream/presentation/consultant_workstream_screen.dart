@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../calendar/presentation/sessions_tab.dart';
+import '../../google_exports/presentation/export_menu_button.dart';
 import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
@@ -24,6 +25,7 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(enterpriseName),
+          actions: [ExportMenuButton(enterpriseId: enterpriseId)],
           bottom: const TabBar(isScrollable: true, tabs: [
             Tab(text: 'Dashboard'),
             Tab(text: 'Tasks'),
@@ -37,7 +39,7 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
           TasksTab(enterpriseId: enterpriseId, readOnly: false),
           RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
           DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
-          SessionsTab(enterpriseId: enterpriseId, canSchedule: true),
+          SessionsTab(enterpriseId: enterpriseId),
         ]),
       ),
     );

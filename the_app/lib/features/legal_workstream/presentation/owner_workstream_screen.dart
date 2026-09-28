@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
 import '../../calendar/presentation/sessions_tab.dart';
+import '../../google_exports/presentation/export_menu_button.dart';
 import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
@@ -44,6 +45,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             appBar: AppBar(
               title: Text(enterprise.businessName),
               actions: [
+                ExportMenuButton(enterpriseId: enterprise.id),
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => ref.read(authRepositoryProvider).signOut(),
@@ -64,7 +66,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
               TasksTab(enterpriseId: enterprise.id, readOnly: false, canCreateTasks: true),
               RecommendationsTab(enterpriseId: enterprise.id, readOnly: true),
               DocumentsTab(enterpriseId: enterprise.id, readOnly: false),
-              SessionsTab(enterpriseId: enterprise.id, canSchedule: false),
+              SessionsTab(enterpriseId: enterprise.id),
             ]),
           ),
         );

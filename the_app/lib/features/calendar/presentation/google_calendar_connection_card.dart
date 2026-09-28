@@ -4,7 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/calendar_providers.dart';
 
-/// Connect / disconnect the signed-in Consultant's own Google Calendar.
+/// Connect / disconnect the signed-in user's own Google account — used for
+/// meetings (Calendar + Meet, free/busy) and exports (Docs/Sheets/Slides).
 ///
 /// Google's consent page opens in the external browser and redirects to
 /// the google-oauth Edge Function, not back into the app — so the
@@ -74,21 +75,21 @@ class _GoogleCalendarConnectionCardState extends ConsumerState<GoogleCalendarCon
       child: connectionAsync.when(
         loading: () => const ListTile(
           leading: Icon(Icons.calendar_month),
-          title: Text('Checking Google Calendar connection…'),
+          title: Text('Checking Google connection…'),
         ),
         error: (_, _) => ListTile(
           leading: const Icon(Icons.error_outline),
-          title: const Text('Could not check Google Calendar connection.'),
+          title: const Text('Could not check Google connection.'),
           trailing: refreshButton,
         ),
         data: (connection) {
           if (connection == null) {
             return ListTile(
               leading: const Icon(Icons.calendar_month),
-              title: const Text('Connect your Google Calendar'),
+              title: const Text('Connect your Google account'),
               subtitle: const Text(
-                'Needed to schedule sessions. Each session gets a Google Meet link '
-                'and the owner is invited by email.',
+                'Needed to schedule meetings, check availability, and export to '
+                'Google Docs, Sheets and Slides. The app only sees files it creates.',
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -102,14 +103,35 @@ class _GoogleCalendarConnectionCardState extends ConsumerState<GoogleCalendarCon
               ),
             );
           }
+          final disconnectButton = TextButton(
+            onPressed: _isBusy ? null : _disconnect,
+            child: const Text('Disconnect'),
+          );
+          // Connected before availability checks / exports existed: running
+          // Connect again replaces the stored token with one that has the
+          // newer permissions.
+          if (connection.needsReconnect) {
+            return ListTile(
+              leading: const Icon(Icons.warning_amber, color: Colors.orange),
+              title: Text('Connected as ${connection.googleEmail ?? 'your Google account'}'),
+              subtitle: const Text('Reconnect once to enable availability checks and exports.'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  disconnectButton,
+                  FilledButton(
+                    onPressed: _isBusy ? null : _connect,
+                    child: const Text('Reconnect'),
+                  ),
+                ],
+              ),
+            );
+          }
           return ListTile(
             leading: const Icon(Icons.event_available, color: Colors.green),
-            title: const Text('Google Calendar connected'),
+            title: const Text('Google account connected'),
             subtitle: Text(connection.googleEmail ?? 'Google account'),
-            trailing: TextButton(
-              onPressed: _isBusy ? null : _disconnect,
-              child: const Text('Disconnect'),
-            ),
+            trailing: disconnectButton,
           );
         },
       ),

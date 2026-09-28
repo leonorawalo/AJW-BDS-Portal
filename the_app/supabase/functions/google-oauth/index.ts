@@ -29,6 +29,12 @@ const SCOPES = [
   'openid',
   'email',
   'https://www.googleapis.com/auth/calendar.events',
+  // Availability checks before booking (calendar-sessions). Busy/free
+  // only — no event details.
+  'https://www.googleapis.com/auth/calendar.freebusy',
+  // Exports to Docs/Sheets/Slides (google-export). drive.file only sees
+  // files this app created — never the rest of the user's Drive.
+  'https://www.googleapis.com/auth/drive.file',
 ].join(' ');
 /// A consent link older than this is refused on the way back.
 const STATE_TTL_MS = 15 * 60 * 1000;

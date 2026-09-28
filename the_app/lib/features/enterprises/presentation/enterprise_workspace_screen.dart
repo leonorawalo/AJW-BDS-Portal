@@ -8,6 +8,7 @@ import '../../legal_workstream/presentation/documents_tab.dart';
 import '../../legal_workstream/presentation/recommendations_tab.dart';
 import '../../legal_workstream/presentation/tasks_tab.dart';
 import '../providers/enterprise_providers.dart';
+import '../../google_exports/presentation/export_menu_button.dart';
 import 'enterprise_details_tab.dart';
 
 /// The Admin's home for a single enterprise. Loan-readiness Dashboard
@@ -31,6 +32,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
           title: Text(enterpriseAsync.value?.businessName ?? 'Enterprise'),
           leading: BackButton(onPressed: () => context.go('/admin')),
           actions: [
+            ExportMenuButton(enterpriseId: enterpriseId),
             IconButton(
               icon: const Icon(Icons.person_add_alt),
               tooltip: 'Assign consultant',
@@ -65,7 +67,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
                 TasksTab(enterpriseId: enterpriseId, readOnly: true, canCreateTasks: true),
                 RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
                 DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
-                SessionsTab(enterpriseId: enterpriseId, canSchedule: false),
+                SessionsTab(enterpriseId: enterpriseId),
                 EnterpriseDetailsTab(enterprise: enterprise),
               ],
             );

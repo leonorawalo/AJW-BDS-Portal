@@ -11,15 +11,16 @@ extension SessionStatusX on SessionStatus {
       };
 }
 
-/// A consultation session booked on a Consultant's Google Calendar
-/// (see supabase/functions/calendar-sessions). Rows are only ever
+/// A meeting booked on its organizer's Google Calendar — the organizer can
+/// be an Admin, Consultant or Owner (see supabase/functions/calendar-sessions).
+/// Who's on it comes separately from session_people(). Rows are only ever
 /// created/cancelled through that Edge Function, never inserted directly
 /// from the app, because the Google event and the row must stay paired.
 class ConsultationSession {
   const ConsultationSession({
     required this.id,
     required this.enterpriseId,
-    required this.consultantId,
+    required this.organizerId,
     required this.title,
     required this.startsAt,
     required this.endsAt,
@@ -27,15 +28,13 @@ class ConsultationSession {
     this.description,
     this.meetLink,
     this.calendarHtmlLink,
-    this.consultantName,
   });
 
   factory ConsultationSession.fromMap(Map<String, dynamic> map) {
-    final consultant = map['consultant'] as Map<String, dynamic>?;
     return ConsultationSession(
       id: map['id'] as String,
       enterpriseId: map['enterprise_id'] as String,
-      consultantId: map['consultant_id'] as String,
+      organizerId: map['organizer_id'] as String,
       title: map['title'] as String,
       description: map['description'] as String?,
       startsAt: DateTime.parse(map['starts_at'] as String).toLocal(),
@@ -43,14 +42,12 @@ class ConsultationSession {
       status: SessionStatusX.fromDb(map['status'] as String),
       meetLink: map['meet_link'] as String?,
       calendarHtmlLink: map['calendar_html_link'] as String?,
-      consultantName:
-          consultant != null ? '${consultant['first_name']} ${consultant['last_name']}' : null,
     );
   }
 
   final String id;
   final String enterpriseId;
-  final String consultantId;
+  final String organizerId;
   final String title;
   final String? description;
   final DateTime startsAt;
@@ -58,7 +55,6 @@ class ConsultationSession {
   final SessionStatus status;
   final String? meetLink;
   final String? calendarHtmlLink;
-  final String? consultantName;
 
   bool get isUpcoming => status == SessionStatus.scheduled && endsAt.isAfter(DateTime.now());
 }

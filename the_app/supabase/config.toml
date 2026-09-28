@@ -426,3 +426,6 @@ verify_jwt = false
 
 [functions.calendar-sessions]
 verify_jwt = true
+
+[functions.google-export]
+verify_jwt = true
