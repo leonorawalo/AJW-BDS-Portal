@@ -6,10 +6,15 @@ import '../../enterprises/providers/enterprise_providers.dart';
 import '../../legal_workstream/models/loan_readiness.dart';
 import '../../legal_workstream/providers/legal_workstream_providers.dart';
 import '../data/google_export_repository.dart';
+import '../data/portfolio_repository.dart';
 import '../models/enterprise_export_data.dart';
 
 final googleExportRepositoryProvider = Provider<GoogleExportRepository>((ref) {
   return GoogleExportRepository(ref.watch(supabaseClientProvider));
+});
+
+final portfolioRepositoryProvider = Provider<PortfolioRepository>((ref) {
+  return PortfolioRepository(ref.watch(supabaseClientProvider));
 });
 
 /// Gathers an enterprise export from the same providers the screens use,

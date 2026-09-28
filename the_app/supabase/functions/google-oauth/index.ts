@@ -110,7 +110,7 @@ async function callback(params: URLSearchParams): Promise<Response> {
   const state = params.get('state');
   const code = params.get('code');
   if (params.get('error')) {
-    return text(`Google Calendar was not connected (${params.get('error')}). You can close this tab.`, 400);
+    return text(`Google account was not connected (${params.get('error')}). You can close this tab.`, 400);
   }
   if (!state || !code) return text('Missing code or state.', 400);
 
@@ -156,7 +156,7 @@ async function callback(params: URLSearchParams): Promise<Response> {
     console.error('Saving connection failed', error);
     return text('Could not save the connection. Please try again.', 500);
   }
-  return text('Google Calendar connected. You can close this tab and return to the AJW BAGS Portal app.');
+  return text('Google account connected. You can close this tab and return to the AJW BAGS Portal app.');
 }
 
 async function disconnect(userId: string): Promise<Response> {
