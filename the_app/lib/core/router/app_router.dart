@@ -16,6 +16,7 @@ import '../../features/enterprises/presentation/register_enterprise_screen.dart'
 import '../../features/legal_workstream/presentation/consultant_workstream_screen.dart';
 import '../../features/legal_workstream/presentation/owner_workstream_screen.dart';
 import '../../features/legal_workstream/presentation/task_detail_screen.dart';
+import '../../features/user_management/presentation/users_screen.dart';
 import '../../shared/models/user_profile.dart';
 
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
@@ -177,6 +178,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'assign-consultant',
             builder: (context, state) => const AssignConsultantScreen(),
           ),
+          GoRoute(path: 'users', builder: (context, state) => const UsersScreen()),
         ],
       ),
       GoRoute(

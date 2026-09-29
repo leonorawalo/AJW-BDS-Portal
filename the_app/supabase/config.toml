@@ -432,3 +432,6 @@ verify_jwt = true
 
 [functions.invite-user]
 verify_jwt = true
+
+[functions.manage-users]
+verify_jwt = true
