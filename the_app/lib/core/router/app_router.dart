@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/audit/presentation/audit_log_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/set_password_screen.dart';
@@ -179,6 +180,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AssignConsultantScreen(),
           ),
           GoRoute(path: 'users', builder: (context, state) => const UsersScreen()),
+          GoRoute(
+            path: 'audit',
+            builder: (context, state) => AuditLogScreen(
+              initialEnterpriseId: state.uri.queryParameters['enterprise'],
+            ),
+          ),
         ],
       ),
       GoRoute(

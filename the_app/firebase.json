@@ -33,7 +33,7 @@
     ],
     "headers": [
       {
-        "source": "/index.html",
+        "source": "**/*.@(js|mjs|json|wasm|html)",
         "headers": [
           {
             "key": "Cache-Control",
@@ -42,7 +42,7 @@
         ]
       },
       {
-        "source": "/flutter_service_worker.js",
+        "source": "/",
         "headers": [
           {
             "key": "Cache-Control",
@@ -51,7 +51,7 @@
         ]
       },
       {
-        "source": "/flutter_bootstrap.js",
+        "source": "/assets/**",
         "headers": [
           {
             "key": "Cache-Control",

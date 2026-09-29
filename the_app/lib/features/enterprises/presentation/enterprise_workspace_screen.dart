@@ -34,6 +34,11 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
           actions: [
             ExportMenuButton(enterpriseId: enterpriseId),
             IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Audit log for this enterprise',
+              onPressed: () => context.push('/admin/audit?enterprise=$enterpriseId'),
+            ),
+            IconButton(
               icon: const Icon(Icons.person_add_alt),
               tooltip: 'Assign consultant',
               onPressed: () => context.push('/admin/enterprises/$enterpriseId/assign-consultant'),

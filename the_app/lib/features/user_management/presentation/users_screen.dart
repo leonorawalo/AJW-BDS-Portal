@@ -40,6 +40,13 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
       appBar: AppBar(
         title: const Text('Users'),
         leading: BackButton(onPressed: () => context.go('/admin')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Audit log',
+            onPressed: () => context.push('/admin/audit'),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add_alt_1),
