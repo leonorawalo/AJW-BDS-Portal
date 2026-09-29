@@ -63,3 +63,6 @@ edge-functions.txt
 
 # Built APKs are shared via GitHub Releases, never committed (a 54 MB one was stripped from history before pushing).
 /release/
+
+# Firebase CLI deploy cache
+.firebase/
