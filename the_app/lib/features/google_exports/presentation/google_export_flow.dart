@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/widgets/progress_dialog.dart';
 import '../../calendar/data/consultation_session_repository.dart' show GoogleNotConnectedException;
 import '../../calendar/providers/calendar_providers.dart';
 import '../data/google_export_repository.dart';
@@ -39,29 +40,6 @@ Future<void> runGoogleExport(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
     }
-  }
-}
-
-/// Shows a blocking progress dialog while [work] runs; always closes it.
-Future<T> withProgress<T>(BuildContext context, String message, Future<T> work) async {
-  final navigator = Navigator.of(context, rootNavigator: true);
-  showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => AlertDialog(
-      content: Row(
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(width: 16),
-          Expanded(child: Text(message)),
-        ],
-      ),
-    ),
-  );
-  try {
-    return await work;
-  } finally {
-    navigator.pop();
   }
 }
 

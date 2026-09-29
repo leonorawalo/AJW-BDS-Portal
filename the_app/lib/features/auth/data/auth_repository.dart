@@ -37,32 +37,25 @@ class AuthRepository {
     );
   }
 
-  /// [roleName] must match a row in public.roles ('Administrator',
-  /// 'Consultant', 'Enterprise Owner'). [specialization] is only
-  /// meaningful when roleName is 'Consultant' — 'Legal', 'Accounting',
-  /// or 'Marketing', per the ToR's "Trio" model. Both are passed as
-  /// sign-up metadata, which the `handle_new_user` Postgres trigger
-  /// reads to populate public.users.
-  Future<AuthResponse> signUp({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    String? phoneNumber,
-    required String roleName,
-    String? specialization,
-  }) {
-    return _client.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'first_name': firstName,
-        'last_name': lastName,
-        if (phoneNumber != null && phoneNumber.isNotEmpty)
-          'phone_number': phoneNumber,
-        'role_name': roleName,
-        'specialization': ?specialization,
-      },
+  /// Exchanges the one-time token from an invite (or an Admin-shared
+  /// set-password link) for a session. The links point at the app's own
+  /// /set-password page rather than Supabase's default redirect, because
+  /// this app uses the PKCE flow, which can't pick up a session from that
+  /// redirect. See supabase/functions/invite-user.
+  Future<void> verifyInviteToken({required String tokenHash, required String type}) {
+    return _client.auth.verifyOTP(
+      tokenHash: tokenHash,
+      type: type == 'magiclink' ? OtpType.magiclink : OtpType.invite,
+    );
+  }
+
+  /// Invited users carry needs_password in their metadata until they've
+  /// chosen a password; the router keeps them on /set-password until then.
+  bool get needsPassword => _client.auth.currentUser?.userMetadata?['needs_password'] == true;
+
+  Future<void> setPassword(String password) {
+    return _client.auth.updateUser(
+      UserAttributes(password: password, data: {'needs_password': false}),
     );
   }
 

@@ -429,3 +429,6 @@ verify_jwt = true
 
 [functions.google-export]
 verify_jwt = true
+
+[functions.invite-user]
+verify_jwt = true

@@ -8,6 +8,7 @@ import '../providers/enterprise_providers.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../../core/widgets/user_profile_badge.dart';
 import '../../google_exports/presentation/portfolio_export_button.dart';
+import '../../user_management/presentation/invite_user_dialog.dart';
 
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
@@ -20,6 +21,11 @@ class EnterpriseListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Enterprises'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1),
+            tooltip: 'Invite a consultant or administrator',
+            onPressed: () => showInviteUserDialog(context),
+          ),
           const PortfolioExportButton(),
           const UserProfileBadge(),
           IconButton(

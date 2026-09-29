@@ -5,6 +5,8 @@ import '../../../shared/models/user_profile.dart';
 import '../../consultants/providers/consultant_assignment_providers.dart';
 import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
+import '../../user_management/models/invite_request.dart';
+import '../../user_management/presentation/invite_flow.dart';
 
 /// Business info, lifecycle status, Going Concern toggle, and current
 /// consultant assignments — what used to be the whole of the Admin's
@@ -184,6 +186,8 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
             },
           ),
         const SizedBox(height: 8),
+        _InviteOwnerActions(enterprise: widget.enterprise),
+        const SizedBox(height: 8),
         ownerAccountsAsync.when(
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => const Text('Could not load Owner accounts.'),
@@ -222,6 +226,56 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
                 ),
               ],
             );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// Invite the Owner (email) or share a set-password link (copy / WhatsApp).
+/// Also the "resend" for an Owner who hasn't accepted yet. Needs the
+/// enterprise's email, which is where the Owner's email is recorded.
+class _InviteOwnerActions extends ConsumerWidget {
+  const _InviteOwnerActions({required this.enterprise});
+  final Enterprise enterprise;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final email = enterprise.email;
+    if (email == null || email.trim().isEmpty) {
+      return Text(
+        "Add the owner's email to this enterprise to invite them to the portal.",
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+    final request = InviteRequest.forOwner(
+      email: email.trim(),
+      ownerName: enterprise.ownerName,
+      enterpriseId: enterprise.id,
+      phoneNumber: enterprise.phoneNumber,
+    );
+    void refresh() {
+      ref.invalidate(enterpriseDetailProvider(enterprise.id));
+      ref.invalidate(ownerAccountsProvider);
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        OutlinedButton.icon(
+          icon: const Icon(Icons.mail_outline),
+          label: Text('Invite owner ($email)'),
+          onPressed: () async {
+            if (await runInvite(context, ref, request)) refresh();
+          },
+        ),
+        TextButton.icon(
+          icon: const Icon(Icons.link),
+          label: const Text('Share invite link'),
+          onPressed: () async {
+            if (await shareInviteLink(context, ref, request)) refresh();
           },
         ),
       ],

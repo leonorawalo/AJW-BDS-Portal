@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/enterprise_providers.dart';
+import '../../user_management/models/invite_request.dart';
+import '../../user_management/presentation/invite_flow.dart';
 
 class RegisterEnterpriseScreen extends ConsumerStatefulWidget {
   const RegisterEnterpriseScreen({super.key});
@@ -21,6 +23,7 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
   final _industryController = TextEditingController();
   final _registrationNumberController = TextEditingController();
   final _kraPinController = TextEditingController();
+  bool _inviteOwner = true;
 
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -61,6 +64,20 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
       // Refresh the list so the new enterprise shows up immediately when
       // we navigate back to it.
       ref.invalidate(enterprisesListProvider);
+
+      final email = _emptyToNull(_emailController.text);
+      if (_inviteOwner && email != null && mounted) {
+        await runInvite(
+          context,
+          ref,
+          InviteRequest.forOwner(
+            email: email,
+            ownerName: enterprise.ownerName,
+            enterpriseId: enterprise.id,
+            phoneNumber: enterprise.phoneNumber,
+          ),
+        );
+      }
 
       if (mounted) {
         context.go('/admin/enterprises/${enterprise.id}');
@@ -127,8 +144,19 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email (optional)'),
+                      decoration: const InputDecoration(labelText: "Owner's email (optional)"),
+                      onChanged: (_) => setState(() {}),
                     ),
+                    if (_emailController.text.trim().isNotEmpty)
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _inviteOwner,
+                        onChanged: (v) => setState(() => _inviteOwner = v ?? true),
+                        title: const Text('Invite the owner to the portal'),
+                        subtitle: const Text(
+                          'Emails them a link to set a password; their account is linked to this enterprise.',
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _countyController,

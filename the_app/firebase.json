@@ -1,1 +1,64 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"ajwafrica-bags-portal","appId":"1:745290415237:android:a9c6eae1cdec93f8377dec","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"ajwafrica-bags-portal","configurations":{"android":"1:745290415237:android:a9c6eae1cdec93f8377dec","web":"1:745290415237:web:04720568111d9e3b377dec"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ajwafrica-bags-portal",
+          "appId": "1:745290415237:android:a9c6eae1cdec93f8377dec",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ajwafrica-bags-portal",
+          "configurations": {
+            "android": "1:745290415237:android:a9c6eae1cdec93f8377dec",
+            "web": "1:745290415237:web:04720568111d9e3b377dec"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/flutter_service_worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/flutter_bootstrap.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+}

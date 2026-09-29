@@ -185,9 +185,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: const Text('Continue with Google'),
                     ),
                     const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => context.push('/register'),
-                      child: const Text("Don't have an account? Register"),
+                    Text(
+                      'New to the portal? Your AJW administrator will send you an invite.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),

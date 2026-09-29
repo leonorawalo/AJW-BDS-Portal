@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/set_password_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/consultants/presentation/assign_consultant_screen.dart';
 import '../../features/consultants/presentation/consultant_portfolio_screen.dart';
@@ -55,7 +55,9 @@ String _homePathFor(UserRole role) {
   }
 }
 
-const _publicPaths = ['/login', '/register', '/forgot-password'];
+// /set-password is public because an invite link arrives before there's a
+// session (the screen exchanges the link's token for one).
+const _publicPaths = ['/login', '/forgot-password', '/set-password'];
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepo = ref.watch(authRepositoryProvider);
@@ -71,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/login',
     refreshListenable: refreshNotifier,
+    // An unknown URL (a stale bookmark, a mangled link) goes to login —
+    // which the redirect then turns into the right home — instead of
+    // go_router's error page.
+    onException: (context, state, router) => router.go('/login'),
     redirect: (context, state) {
       final isPublicRoute = _publicPaths.contains(state.matchedLocation);
       final user = authRepo.currentUser;
@@ -78,6 +84,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Not signed in: only the public auth screens are reachable.
       if (user == null) {
         return isPublicRoute ? null : '/login';
+      }
+
+      // Invited and hasn't chosen a password yet (Phase 9a): nowhere else
+      // until they do.
+      if (authRepo.needsPassword) {
+        return state.matchedLocation == '/set-password' ? null : '/set-password';
       }
 
       // Signed in — figure out the role home before deciding anything.
@@ -128,7 +140,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+        path: '/set-password',
+        builder: (context, state) => SetPasswordScreen(
+          tokenHash: state.uri.queryParameters['token_hash'],
+          type: state.uri.queryParameters['type'],
+        ),
+      ),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
