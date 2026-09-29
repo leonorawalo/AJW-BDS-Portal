@@ -63,8 +63,22 @@ class AuthRepository {
     return _client.auth.resetPasswordForEmail(email);
   }
 
-  Future<void> signOut() {
-    return _client.auth.signOut();
+  final _beforeSignOut = <Future<void> Function()>[];
+
+  /// Work that must happen while the session still exists, e.g. releasing
+  /// this device's push token (RLS needs the user's JWT to delete it).
+  void addBeforeSignOut(Future<void> Function() hook) => _beforeSignOut.add(hook);
+  void removeBeforeSignOut(Future<void> Function() hook) => _beforeSignOut.remove(hook);
+
+  Future<void> signOut() async {
+    for (final hook in List.of(_beforeSignOut)) {
+      // Best effort: an offline device must still be able to sign out.
+      // (If the release fails, the next sign-in's claim fixes ownership.)
+      try {
+        await hook().timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
+    await _client.auth.signOut();
   }
 
   /// Fetches the row from public.users (not auth.users) — this is where

@@ -82,8 +82,10 @@ async function resolveTarget(payload: WebhookPayload): Promise<NotificationTarge
 
     return {
       userIds: adminIds,
-      title: 'New user registered',
-      body: `${record.first_name} ${record.last_name} signed up.`,
+      // Accounts are created by Admin invites (Phase 9a), so this fires
+      // when someone is invited, not when they first sign in.
+      title: 'New user invited',
+      body: `${record.first_name} ${record.last_name} was invited to the portal.`,
     };
   }
 
@@ -116,6 +118,11 @@ async function resolveTarget(payload: WebhookPayload): Promise<NotificationTarge
   }
 
   if (table === 'tasks' && type === 'INSERT') {
+    // A consultant doesn't need a push about tasks they created themselves
+    // (applying a ToR checklist inserts 5-10 at once). created_by is set
+    // by the database (default auth.uid()).
+    if (record.created_by && record.created_by === record.consultant_id) return null;
+
     const { data: enterprise } = await supabase
       .from('enterprises')
       .select('business_name')

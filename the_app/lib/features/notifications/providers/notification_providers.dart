@@ -23,47 +23,56 @@ final foregroundMessagesProvider = StreamProvider<RemoteMessage>((ref) {
 });
 
 /// Keeps `device_tokens` in sync with who's signed in on this device:
-/// registers a token on sign-in, moves it to the new token on refresh,
-/// removes it on sign-out. Has no return value — it exists purely for
-/// its side effects, so it must be kept alive by being watched once
-/// near the root of the widget tree (app.dart). No-op on web — see
-/// [foregroundMessagesProvider].
+/// claims the token for the user on sign-in (taking it over from any
+/// previous user of the device), follows token refreshes, and releases it
+/// just BEFORE sign-out while the session can still delete it. Has no
+/// return value — it exists purely for its side effects, so it must be
+/// kept alive by being watched once near the root of the widget tree
+/// (app.dart). No-op on web — see [foregroundMessagesProvider].
 final notificationSyncProvider = Provider<void>((ref) {
   if (kIsWeb) return;
 
   final fcmService = ref.watch(fcmServiceProvider);
   final tokenRepo = ref.watch(deviceTokenRepositoryProvider);
+  final authRepo = ref.watch(authRepositoryProvider);
 
   String? registeredToken;
 
-  Future<void> registerForUser(String userId) async {
+  Future<void> claimForCurrentUser() async {
     await fcmService.requestPermission();
     final token = await fcmService.getToken();
     if (token == null) return;
     registeredToken = token;
-    await tokenRepo.registerToken(userId: userId, token: token);
+    await tokenRepo.claimToken(token);
   }
 
+  Future<void> releaseBeforeSignOut() async {
+    final token = registeredToken;
+    if (token == null) return;
+    await tokenRepo.releaseToken(token);
+    registeredToken = null;
+  }
+
+  authRepo.addBeforeSignOut(releaseBeforeSignOut);
+
   final refreshSubscription = fcmService.onTokenRefresh.listen((newToken) {
-    final profile = ref.read(currentUserProfileProvider).value;
-    if (profile == null) return;
+    if (ref.read(currentUserProfileProvider).value == null) return;
+    final oldToken = registeredToken;
     registeredToken = newToken;
-    tokenRepo.registerToken(userId: profile.id, token: newToken);
+    tokenRepo.claimToken(newToken);
+    if (oldToken != null && oldToken != newToken) tokenRepo.releaseToken(oldToken);
   });
 
   ref.listen<AsyncValue<UserProfile?>>(
     currentUserProfileProvider,
     (previous, next) {
-      final profile = next.value;
-      if (profile != null) {
-        registerForUser(profile.id);
-      } else if (previous?.value != null && registeredToken != null) {
-        tokenRepo.deleteToken(registeredToken!);
-        registeredToken = null;
-      }
+      if (next.value != null) claimForCurrentUser();
     },
     fireImmediately: true,
   );
 
-  ref.onDispose(refreshSubscription.cancel);
+  ref.onDispose(() {
+    refreshSubscription.cancel();
+    authRepo.removeBeforeSignOut(releaseBeforeSignOut);
+  });
 });
