@@ -1,0 +1,78 @@
+/* Shared styles for the public pages (about / privacy / terms) that Google's
+   OAuth verification requires on AJW's own domain. Plain HTML, no Flutter,
+   so they load instantly and are readable by Google's reviewers. */
+:root {
+  --brand: #7a1f2b;
+  --text: #333333;
+  --muted: #6b6b6e;
+  --surface: #f7f7f7;
+  --line: #e2e2e2;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--surface);
+  line-height: 1.6;
+}
+header {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.bar {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bar img { height: 40px; width: auto; }
+.bar .name { font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
+.bar nav { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--brand); text-decoration: none; font-weight: 600; }
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+h1 { font-size: 28px; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 28px 0 8px; }
+h3 { font-size: 16px; margin: 20px 0 6px; }
+p, li { font-size: 15px; }
+.muted { color: var(--muted); font-size: 14px; }
+a { color: var(--brand); }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; border: 1px solid var(--line); padding: 8px; }
+th { background: var(--surface); }
+.button {
+  display: inline-block;
+  background: var(--brand);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 24px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.callout {
+  border-left: 4px solid var(--brand);
+  background: var(--surface);
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+footer {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  color: var(--muted);
+  font-size: 13px;
+}
+footer a { color: var(--muted); }

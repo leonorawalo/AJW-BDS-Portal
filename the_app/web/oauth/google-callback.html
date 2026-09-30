@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Connecting Google… · AJW BAGS Portal</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0;
+           min-height: 100vh; display: grid; place-items: center; background: #f7f7f7; color: #333; }
+    p { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <p>Finishing your Google connection…</p>
+  <script>
+    // Google's OAuth redirect lands here, on AJW's own verified domain (Google
+    // verification requires redirect URIs on domains the developer owns, and
+    // supabase.co isn't one). Pass Google's result (code + state, or error)
+    // straight on to the google-oauth Edge Function, which validates the
+    // state and exchanges the code server-side. Nothing is stored or read here.
+    window.location.replace(
+      'https://cgnmnqjyvlgyndhmicjl.supabase.co/functions/v1/google-oauth' + window.location.search
+    );
+  </script>
+</body>
+</html>
