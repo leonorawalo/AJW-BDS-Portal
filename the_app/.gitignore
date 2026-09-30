@@ -66,3 +66,15 @@ edge-functions.txt
 
 # Firebase CLI deploy cache
 .firebase/
+
+# DO_NOT_BREAK.md section 1: these must never be ignored (keep in sync with
+# that section and scripts/check_do_not_break.js). .env is deliberately NOT
+# re-included here: it stays local and out of git.
+!DO_NOT_BREAK.md
+!web/googlec7b934ad5a1b7fa7.html
+!web/about.html
+!web/privacy.html
+!web/terms.html
+!web/legal.css
+!web/oauth/google-callback.html
+!supabase/config.toml

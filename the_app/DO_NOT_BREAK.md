@@ -1,0 +1,164 @@
+# DO NOT BREAK — AJW BAGS Portal invariants
+
+Things that must stay in place, or must match each other across systems,
+for as long as the portal runs on this architecture
+(Flutter web + Android · Supabase · Firebase · Google Cloud).
+No secret values are stored here, only names and locations.
+
+If you change one side of a pair below, change the other side the same day.
+
+---------------------------------------------------------------------
+## 0. Which project is which (they look alike!)
+
+| System | ID (check the address bar, e.g. `?project=`) | Used for |
+|---|---|---|
+| Supabase | `ajw-bds-portal`, ref `cgnmnqjyvlgyndhmicjl` | Database, logins, files, Edge Functions, invite emails |
+| Google Cloud | `ajw-bags-portal` | Google suite: Calendar, Meet, Drive, Docs, Sheets, Slides, Gmail (the Connect button). This is the project Google verifies. |
+| Google Cloud | `ajw-bags-sign-in` | ONLY the "Continue with Google" login button |
+| Google Cloud / Firebase | `ajwafrica-bags-portal` | Push notifications (FCM) and web hosting |
+
+`ajw-bags-portal` and `ajwafrica-bags-portal` both show the name
+"AJW BAGS Portal". Always check the ID, not the name.
+
+Live site: https://ajwafrica-bags-portal.web.app
+
+---------------------------------------------------------------------
+## 1. Files that must NEVER be deleted from the repo
+
+| File | Why |
+|---|---|
+| `web/googlec7b934ad5a1b7fa7.html` | Proves to Google that we own the site (Search Console). Deleted + redeployed = site un-verified = Google verification breaks. |
+| `web/about.html`, `web/privacy.html`, `web/terms.html`, `web/legal.css` | Linked from Google's consent screen (Branding) in BOTH Google projects. Google checks they stay live. |
+| `web/oauth/google-callback.html` | The redirect relay Google sends users back to after Connect. |
+| `.env` (listed under `flutter: assets:` in `pubspec.yaml`) | App config (Supabase URL + anon key). Removing it from assets = white screen. |
+| `supabase/config.toml` | Holds each Edge Function's "Verify JWT" setting. |
+
+`firebase.json` must NOT ignore dotfiles (the app needs `assets/.env` served).
+
+This list is enforced in two places. Change all three together:
+- `.gitignore` ends with `!` lines so these files can never be ignored
+  (except `.env`, which stays out of git on purpose).
+- `scripts/check_do_not_break.js` runs before every hosting deploy
+  (`predeploy` in `firebase.json`). It fails the deploy if a file here is
+  missing, if `.env` is gone from pubspec assets, if `firebase.json`
+  ignores dotfiles, or if the web build is missing any of them.
+
+---------------------------------------------------------------------
+## 2. Google: things that must match
+
+### 2a. Suite / Connect (project `ajw-bags-portal`, client "Supabase Auth")
+- Client ID + secret == Supabase Edge Function secrets
+  `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`.
+- The redirect URI the code uses (Edge secret `GOOGLE_OAUTH_REDIRECT_URI`,
+  e.g. `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`)
+  MUST be listed under that client's Authorised redirect URIs.
+- Every scope the `google-oauth` function requests MUST be listed under
+  Google Auth Platform → Data access:
+  openid, userinfo.email, userinfo.profile, calendar.freebusy, drive.file
+  (non-sensitive); calendar.events, gmail.send (sensitive).
+  Adding a scope later = add it in the console + users reconnect +
+  Google re-review.
+- Enabled APIs: Calendar, Drive, Docs, Sheets, Slides, Gmail.
+- Authorised domain: `ajwafrica-bags-portal.web.app` only (no supabase.co here).
+- Privacy Policy must describe every Google permission and keep Google's
+  "Limited Use" statement.
+
+### 2b. Login button (project `ajw-bags-sign-in`, client "Supabase sign-in")
+- Client ID + secret == Supabase → Authentication → Sign In / Providers → Google.
+- Redirect URI: `https://cgnmnqjyvlgyndhmicjl.supabase.co/auth/v1/callback`
+- Scopes: openid, email, profile ONLY. Don't add a logo or sensitive
+  scopes, or this project will need verification too.
+- It only signs in to EXISTING accounts (a database rule blocks new
+  accounts from Google).
+
+### 2c. Search Console
+- Property `https://ajwafrica-bags-portal.web.app/` verified by the HTML
+  file in section 1, under the Google account that owns the Cloud projects.
+
+---------------------------------------------------------------------
+## 3. Supabase settings that must match the app
+
+- Authentication → URL Configuration:
+  - Site URL = `https://ajwafrica-bags-portal.web.app`
+  - Redirect URLs include `https://ajwafrica-bags-portal.web.app/**`,
+    `http://localhost:3000/**`, `ajwbags://login-callback`
+- `ajwbags://login-callback` == the intent filter in
+  `android/app/src/main/AndroidManifest.xml` (scheme `ajwbags`, host `login-callback`).
+- "Allow new users to sign up" = OFF (people only join by Admin invite).
+- Email OTP expiration = 86400 (24 h), so invite links last a day.
+- Invite email template link MUST be exactly:
+  `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=invite`
+- Templates are only editable while custom SMTP is on.
+- SMTP = Gmail `ajw.bags.portal@gmail.com` with an APP PASSWORD.
+  Changing that Gmail's password or turning off 2-Step Verification
+  kills the app password, and then invite emails stop.
+- Storage bucket `downloads` (public) holds `ajw-bags-portal.apk`; the
+  invite template links to that exact file name.
+
+### Edge Function secrets (names must match the code)
+GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET · GOOGLE_OAUTH_REDIRECT_URI ·
+APP_URL · FIREBASE_PROJECT_ID · FIREBASE_CLIENT_EMAIL ·
+FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
+(SUPABASE_URL / SERVICE_ROLE_KEY / ANON_KEY are automatic.)
+
+### Edge Functions
+- Names must be exact, and deploy via the CLI only (the dashboard invents
+  random names like "swift-processor"): send-push, google-oauth,
+  calendar-sessions, google-export, invite-user, manage-users,
+  gmail-send, drive-files.
+- Verify JWT: OFF for `send-push` and `google-oauth`, ON for the rest
+  (kept in `supabase/config.toml`).
+
+### Push notifications
+- 4 Database Webhooks (users, consultant_assignments, tasks insert,
+  tasks update) → `.../functions/v1/send-push`, header
+  `x-webhook-secret` == Edge secret `WEBHOOK_SECRET`.
+- Firebase service-account key in use: `2c6526fc66…` (stored only in the
+  FIREBASE_* secrets). To rotate: generate new key → update secrets →
+  delete the old key.
+- One phone = one user at a time (`device_tokens` is unique per token).
+
+---------------------------------------------------------------------
+## 4. Database rules
+
+- Never edit a migration that has already been applied; fix things in a
+  NEW migration.
+- "Recorded as applied" ≠ "live". Check the live DB when behaviour and
+  migrations disagree.
+- "Automatically expose new tables" is OFF. Every new table needs
+  explicit GRANTs: to `authenticated` (plus RLS policies) if the app
+  uses it, and to `service_role` if an Edge Function uses it.
+- The audit log is written only by database triggers, never by the app.
+- Non-admins can't change role/status/specialization/email (a trigger
+  guards it). Don't remove it.
+
+---------------------------------------------------------------------
+## 5. Deploying and building
+
+- Web: after any app change → `flutter build web --release` →
+  `npx firebase-tools deploy --only hosting`. The live site does not
+  update by itself. The deploy runs `scripts/check_do_not_break.js`
+  first and stops if it fails. Fix the cause, don't remove the check.
+- Android: the APK only changes when rebuilt AND re-uploaded to
+  Storage → downloads as `ajw-bags-portal.apk`.
+- Android release signing key (once created): NEVER lose the keystore or
+  its password. Back it up outside the repo and outside OneDrive. Losing it
+  = the app can never be updated under the same identity.
+
+---------------------------------------------------------------------
+## 6. Never commit
+
+- `client_secret*.json` (Google), Firebase service-account JSON,
+  keystores / `key.properties`, SMTP/app passwords.
+- `.env` holds ONLY the Supabase URL + anon key (public by design).
+  Never put the service_role key or any other secret in it; it ships
+  inside the app.
+
+---------------------------------------------------------------------
+## 7. While Google's app is in Testing / unverified
+
+- Testing: only emails under Audience → Test users can Connect.
+- Published but unverified: anyone can connect, sees an "unverified app"
+  warning, max 100 users ever.
+- Verified: no warning, no cap. Keep scopes, branding pages and domain
+  exactly as submitted, or Google may ask for re-review.
