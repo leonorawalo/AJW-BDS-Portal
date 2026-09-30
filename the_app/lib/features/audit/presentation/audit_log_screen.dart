@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../enterprises/providers/enterprise_providers.dart';
 import '../../user_management/providers/user_management_providers.dart';
 import '../data/audit_repository.dart';
 import '../models/audit_entry.dart';
 import '../providers/audit_providers.dart';
+import '../../../core/widgets/app_shell.dart';
 
 /// Admin: the audit log (Phase 9c), newest first, filterable by
 /// enterprise, user (what they did or what happened to them) and date.
@@ -88,13 +88,9 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     final localizations = MaterialLocalizations.of(context);
     final hasFilters = _enterpriseId != null || _userId != null || _dates != null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audit log'),
-        leading: BackButton(
-          onPressed: () => context.canPop() ? context.pop() : context.go('/admin'),
-        ),
-      ),
+    return AppShell(
+      title: 'Audit log',
+      globalKey: 'audit',
       body: Column(
         children: [
           Padding(

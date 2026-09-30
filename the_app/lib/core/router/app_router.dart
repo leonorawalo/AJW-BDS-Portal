@@ -165,6 +165,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'enterprises/:enterpriseId',
             builder: (context, state) => EnterpriseWorkspaceScreen(
               enterpriseId: state.pathParameters['enterpriseId']!,
+              section: state.uri.queryParameters['section'],
             ),
             routes: [
               GoRoute(
@@ -197,13 +198,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => ConsultantWorkstreamScreen(
               enterpriseId: state.pathParameters['enterpriseId']!,
               enterpriseName: state.uri.queryParameters['name'] ?? 'Enterprise',
+              section: state.uri.queryParameters['section'],
             ),
           ),
         ],
       ),
       GoRoute(
         path: '/owner',
-        builder: (context, state) => const OwnerWorkstreamScreen(),
+        builder: (context, state) => OwnerWorkstreamScreen(section: state.uri.queryParameters['section']),
       ),
       GoRoute(
         path: '/workstream/enterprises/:enterpriseId/tasks/:taskId',

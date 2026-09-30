@@ -9,6 +9,8 @@ import '../models/session_person.dart';
 import '../providers/calendar_providers.dart';
 import 'google_calendar_connection_card.dart';
 import 'schedule_session_dialog.dart';
+import '../../email/data/gmail_links.dart';
+import '../../email/presentation/compose_email_dialog.dart';
 
 /// Meetings on one enterprise. Admins, Consultants and Owners can all
 /// connect their own Google Calendar and schedule meetings (who they can
@@ -188,6 +190,28 @@ class _SessionCard extends ConsumerWidget {
                         mode: LaunchMode.externalApplication,
                       ),
                     ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.mail_outline, size: 18),
+                    label: const Text('Email participants'),
+                    onPressed: () => showComposeEmailDialog(
+                      context,
+                      ref,
+                      enterpriseId: session.enterpriseId,
+                      preselectUserIds: {for (final p in people) if (p.userId != myId) p.userId},
+                      subject: 'Re: ${session.title}',
+                    ),
+                  ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('Find emails'),
+                    onPressed: () async {
+                      final connection = await ref.read(myGoogleConnectionProvider.future).catchError((_) => null);
+                      await launchUrl(
+                        gmailSearchUri(phrase: session.title, accountEmail: connection?.googleEmail),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                  ),
                   if (canCancel)
                     TextButton(
                       onPressed: () => _cancel(context, ref),

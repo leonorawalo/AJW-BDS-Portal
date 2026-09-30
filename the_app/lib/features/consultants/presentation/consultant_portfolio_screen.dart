@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../auth/providers/auth_providers.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
 
 import '../../enterprises/models/enterprise.dart'; //fix for the ".label" error that was occuring in line 55 (was line 53 before) of this file. The Enterprise model was not imported, so the compiler could not find the "label" property of the lifecycleStatus enum.
+import '../../../core/widgets/app_shell.dart';
 
-import '../../../core/widgets/user_profile_badge.dart';
 
 /// Reuses enterprisesListProvider — the *same* query Admin's screen uses.
 /// What comes back differs per role purely because of RLS
@@ -21,18 +20,9 @@ class ConsultantPortfolioScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My portfolio'),
-        actions: [
-          const UserProfileBadge(),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
-          ),
-        ],
-      ),
+    return AppShell(
+      title: 'My portfolio',
+      globalKey: 'portfolio',
       body: enterprisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(
@@ -54,9 +44,9 @@ class ConsultantPortfolioScreen extends ConsumerWidget {
                 final enterprise = enterprises[index];
                 return Card(
                   child: ListTile(
-                    onTap: () => context.push(
-  '/consultant/enterprises/${enterprise.id}?name=${Uri.encodeComponent(enterprise.businessName)}',
-),
+                    onTap: () => context.go(
+                      '/consultant/enterprises/${enterprise.id}?name=${Uri.encodeComponent(enterprise.businessName)}',
+                    ),
                     title: Text(enterprise.businessName),
                     subtitle: Text(enterprise.county ?? 'No county set'),
                     trailing: Text(enterprise.lifecycleStatus.label),

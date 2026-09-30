@@ -24,7 +24,14 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
-const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/google-oauth`;
+// Google verification needs redirect URIs on a domain AJW owns, so in
+// production this is set to the relay page on the hosted site
+// (https://ajwafrica-bags-portal.web.app/oauth/google-callback.html), which
+// forwards Google's result here unchanged. Unset = the direct function URL
+// (the pre-verification setup). The same value must be listed as an
+// Authorised redirect URI on the OAuth client, and is used for both the
+// consent URL and the token exchange.
+const REDIRECT_URI = Deno.env.get('GOOGLE_OAUTH_REDIRECT_URI') ?? `${SUPABASE_URL}/functions/v1/google-oauth`;
 const SCOPES = [
   'openid',
   'email',
@@ -35,6 +42,9 @@ const SCOPES = [
   // Exports to Docs/Sheets/Slides (google-export). drive.file only sees
   // files this app created — never the rest of the user's Drive.
   'https://www.googleapis.com/auth/drive.file',
+  // "Write email" (gmail-send): send-only, as the user, from their own
+  // Gmail. No read access to their mailbox.
+  'https://www.googleapis.com/auth/gmail.send',
 ].join(' ');
 /// A consent link older than this is refused on the way back.
 const STATE_TTL_MS = 15 * 60 * 1000;

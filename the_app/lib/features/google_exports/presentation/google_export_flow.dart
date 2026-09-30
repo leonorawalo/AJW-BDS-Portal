@@ -73,10 +73,11 @@ Future<void> offerGoogleConnect(BuildContext context, WidgetRef ref, {required b
       title: Text(reconnect ? 'Reconnect Google' : 'Connect Google'),
       content: Text(
         reconnect
-            ? 'Your Google connection predates exports. Reconnect once to allow the '
-                'app to create files in your Drive (it can only see files it creates).'
-            : 'Connect your Google account to export to Docs, Sheets and Slides. '
-                'Files are created in your own Drive, and the app can only see files it creates.',
+            ? 'Your Google connection was made before this feature existed. Reconnect once to '
+                'grant the newer permissions (Drive files the app creates, and sending email as you).'
+            : 'Connect your Google account to use meetings, exports and email. Files and emails '
+                'are created in your own Google account; the app can only see files it creates '
+                'and cannot read your email.',
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Not now')),

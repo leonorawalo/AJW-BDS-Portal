@@ -5,9 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
 
-import '../../auth/providers/auth_providers.dart';
-import '../../../core/widgets/user_profile_badge.dart';
 import '../../google_exports/presentation/portfolio_export_button.dart';
+import '../../../core/widgets/app_shell.dart';
 
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
@@ -16,24 +15,10 @@ class EnterpriseListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Enterprises'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.manage_accounts),
-            tooltip: 'Users',
-            onPressed: () => context.go('/admin/users'),
-          ),
-          const PortfolioExportButton(),
-          const UserProfileBadge(),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
-          ),
-        ],
-      ),
+    return AppShell(
+      title: 'Enterprises',
+      globalKey: 'enterprises',
+      actions: const [PortfolioExportButton()],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/admin/enterprises/new'),
         icon: const Icon(Icons.add),

@@ -10,6 +10,7 @@ import '../../enterprises/providers/enterprise_providers.dart';
 import '../../legal_workstream/models/task_template.dart';
 import '../../legal_workstream/providers/legal_workstream_providers.dart';
 import '../providers/consultant_assignment_providers.dart';
+import '../../../core/widgets/labeled_value.dart';
 
 class AssignConsultantScreen extends ConsumerStatefulWidget {
   const AssignConsultantScreen({super.key, this.preselectedEnterpriseId});
@@ -154,10 +155,9 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
                           (e) => e.id == widget.preselectedEnterpriseId,
                           orElse: () => enterprises.first,
                         );
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Enterprise'),
-                          subtitle: Text(match.businessName),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: LabeledValue(label: 'Enterprise', value: match.businessName),
                         );
                       },
                     )

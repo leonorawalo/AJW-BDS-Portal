@@ -6,6 +6,7 @@ import '../../enterprises/models/enterprise.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
 import '../models/loan_readiness.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../../core/widgets/labeled_value.dart';
 
 /// Loan-readiness dashboard — computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
@@ -347,8 +348,10 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               enabled: !widget.readOnly,
-              title: const Text('Business started'),
-              subtitle: Text(_businessStartedDate?.toLocal().toString().split(' ').first ?? 'Not set'),
+              title: LabeledValue(
+                label: 'Business started',
+                value: _businessStartedDate?.toLocal().toString().split(' ').first ?? 'Not set',
+              ),
               trailing: widget.readOnly ? null : const Icon(Icons.calendar_today),
               onTap: widget.readOnly ? null : _pickDate,
             ),

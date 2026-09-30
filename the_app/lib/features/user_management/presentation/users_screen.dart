@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/progress_dialog.dart';
@@ -10,6 +9,9 @@ import '../models/managed_user.dart';
 import '../providers/user_management_providers.dart';
 import 'invite_flow.dart';
 import 'invite_user_dialog.dart';
+import '../../email/models/email_contact.dart';
+import '../../email/presentation/compose_email_dialog.dart';
+import '../../../core/widgets/app_shell.dart';
 
 /// Admin: every account, with role, specialization and status
 /// (invited / active / suspended), plus resend invite, change
@@ -36,18 +38,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(managedUsersProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Users'),
-        leading: BackButton(onPressed: () => context.go('/admin')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Audit log',
-            onPressed: () => context.push('/admin/audit'),
-          ),
-        ],
-      ),
+    return AppShell(
+      title: 'Users',
+      globalKey: 'users',
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text('Invite user'),
@@ -121,7 +114,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   }
 }
 
-enum _Action { resendInvite, shareLink, changeSpecialization, suspend, reactivate }
+enum _Action { email, resendInvite, shareLink, changeSpecialization, suspend, reactivate }
 
 class _UserTile extends ConsumerWidget {
   const _UserTile({required this.user});
@@ -140,6 +133,15 @@ class _UserTile extends ConsumerWidget {
     final repo = ref.read(userAdminRepositoryProvider);
     try {
       switch (action) {
+        case _Action.email:
+          await showComposeEmailDialog(
+            context,
+            ref,
+            directRecipients: [
+              EmailContact(userId: user.id, fullName: user.fullName, roleName: user.roleName, email: user.email),
+            ],
+          );
+          return;
         case _Action.resendInvite:
           await runInvite(context, ref, _inviteRequest);
         case _Action.shareLink:
@@ -212,6 +214,8 @@ class _UserTile extends ConsumerWidget {
     ].join(' · ');
 
     final actions = <PopupMenuEntry<_Action>>[
+      if (!isMe && user.state != AccountState.suspended)
+        const PopupMenuItem(value: _Action.email, child: Text('Email (from your Gmail)')),
       if (user.state == AccountState.invited) ...const [
         PopupMenuItem(value: _Action.resendInvite, child: Text('Resend invite email')),
         PopupMenuItem(value: _Action.shareLink, child: Text('Share invite link')),

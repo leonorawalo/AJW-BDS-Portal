@@ -45,3 +45,77 @@ export async function accessTokenFor(userId: string): Promise<string> {
   }
   return body.access_token as string;
 }
+
+const FOLDER_NAME = 'AJW BAGS Portal';
+const FOLDER_MARKER = 'ajwBagsPortalFolder';
+
+/// The user's token lacks a scope added after they connected (e.g.
+/// drive.file, gmail.send) — they need to reconnect once.
+export class ReconnectNeededError extends Error {}
+
+/// fetch against a Google API with the user's token. A 403 about scopes
+/// means the connection predates drive.file.
+export async function google(token: string, url: string, init: RequestInit = {}): Promise<Record<string, unknown>> {
+  const res = await fetch(url, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, ...(init.headers ?? {}) },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const message: string = body.error?.message ?? res.statusText;
+    const insufficient =
+      res.status === 403 &&
+      (/insufficient/i.test(message) || JSON.stringify(body).includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT'));
+    if (insufficient) throw new ReconnectNeededError();
+    throw new Error(`Google: ${message}`);
+  }
+  return body;
+}
+
+/// The app's own folder, found by a private marker property (drive.file
+/// can list files this app created), created on first export.
+export async function ensureFolder(token: string): Promise<string> {
+  const q = `appProperties has { key='${FOLDER_MARKER}' and value='1' } and trashed = false`;
+  const found = await google(
+    token,
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&spaces=drive`,
+  );
+  const files = found.files as { id: string }[] | undefined;
+  if (files && files.length > 0) return files[0].id;
+
+  const created = await google(token, 'https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: FOLDER_NAME,
+      mimeType: 'application/vnd.google-apps.folder',
+      appProperties: { [FOLDER_MARKER]: '1' },
+    }),
+  });
+  return created.id as string;
+}
+
+/// A per-enterprise subfolder inside the app folder, found by a private
+/// marker (the enterprise id), so renaming it in Drive doesn't break it.
+export async function ensureEnterpriseFolder(token: string, enterpriseId: string, name: string): Promise<string> {
+  const parent = await ensureFolder(token);
+  const q = `appProperties has { key='ajwBagsEnterprise' and value='${enterpriseId}' } and trashed = false`;
+  const found = await google(
+    token,
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&spaces=drive`,
+  );
+  const files = found.files as { id: string }[] | undefined;
+  if (files && files.length > 0) return files[0].id;
+
+  const created = await google(token, 'https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parent],
+      appProperties: { ajwBagsEnterprise: enterpriseId },
+    }),
+  });
+  return created.id as string;
+}
