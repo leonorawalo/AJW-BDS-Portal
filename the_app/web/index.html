@@ -31,15 +31,16 @@
 
   <title>AJW BAGS Portal</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#D13B3B">
 
   <!-- Loading screen: shown instantly while the app (several MB) downloads,
        removed on Flutter's first frame. Colours match lib/core/theme/app_colors.dart. -->
   <style>
-    html, body { margin: 0; height: 100%; background: #F7F7F7; }
+    html, body { margin: 0; height: 100%; background: #FFFFFF; }
     #ajw-splash {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 20px; background: #F7F7F7; color: #494949;
+      gap: 20px; background: #FFFFFF; color: #494949;
       font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       transition: opacity .35s ease;
     }
@@ -48,7 +49,7 @@
     .ajw-dots { display: flex; gap: 10px; }
     .ajw-dots span {
       width: 10px; height: 10px; border-radius: 50%;
-      background: #7A1F2B; opacity: .25;
+      background: #D13B3B; opacity: .25;
       animation: ajw-pulse 1.4s ease-in-out infinite;
     }
     .ajw-dots span:nth-child(2) { background: #494949; animation-delay: .2s; }
@@ -63,7 +64,7 @@
 </head>
 <body>
   <div id="ajw-splash" role="status" aria-live="polite">
-    <img src="assets/assets/images/ajw_logo.webp" alt="AJW Africa">
+    <img src="brand/ajw-mark.svg" alt="AJW Africa">
     <div>Loading AJW BAGS Portal…</div>
     <div class="ajw-dots" aria-hidden="true"><span></span><span></span><span></span></div>
     <div id="ajw-splash-slow">This is taking a while on this connection. Please keep the page open.</div>

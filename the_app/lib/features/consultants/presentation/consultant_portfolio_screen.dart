@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../enterprises/providers/enterprise_providers.dart';
 
-import '../../enterprises/models/enterprise.dart'; //fix for the ".label" error that was occuring in line 55 (was line 53 before) of this file. The Enterprise model was not imported, so the compiler could not find the "label" property of the lifecycleStatus enum.
 import '../../../core/widgets/app_shell.dart';
-
+import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../enterprises/presentation/enterprise_grid.dart';
 
 /// Reuses enterprisesListProvider — the *same* query Admin's screen uses.
 /// What comes back differs per role purely because of RLS
@@ -24,38 +25,29 @@ class ConsultantPortfolioScreen extends ConsumerWidget {
       title: 'My portfolio',
       globalKey: 'portfolio',
       body: enterprisesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(
-          child: Text('Could not load your portfolio. Pull to refresh or try again.'),
+        loading: () => const AjwLoadingView(),
+        error: (_, _) => EmptyState(
+          isError: true,
+          icon: Icons.cloud_off_outlined,
+          title: "Couldn't load your portfolio",
+          message: 'Check your connection and try again.',
+          action: OutlinedButton(
+            onPressed: () => ref.invalidate(enterprisesListProvider),
+            child: const Text('Try again'),
+          ),
         ),
-        data: (enterprises) {
-          if (enterprises.isEmpty) {
-            return const Center(
-              child: Text('No enterprises assigned to you yet.'),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(enterprisesListProvider),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: enterprises.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final enterprise = enterprises[index];
-                return Card(
-                  child: ListTile(
-                    onTap: () => context.go(
-                      '/consultant/enterprises/${enterprise.id}?name=${Uri.encodeComponent(enterprise.businessName)}',
-                    ),
-                    title: Text(enterprise.businessName),
-                    subtitle: Text(enterprise.county ?? 'No county set'),
-                    trailing: Text(enterprise.lifecycleStatus.label),
-                  ),
-                );
-              },
-            ),
-          );
-        },
+        data: (enterprises) => EnterpriseGrid(
+          enterprises: enterprises,
+          onRefresh: () async => ref.invalidate(enterprisesListProvider),
+          onOpen: (e) => context.go(
+            '/consultant/enterprises/${e.id}?name=${Uri.encodeComponent(e.businessName)}',
+          ),
+          emptyState: const EmptyState(
+            icon: Icons.work_outline,
+            title: 'No enterprises assigned yet',
+            message: 'When an administrator assigns you to an enterprise, it will appear here.',
+          ),
+        ),
       ),
     );
   }

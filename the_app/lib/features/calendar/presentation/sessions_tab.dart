@@ -11,6 +11,7 @@ import 'google_calendar_connection_card.dart';
 import 'schedule_session_dialog.dart';
 import '../../email/data/gmail_links.dart';
 import '../../email/presentation/compose_email_dialog.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// Meetings on one enterprise. Admins, Consultants and Owners can all
 /// connect their own Google Calendar and schedule meetings (who they can
@@ -53,7 +54,7 @@ class SessionsTab extends ConsumerWidget {
             const GoogleCalendarConnectionCard(),
             const SizedBox(height: 16),
             ...sessionsAsync.when(
-              loading: () => [const Center(child: CircularProgressIndicator())],
+              loading: () => [const AjwLoadingView()],
               error: (_, _) => [const Center(child: Text('Could not load sessions.'))],
               data: (sessions) => _buildSections(context, sessions, people),
             ),

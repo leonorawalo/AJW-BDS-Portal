@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/document.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class DocumentViewerScreen extends ConsumerStatefulWidget {
   const DocumentViewerScreen({super.key, required this.document});
@@ -66,7 +67,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const AjwLoadingView();
     if (_error != null) return Center(child: Text(_error!));
 
     if (_pdfController != null) {

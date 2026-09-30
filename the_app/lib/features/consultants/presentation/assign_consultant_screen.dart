@@ -11,6 +11,7 @@ import '../../legal_workstream/models/task_template.dart';
 import '../../legal_workstream/providers/legal_workstream_providers.dart';
 import '../providers/consultant_assignment_providers.dart';
 import '../../../core/widgets/labeled_value.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class AssignConsultantScreen extends ConsumerStatefulWidget {
   const AssignConsultantScreen({super.key, this.preselectedEnterpriseId});
@@ -305,11 +306,7 @@ class _SpecializationAssignmentCard extends ConsumerWidget {
                   FilledButton(
                     onPressed: (enabled && selectedConsultantId != null && !isSubmitting) ? onAssign : null,
                     child: isSubmitting
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const AjwLoader(dotSize: 6)
                         : const Text('Assign'),
                   ),
                 ],

@@ -13,6 +13,7 @@ import '../../legal_workstream/presentation/recommendations_tab.dart';
 import '../../legal_workstream/presentation/tasks_tab.dart';
 import '../providers/enterprise_providers.dart';
 import 'enterprise_details_tab.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// The Admin's home for a single enterprise. The loan-readiness Dashboard
 /// leads (the programme's purpose), then Tasks, Recommendations,
@@ -65,7 +66,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
         ),
       ],
       body: enterpriseAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AjwLoadingView(),
         error: (_, _) => const Center(child: Text('Could not load this enterprise.')),
         data: (enterprise) {
           if (enterprise == null) return const Center(child: Text('Enterprise not found.'));

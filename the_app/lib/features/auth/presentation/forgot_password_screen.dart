@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ajw_loader.dart';
 import '../providers/auth_providers.dart';
+import 'auth_layout.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -50,51 +54,30 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/login')),
-        title: const Text('Reset password'),
-      ),
-            body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/ajw_logo.webp',
-                    height: 64,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 24),
-                  _emailSent ? _buildConfirmation(context) : _buildForm(context),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return AuthLayout(
+      onBack: () => context.go('/login'),
+      child: _emailSent ? _buildConfirmation(context) : _buildForm(context),
     );
   }
 
   Widget _buildConfirmation(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.mark_email_read_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 16),
-        const Text(
-          'Check your inbox for a link to reset your password.',
-          textAlign: TextAlign.center,
+        Center(
+          child: CircleAvatar(
+            radius: 32,
+            backgroundColor: AppColors.brandRedTint,
+            child: const Icon(Icons.mark_email_read_outlined, size: 30, color: AppColors.brandRed),
+          ),
         ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: () => context.go('/login'),
-          child: const Text('Back to sign in'),
+        const SizedBox(height: Space.xl),
+        AuthHeading(
+          title: 'Check your inbox',
+          subtitle: 'We sent a reset link to ${_emailController.text.trim()}. It can take a minute to arrive.',
         ),
+        const SizedBox(height: Space.xxl),
+        FilledButton(onPressed: () => context.go('/login'), child: const Text('Back to sign in')),
       ],
     );
   }
@@ -104,28 +87,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Enter your email and we\'ll send you a reset link.'),
-          const SizedBox(height: 24),
+          const AuthHeading(
+            title: 'Reset your password',
+            subtitle: "Enter your email and we'll send you a link to choose a new one.",
+          ),
+          const SizedBox(height: Space.xxl),
           if (_errorMessage != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
-              ),
-            ),
-            const SizedBox(height: 16),
+            AuthErrorBanner(_errorMessage!),
+            const SizedBox(height: Space.lg),
           ],
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(labelText: 'Email'),
+            autofillHints: const [AutofillHints.email],
+            onFieldSubmitted: (_) => _isSubmitting ? null : _submit(),
+            decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
             validator: (value) {
               if (value == null || !value.contains('@')) {
                 return 'Enter a valid email address';
@@ -133,16 +110,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: Space.xl),
           FilledButton(
             onPressed: _isSubmitting ? null : _submit,
-            child: _isSubmitting
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Send reset link'),
+            child: _isSubmitting ? const AjwLoader(dotSize: 7) : const Text('Send reset link'),
           ),
         ],
       ),

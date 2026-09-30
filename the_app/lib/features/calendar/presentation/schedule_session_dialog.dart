@@ -5,6 +5,7 @@ import '../data/consultation_session_repository.dart';
 import '../models/participant_availability.dart';
 import '../models/session_invitee.dart';
 import '../providers/calendar_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// Books a meeting on the caller's own Google Calendar and invites the
 /// chosen participants. Who can be picked comes from
@@ -209,7 +210,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
             candidatesAsync.when(
               loading: () => const Padding(
                 padding: EdgeInsets.all(8),
-                child: Center(child: CircularProgressIndicator()),
+                child: AjwLoadingView(),
               ),
               error: (_, _) => const Text('Could not load who you can invite.'),
               data: (candidates) => _ParticipantPicker(
@@ -283,7 +284,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
         FilledButton(
           onPressed: _isSaving ? null : _submit,
           child: _isSaving
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const AjwLoader(dotSize: 6)
               : const Text('Schedule'),
         ),
       ],

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/enterprise_providers.dart';
 import '../../user_management/models/invite_request.dart';
 import '../../user_management/presentation/invite_flow.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class RegisterEnterpriseScreen extends ConsumerStatefulWidget {
   const RegisterEnterpriseScreen({super.key});
@@ -181,11 +182,7 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
                     FilledButton(
                       onPressed: _isSubmitting ? null : _submit,
                       child: _isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const AjwLoader(dotSize: 6)
                           : const Text('Register enterprise'),
                     ),
                   ],

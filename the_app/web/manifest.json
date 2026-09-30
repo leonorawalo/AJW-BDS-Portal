@@ -1,12 +1,12 @@
 {
-    "name": "the_app",
-    "short_name": "the_app",
+    "name": "AJW BAGS Portal",
+    "short_name": "BAGS Portal",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FFFFFF",
+    "theme_color": "#D13B3B",
+    "description": "AJW Africa's Business Advancement and Growth Services portal.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

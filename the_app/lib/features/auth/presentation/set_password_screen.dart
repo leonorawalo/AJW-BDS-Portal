@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ajw_loader.dart';
 import '../providers/auth_providers.dart';
+import 'auth_layout.dart';
 
 /// First sign-in for an invited user (Phase 9a). Reached two ways:
 /// - from the invite email / an Admin-shared link:
@@ -87,82 +90,62 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
   Widget build(BuildContext context) {
     final signedIn = ref.watch(authRepositoryProvider).currentUser != null;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+    return AuthLayout(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AuthHeading(
+            title: 'Welcome to BAGS',
+            subtitle: 'Choose a password to finish setting up your account.',
+          ),
+          const SizedBox(height: Space.xxl),
+          if (_error != null) ...[
+            AuthErrorBanner(_error!),
+            const SizedBox(height: Space.lg),
+          ],
+          if (_verifying)
+            const AjwLoadingView()
+          else if (signedIn)
+            Form(
+              key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(
-                    child: Image.asset('assets/images/ajw_logo.webp', height: 64, fit: BoxFit.contain),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Welcome to the AJW BAGS Portal', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  const Text('Choose a password to finish setting up your account.'),
-                  const SizedBox(height: 24),
-                  if (_error != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
-                      ),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    autofillHints: const [AutofillHints.newPassword],
+                    decoration: const InputDecoration(
+                      labelText: 'New password',
+                      helperText: 'At least 8 characters',
+                      prefixIcon: Icon(Icons.lock_outline),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (_verifying)
-                    const Center(child: CircularProgressIndicator())
-                  else if (signedIn)
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(labelText: 'New password'),
-                            validator: (v) =>
-                                v == null || v.length < 8 ? 'Use at least 8 characters' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _confirmController,
-                            obscureText: true,
-                            decoration: const InputDecoration(labelText: 'Confirm password'),
-                            validator: (v) =>
-                                v != _passwordController.text ? 'Passwords do not match' : null,
-                          ),
-                          const SizedBox(height: 24),
-                          FilledButton(
-                            onPressed: _saving ? null : _save,
-                            child: _saving
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Text('Save password'),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (_error == null)
-                    const Text('Open the invite link from your email to continue.'),
+                    validator: (v) => v == null || v.length < 8 ? 'Use at least 8 characters' : null,
+                  ),
+                  const SizedBox(height: Space.lg),
+                  TextFormField(
+                    controller: _confirmController,
+                    obscureText: true,
+                    autofillHints: const [AutofillHints.newPassword],
+                    onFieldSubmitted: (_) => _saving ? null : _save(),
+                    decoration: const InputDecoration(labelText: 'Confirm password', prefixIcon: Icon(Icons.lock_outline)),
+                    validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                  ),
+                  const SizedBox(height: Space.xl),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving ? const AjwLoader(dotSize: 7) : const Text('Save password'),
+                  ),
                 ],
               ),
+            )
+          else if (_error == null)
+            Text(
+              'Open the invite link from your email to continue.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
-          ),
-        ),
+        ],
       ),
     );
   }

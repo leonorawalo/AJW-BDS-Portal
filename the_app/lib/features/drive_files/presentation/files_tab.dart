@@ -12,6 +12,7 @@ import '../../google_exports/presentation/google_export_flow.dart' show offerGoo
 import '../data/enterprise_file_repository.dart';
 import '../models/enterprise_file.dart';
 import '../providers/drive_files_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// B2: the enterprise's working Google files. Anyone on the enterprise
 /// (Admin, Owner, consultants) can create a Doc / Sheet / Slides; it's
@@ -52,7 +53,7 @@ class FilesTab extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(enterpriseFilesProvider(enterpriseId)),
         child: filesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AjwLoadingView(),
           error: (_, _) => ListView(children: const [
             Padding(padding: EdgeInsets.all(32), child: Center(child: Text('Could not load files.'))),
           ]),

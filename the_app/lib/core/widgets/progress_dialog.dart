@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ajw_loader.dart';
 
 /// Shows a blocking progress dialog while [work] runs; always closes it.
 Future<T> withProgress<T>(BuildContext context, String message, Future<T> work) async {
@@ -9,7 +10,7 @@ Future<T> withProgress<T>(BuildContext context, String message, Future<T> work) 
     builder: (_) => AlertDialog(
       content: Row(
         children: [
-          const CircularProgressIndicator(),
+          const AjwLoader(),
           const SizedBox(width: 16),
           Expanded(child: Text(message)),
         ],

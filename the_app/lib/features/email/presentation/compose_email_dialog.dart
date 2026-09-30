@@ -7,6 +7,7 @@ import '../../google_exports/data/google_export_repository.dart' show GoogleReco
 import '../../google_exports/presentation/google_export_flow.dart' show offerGoogleConnect;
 import '../models/email_contact.dart';
 import '../providers/email_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// "Write email", sent from the user's own Gmail. Either about an
 /// enterprise ([enterpriseId]: recipients picked from its contacts,
@@ -136,7 +137,7 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
               contactsAsync.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.all(8),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: AjwLoadingView(),
                 ),
                 error: (_, _) => const Text('Could not load contacts.'),
                 data: (contacts) {
@@ -186,7 +187,7 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
         TextButton(onPressed: _sending ? null : () => Navigator.pop(context), child: const Text('Cancel')),
         FilledButton.icon(
           icon: _sending
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const AjwLoader(dotSize: 6)
               : const Icon(Icons.send),
           label: const Text('Send via Gmail'),
           onPressed: _sending ? null : _send,

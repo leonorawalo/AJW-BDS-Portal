@@ -5,7 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ajw_loader.dart';
 import '../providers/auth_providers.dart';
+import 'auth_layout.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
   StreamSubscription<AuthState>? _authErrorSub;
 
@@ -29,12 +34,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // A failed Google sign-in comes back as a redirect carrying the error,
     // not as an exception from signInWithGoogle(). On Android it arrives on
     // the auth stream; on web the page reloads with it in the URL.
-    _authErrorSub = ref.read(authRepositoryProvider).authStateChanges.listen(
-      (_) {},
-      onError: (Object e) {
-        if (mounted) setState(() => _errorMessage = _googleErrorMessage(e.toString()));
-      },
-    );
+    _authErrorSub = ref
+        .read(authRepositoryProvider)
+        .authStateChanges
+        .listen(
+          (_) {},
+          onError: (Object e) {
+            if (mounted) setState(() => _errorMessage = _googleErrorMessage(e.toString()));
+          },
+        );
     final urlError = Uri.base.queryParameters['error_description'];
     if (urlError != null) _errorMessage = _googleErrorMessage(urlError);
   }
@@ -80,10 +88,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authRepositoryProvider).signIn(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
+      await ref
+          .read(authRepositoryProvider)
+          .signIn(email: _emailController.text.trim(), password: _passwordController.text);
       // No manual navigation here — routerProvider's redirect picks up
       // the auth state change and sends the user to their role home.
     } on AuthException catch (e) {
@@ -97,106 +104,101 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/ajw_logo.webp',
-                        height: 64,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text('AJW BAGS Portal', style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 8),
-                    const Text('Sign in to continue'),
-                    const SizedBox(height: 32),
-                    if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onErrorContainer,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (value) {
-                        if (value == null || !value.contains('@')) {
-                          return 'Enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push('/forgot-password'),
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Sign in'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _isSubmitting ? null : _signInWithGoogle,
-                      icon: const Icon(Icons.login),
-                      label: const Text('Continue with Google'),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'New to the portal? Your AJW administrator will send you an invite.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+    return AuthLayout(
+      playIntro: true,
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AuthHeading(title: 'Welcome back', subtitle: 'Sign in to your BAGS workspace.'),
+              const SizedBox(height: Space.xxl),
+              if (_errorMessage != null) ...[AuthErrorBanner(_errorMessage!), const SizedBox(height: Space.lg)],
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+                validator: (value) {
+                  if (value == null || !value.contains('@')) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: Space.lg),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _isSubmitting ? null : _submit(),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Enter your password';
+                  }
+                  return null;
+                },
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => context.push('/forgot-password'),
+                  child: const Text('Forgot password?'),
                 ),
               ),
-            ),
+              const SizedBox(height: Space.sm),
+              FilledButton(
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting ? const AjwLoader(dotSize: 7) : const Text('Sign in'),
+              ),
+              const SizedBox(height: Space.lg),
+              const _OrDivider(),
+              const SizedBox(height: Space.lg),
+              OutlinedButton.icon(
+                onPressed: _isSubmitting ? null : _signInWithGoogle,
+                icon: const Icon(Icons.account_circle_outlined),
+                label: const Text('Continue with Google'),
+              ),
+              const SizedBox(height: Space.xl),
+              Text(
+                'New to the portal? Your AJW administrator will send you an invite.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.md),
+          child: Text('or', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.charcoalSoft)),
+        ),
+        const Expanded(child: Divider()),
+      ],
     );
   }
 }

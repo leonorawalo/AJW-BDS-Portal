@@ -7,6 +7,11 @@ import '../../enterprises/providers/enterprise_providers.dart';
 import '../models/loan_readiness.dart';
 import '../providers/legal_workstream_providers.dart';
 import '../../../core/widgets/labeled_value.dart';
+import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/greeting_header.dart';
+import '../../../core/widgets/status_chip.dart';
 
 /// Loan-readiness dashboard — computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
@@ -16,10 +21,18 @@ import '../../../core/widgets/labeled_value.dart';
 /// Readiness, the KCB checklist, and red flags all update automatically
 /// as the consultant completes real ToR tasks.
 class AssessmentDashboardTab extends ConsumerWidget {
-  const AssessmentDashboardTab({super.key, required this.enterpriseId, required this.readOnly});
+  const AssessmentDashboardTab({
+    super.key,
+    required this.enterpriseId,
+    required this.readOnly,
+    this.showGreeting = false,
+  });
 
   final String enterpriseId;
   final bool readOnly;
+
+  /// The Owner's home: greet them above their enterprise's scores.
+  final bool showGreeting;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,10 +40,15 @@ class AssessmentDashboardTab extends ConsumerWidget {
     final completedAsync = ref.watch(completedLoanReadinessTitlesProvider(enterpriseId));
 
     if (enterpriseAsync.isLoading || completedAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AjwLoadingView();
     }
     if (enterpriseAsync.hasError || completedAsync.hasError) {
-      return const Center(child: Text('Could not load loan-readiness data.'));
+      return const EmptyState(
+        isError: true,
+        icon: Icons.cloud_off_outlined,
+        title: "Couldn't load loan readiness",
+        message: 'Check your connection and try again.',
+      );
     }
 
     final enterprise = enterpriseAsync.value;
@@ -45,76 +63,189 @@ class AssessmentDashboardTab extends ConsumerWidget {
     final kcbMet = LoanReadiness.kcbRequirementsMet(inputs);
     final flags = LoanReadiness.redFlags(inputs);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final kcbTotal = LoanReadiness.kcbRequirements(inputs).length;
+    final text = Theme.of(context).textTheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 900;
+        final scores = [
+          _ScoreCard(label: 'Business health', score: businessHealth, compact: !wide),
+          _ScoreCard(label: 'Credit readiness', score: creditReadiness, compact: !wide),
+          _KcbCard(met: kcbMet.length, total: kcbTotal),
+        ];
+        final facts = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: _ScoreBadge(label: 'Business Health', score: businessHealth)),
-            const SizedBox(width: 12),
-            Expanded(child: _ScoreBadge(label: 'Credit Readiness', score: creditReadiness)),
+            _SectionHeader(
+              title: 'Business facts',
+              subtitle: readOnly
+                  ? 'Kept up to date by your consultant.'
+                  : 'Not part of any task. Set them once, and update them when you learn more.',
+            ),
+            _EditableFacts(enterprise: enterprise, readOnly: readOnly),
           ],
-        ),
-        const SizedBox(height: 12),
-        _KcbProgress(met: kcbMet.length, total: LoanReadiness.kcbRequirements(inputs).length),
-        const SizedBox(height: 12),
-        _RedFlagsList(flags: flags),
-        const SizedBox(height: 24),
-        Text('Facts nothing else tracks', style: Theme.of(context).textTheme.titleMedium),
-        Text(
-          "These three aren't in any task — set them once, update when you learn better.",
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 8),
-        _EditableFacts(enterprise: enterprise, readOnly: readOnly),
-        const SizedBox(height: 24),
-        Text('What\'s driving this score', style: Theme.of(context).textTheme.titleMedium),
-        Text(
-          'Automatic — updates itself as ToR tasks are completed in the Tasks tab. '
-          'Nothing here to fill in.',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 8),
-        _DerivedFromTasksList(inputs: inputs),
-      ],
+        );
+        final drivers = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _SectionHeader(
+              title: "What's driving these scores",
+              subtitle: 'Updates by itself as tasks are completed. Nothing to fill in here.',
+            ),
+            _DerivedFromTasksList(inputs: inputs),
+          ],
+        );
+
+        return ListView(
+          padding: PageBody.paddingFor(context),
+          children: [
+            PageBody(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (showGreeting) GreetingHeader(summary: enterprise.businessName),
+                  Text('Loan readiness', style: text.titleLarge),
+                  const SizedBox(height: Space.md),
+                  if (wide)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < scores.length; i++) ...[
+                            if (i > 0) const SizedBox(width: Space.lg),
+                            Expanded(child: scores[i]),
+                          ],
+                        ],
+                      ),
+                    )
+                  else ...[
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: scores[0]),
+                          const SizedBox(width: Space.md),
+                          Expanded(child: scores[1]),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: Space.md),
+                    scores[2],
+                  ],
+                  const SizedBox(height: Space.lg),
+                  _RedFlagsList(flags: flags),
+                  const SizedBox(height: Space.xxl),
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: drivers),
+                        const SizedBox(width: Space.xl),
+                        Expanded(child: facts),
+                      ],
+                    )
+                  else ...[
+                    drivers,
+                    const SizedBox(height: Space.xxl),
+                    facts,
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-/// Score + status band (Strong/Developing/Weak) — the color never
-/// carries meaning alone, it's always paired with the icon and label.
-class _ScoreBadge extends StatelessWidget {
-  const _ScoreBadge({required this.label, required this.score});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.subtitle});
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: text.titleLarge),
+          const SizedBox(height: 2),
+          Text(subtitle, style: text.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+/// Score out of 100 as a ring, with its band (Strong / Developing / Weak).
+/// The colour never carries meaning alone: the band is also written out,
+/// with an icon.
+class _ScoreCard extends StatelessWidget {
+  const _ScoreCard({required this.label, required this.score, this.compact = false});
 
   final String label;
   final double score;
 
+  /// Ring above the band instead of beside it (two cards across a phone).
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
-    final (Color color, IconData icon, String band) = switch (score) {
-      >= 70 => (AppColors.successGreen, Icons.check_circle, 'Strong'),
-      >= 40 => (AppColors.pendingAmber, Icons.warning_amber, 'Developing'),
-      _ => (AppColors.errorRed, Icons.error, 'Weak'),
+    final (Color color, IconData icon, String bandLabel, StatusTone tone) = switch (score) {
+      >= 70 => (AppColors.successGreen, Icons.check_circle, 'Strong', StatusTone.success),
+      >= 40 => (AppColors.pendingAmber, Icons.trending_up, 'Developing', StatusTone.warning),
+      _ => (AppColors.errorRed, Icons.error_outline, 'Weak', StatusTone.danger),
     };
+    final text = Theme.of(context).textTheme;
 
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 6),
-                Text('${score.toStringAsFixed(0)}/100', style: Theme.of(context).textTheme.headlineSmall),
-              ],
+            Text(label, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
+            const SizedBox(height: Space.md),
+            Builder(
+              builder: (context) {
+                final ring = SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: score / 100),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => CustomPaint(
+                      painter: _RingPainter(value: value, color: color),
+                      child: Center(child: Text(score.toStringAsFixed(0), style: text.headlineMedium)),
+                    ),
+                  ),
+                );
+                final band = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StatusChip(bandLabel, tone: tone, icon: icon),
+                    const SizedBox(height: Space.xs),
+                    Text('out of 100', style: text.bodySmall),
+                  ],
+                );
+                // Side by side when there's room; stacked in a narrow card
+                // (two cards across a phone).
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [ring, const SizedBox(height: Space.md), band],
+                  );
+                }
+                return Row(children: [ring, const SizedBox(width: Space.lg), Expanded(child: band)]);
+              },
             ),
-            Text(band, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -122,30 +253,74 @@ class _ScoreBadge extends StatelessWidget {
   }
 }
 
-class _KcbProgress extends StatelessWidget {
-  const _KcbProgress({required this.met, required this.total});
+class _RingPainter extends CustomPainter {
+  _RingPainter({required this.value, required this.color});
+  final double value;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 7.0;
+    final rect = (Offset.zero & size).deflate(stroke / 2);
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..color = AppColors.surfaceSunken;
+    final arc = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    canvas.drawArc(rect, 0, 6.2832, false, track);
+    if (value > 0) canvas.drawArc(rect, -1.5708, 6.2832 * value.clamp(0.0, 1.0), false, arc);
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) => old.value != value || old.color != color;
+}
+
+class _KcbCard extends StatelessWidget {
+  const _KcbCard({required this.met, required this.total});
 
   final int met;
   final int total;
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final ratio = total == 0 ? 0.0 : met / total;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('KCB MSME readiness: $met/$total', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
+            Text('KCB MSME checklist', style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
+            const SizedBox(height: Space.md),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('$met', style: text.displaySmall),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4, left: 4),
+                  child: Text('of $total met', style: text.bodyMedium?.copyWith(color: AppColors.charcoalSoft)),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.md),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: met / total,
-                minHeight: 8,
-                backgroundColor: AppColors.lightGray.withValues(alpha: 0.3),
-                valueColor: const AlwaysStoppedAnimation(AppColors.charcoal),
+              borderRadius: BorderRadius.circular(999),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: ratio),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 8,
+                  backgroundColor: AppColors.surfaceSunken,
+                  valueColor: const AlwaysStoppedAnimation(AppColors.brandRed),
+                ),
               ),
             ),
           ],
@@ -162,35 +337,58 @@ class _RedFlagsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     if (flags.isEmpty) {
-      return const Row(
-        children: [
-          Icon(Icons.check_circle_outline, color: AppColors.successGreen, size: 20),
-          SizedBox(width: 8),
-          Text('No red flags right now.'),
-        ],
+      return Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
+          child: Row(
+            children: [
+              const Icon(Icons.verified_outlined, color: AppColors.successGreen, size: 22),
+              const SizedBox(width: Space.md),
+              Text('No red flags right now.', style: text.bodyMedium),
+            ],
+          ),
+        ),
       );
     }
 
     return Card(
       margin: EdgeInsets.zero,
-      color: AppColors.errorRed.withValues(alpha: 0.06),
+      color: const Color(0xFFFFF6F5),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.lg),
+        side: const BorderSide(color: Color(0xFFF6D4CF)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Red flags', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.flag_outlined, color: AppColors.errorRed, size: 20),
+                const SizedBox(width: Space.sm),
+                Text(
+                  '${flags.length} red ${flags.length == 1 ? 'flag' : 'flags'} to resolve',
+                  style: text.titleMedium?.copyWith(color: AppColors.errorRed),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.md),
             for (final flag in flags)
               Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: Space.sm),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline, color: AppColors.errorRed, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(flag)),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: CircleAvatar(radius: 3, backgroundColor: AppColors.errorRed),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: Text(flag, style: text.bodyMedium)),
                   ],
                 ),
               ),
@@ -212,22 +410,45 @@ class _DerivedFromTasksList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = LoanReadiness.drivers(inputs);
+    final text = Theme.of(context).textTheme;
 
     return Card(
       margin: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final (done, label, source) in rows)
-            ListTile(
-              dense: true,
-              leading: Icon(
-                done ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: done ? AppColors.successGreen : AppColors.lightGray,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Space.sm),
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) const Divider(indent: 56),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      rows[i].$1 ? Icons.check_circle : Icons.radio_button_unchecked,
+                      color: rows[i].$1 ? AppColors.successGreen : AppColors.lightGray,
+                      size: 22,
+                    ),
+                    const SizedBox(width: Space.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(rows[i].$2, style: text.bodyMedium?.copyWith(fontWeight: AppFonts.bodyStrong)),
+                          if (!rows[i].$1) ...[
+                            const SizedBox(height: 2),
+                            Text(rows[i].$3, style: text.bodySmall),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              title: Text(label),
-              subtitle: done ? null : Text(source, style: Theme.of(context).textTheme.bodySmall),
-            ),
-        ],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -336,25 +557,70 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     }
   }
 
+  static const _months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  static String _date(DateTime? d) => d == null ? 'Not set' : '${d.day} ${_months[d.month - 1]} ${d.year}';
+
+  static String _money(double? v) {
+    if (v == null) return 'Not set';
+    final digits = v.toStringAsFixed(0);
+    final out = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) out.write(',');
+      out.write(digits[i]);
+    }
+    return 'KSh $out';
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.readOnly) {
+      final e = widget.enterprise;
+      final rows = [
+        ('Business started', _date(e.businessStartedDate)),
+        ('Approximate annual turnover', _money(e.annualTurnover)),
+        ('Loan purpose', (e.loanPurpose ?? '').isEmpty ? 'Not set' : e.loanPurpose!),
+      ];
+      return Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: Space.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const Divider(indent: Space.lg, endIndent: Space.lg),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
+                  child: LabeledValue(label: rows[i].$1, value: rows[i].$2),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Space.lg),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
               enabled: !widget.readOnly,
               title: LabeledValue(
                 label: 'Business started',
-                value: _businessStartedDate?.toLocal().toString().split(' ').first ?? 'Not set',
+                value: _date(_businessStartedDate),
               ),
-              trailing: widget.readOnly ? null : const Icon(Icons.calendar_today),
+              trailing: widget.readOnly ? null : const Icon(Icons.edit_calendar_outlined),
               onTap: widget.readOnly ? null : _pickDate,
             ),
+            const SizedBox(height: Space.sm),
             TextField(
               controller: _turnoverController,
               enabled: !widget.readOnly,
@@ -363,7 +629,7 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
               onSubmitted: (_) => _save(),
               onEditingComplete: _save,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: Space.md),
             TextField(
               controller: _loanPurposeController,
               enabled: !widget.readOnly,
@@ -372,8 +638,8 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
               onEditingComplete: _save,
             ),
             if (_isSaving) ...[
-              const SizedBox(height: 8),
-              const LinearProgressIndicator(),
+              const SizedBox(height: Space.md),
+              const Center(child: AjwLoader(dotSize: 7, semanticsLabel: 'Saving')),
             ],
           ],
         ),

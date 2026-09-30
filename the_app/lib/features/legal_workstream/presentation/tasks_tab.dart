@@ -8,6 +8,7 @@ import '../../consultants/providers/consultant_assignment_providers.dart';
 import '../models/task.dart';
 import '../models/task_template.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class TasksTab extends ConsumerWidget {
   const TasksTab({
@@ -43,7 +44,7 @@ class TasksTab extends ConsumerWidget {
               child: const Icon(Icons.add),
             ),
       body: tasksAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AjwLoadingView(),
         error: (_, _) => const Center(child: Text('Could not load tasks.')),
         data: (tasks) {
           if (tasks.isEmpty) {

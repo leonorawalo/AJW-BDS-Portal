@@ -12,6 +12,7 @@ import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
 import 'tasks_tab.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// The Owner's home: their (single) enterprise's workspace. Sections come
 /// from the side menu (AppShell) and live in the URL (/owner?section=…).
@@ -34,7 +35,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
     return enterprisesAsync.when(
-      loading: () => const AppShell(title: 'My workstream', body: Center(child: CircularProgressIndicator())),
+      loading: () => const AppShell(title: 'My workstream', body: AjwLoadingView()),
       error: (_, _) => const AppShell(title: 'My workstream', body: Center(child: Text('Could not load your enterprise.'))),
       data: (enterprises) {
         if (enterprises.isEmpty) {
@@ -76,7 +77,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             'documents' => DocumentsTab(enterpriseId: enterprise.id, readOnly: false),
             'files' => FilesTab(enterpriseId: enterprise.id),
             'sessions' => SessionsTab(enterpriseId: enterprise.id),
-            _ => AssessmentDashboardTab(enterpriseId: enterprise.id, readOnly: true),
+            _ => AssessmentDashboardTab(enterpriseId: enterprise.id, readOnly: true, showGreeting: true),
           },
         );
       },

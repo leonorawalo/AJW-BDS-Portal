@@ -7,6 +7,7 @@ import '../models/document.dart';
 import '../models/task.dart';
 import '../providers/legal_workstream_providers.dart';
 import 'open_document_viewer.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({
@@ -25,7 +26,7 @@ class TaskDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Task')),
       body: taskAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AjwLoadingView(),
         error: (_, _) => const Center(child: Text('Could not load this task.')),
         data: (task) => SingleChildScrollView(
           padding: const EdgeInsets.all(16),

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
 
 import '../../google_exports/presentation/portfolio_export_button.dart';
 import '../../../core/widgets/app_shell.dart';
+import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/widgets/empty_state.dart';
+import 'enterprise_grid.dart';
 
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
@@ -25,58 +27,27 @@ class EnterpriseListScreen extends ConsumerWidget {
         label: const Text('Register enterprise'),
       ),
       body: enterprisesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text('Could not load enterprises. Pull to refresh or try again.'),
+        loading: () => const AjwLoadingView(),
+        error: (error, _) => EmptyState(
+          isError: true,
+          icon: Icons.cloud_off_outlined,
+          title: "Couldn't load enterprises",
+          message: 'Check your connection and try again.',
+          action: OutlinedButton(
+            onPressed: () => ref.invalidate(enterprisesListProvider),
+            child: const Text('Try again'),
+          ),
         ),
-        data: (enterprises) {
-          if (enterprises.isEmpty) {
-            return const Center(
-              child: Text('No enterprises registered yet. Tap "Register enterprise" to add one.'),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(enterprisesListProvider),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: enterprises.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final enterprise = enterprises[index];
-                return _EnterpriseListTile(
-                  enterprise: enterprise,
-                  onTap: () => context.go('/admin/enterprises/${enterprise.id}'),
-                );
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _EnterpriseListTile extends StatelessWidget {
-  const _EnterpriseListTile({required this.enterprise, required this.onTap});
-
-  final Enterprise enterprise;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        title: Text(enterprise.businessName),
-        subtitle: Text('${enterprise.ownerName} · ${enterprise.county ?? 'No county set'}'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(enterprise.lifecycleStatus.label, style: Theme.of(context).textTheme.bodySmall),
-            if (enterprise.goingConcernStatus == GoingConcernStatus.achieved)
-              const Text('Going Concern ✓', style: TextStyle(fontSize: 11)),
-          ],
+        data: (enterprises) => EnterpriseGrid(
+          enterprises: enterprises,
+          bottomPadding: 72,
+          onRefresh: () async => ref.invalidate(enterprisesListProvider),
+          onOpen: (e) => context.go('/admin/enterprises/${e.id}'),
+          emptyState: const EmptyState(
+            icon: Icons.storefront_outlined,
+            title: 'No enterprises yet',
+            message: 'Register the first enterprise to start tracking its journey to going concern and loan readiness.',
+          ),
         ),
       ),
     );

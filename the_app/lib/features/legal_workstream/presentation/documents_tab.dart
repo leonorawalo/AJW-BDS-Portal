@@ -6,6 +6,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../models/document.dart';
 import '../providers/legal_workstream_providers.dart';
 import 'open_document_viewer.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class DocumentsTab extends ConsumerWidget {
   const DocumentsTab({super.key, required this.enterpriseId, required this.readOnly});
@@ -25,7 +26,7 @@ class DocumentsTab extends ConsumerWidget {
         child: const Icon(Icons.upload_file),
       ),
       body: docsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AjwLoadingView(),
         error: (_, _) => const Center(child: Text('Could not load documents.')),
         data: (docs) {
           if (docs.isEmpty) return const Center(child: Text('No documents yet.'));

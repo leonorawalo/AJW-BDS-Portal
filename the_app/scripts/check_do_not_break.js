@@ -62,6 +62,28 @@ for (const file of BUILT_FILES) {
   }
 }
 
+// Commercial brand fonts (no confirmed web/app licence) must never ship.
+// DO_NOT_BREAK.md section 8.
+const commercialFont = /henderson|jeko|ambit/i;
+function walk(dir, out = []) {
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else out.push(full);
+  }
+  return out;
+}
+for (const file of [...walk(path.join(root, 'assets/fonts')), ...walk(path.join(root, 'build/web/assets'))]) {
+  if (commercialFont.test(path.basename(file))) {
+    problems.push(`Commercial font would be deployed: ${path.relative(root, file)}`);
+  }
+}
+const fontAssets = pubspec.split('\n').filter((l) => /^\s*-\s*asset:\s*assets\/fonts\//.test(l));
+if (fontAssets.some((l) => commercialFont.test(l))) {
+  problems.push('pubspec.yaml fonts: still lists a commercial brand font');
+}
+
 if (problems.length > 0) {
   console.error('\nDO_NOT_BREAK check FAILED, deploy stopped:');
   for (const p of problems) console.error(`  - ${p}`);

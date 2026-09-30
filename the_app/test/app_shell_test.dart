@@ -76,12 +76,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('BODY'), findsOneWidget);
-    expect(find.text('AJW BAGS Portal'), findsOneWidget);
+    expect(find.text('BAGS Portal'), findsOneWidget);
     for (final label in ['Enterprises', 'Users', 'Audit log', 'Dashboard', 'Tasks', 'Google files', 'Sign out']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('BLUE FARM'), findsOneWidget);
-    expect(find.text('Gloria Asiba · Administrator'), findsOneWidget);
+    expect(find.text('Gloria Asiba'), findsOneWidget);
+    expect(find.text('Administrator'), findsOneWidget);
 
     await tester.tap(find.text('Tasks'));
     expect(selected, 'tasks');
@@ -105,7 +106,7 @@ void main() {
     await tester.tap(find.byTooltip('Menu'));
     await tester.pumpAndSettle();
     expect(find.text('Dashboard'), findsOneWidget);
-    expect(find.text('Gloria Asiba · Administrator'), findsOneWidget);
+    expect(find.text('Gloria Asiba'), findsOneWidget);
 
     await tester.tap(find.text('Google files'));
     await tester.pumpAndSettle();

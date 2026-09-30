@@ -7,6 +7,7 @@ import '../data/audit_repository.dart';
 import '../models/audit_entry.dart';
 import '../providers/audit_providers.dart';
 import '../../../core/widgets/app_shell.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// Admin: the audit log (Phase 9c), newest first, filterable by
 /// enterprise, user (what they did or what happened to them) and date.
@@ -176,7 +177,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     }
     if (_entries.isEmpty) {
       return _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AjwLoadingView()
           : const Center(child: Text('No events match these filters.'));
     }
     return RefreshIndicator(
@@ -197,7 +198,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
               padding: const EdgeInsets.all(12),
               child: Center(
                 child: _loading
-                    ? const CircularProgressIndicator()
+                    ? const AjwLoader()
                     : OutlinedButton(onPressed: () => _load(reset: false), child: const Text('Load more')),
               ),
             );

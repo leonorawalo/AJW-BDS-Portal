@@ -7,6 +7,7 @@ import '../models/enterprise.dart';
 import '../providers/enterprise_providers.dart';
 import '../../user_management/models/invite_request.dart';
 import '../../user_management/presentation/invite_flow.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// Business info, lifecycle status, Going Concern toggle, and current
 /// consultant assignments — what used to be the whole of the Admin's
@@ -217,11 +218,7 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
                 FilledButton(
                   onPressed: (_selectedOwnerUserId != null && !_isLinking) ? _link : null,
                   child: _isLinking
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const AjwLoader(dotSize: 6)
                       : const Text('Link'),
                 ),
               ],

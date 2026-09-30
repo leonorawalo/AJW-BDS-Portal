@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/recommendation.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 class RecommendationsTab extends ConsumerWidget {
   const RecommendationsTab({super.key, required this.enterpriseId, required this.readOnly});
@@ -22,7 +23,7 @@ class RecommendationsTab extends ConsumerWidget {
               child: const Icon(Icons.add),
             ),
       body: recsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AjwLoadingView(),
         error: (_, _) => const Center(child: Text('Could not load recommendations.')),
         data: (items) {
           if (items.isEmpty) return const Center(child: Text('No recommendations yet.'));

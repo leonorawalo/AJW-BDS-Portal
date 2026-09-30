@@ -6,6 +6,9 @@ import '../../features/auth/providers/auth_providers.dart';
 import '../../features/calendar/presentation/google_first_run_prompt.dart';
 import '../../features/enterprises/providers/enterprise_providers.dart';
 import '../../shared/models/user_profile.dart';
+import '../branding/ajw_logo.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'user_profile_badge.dart';
 
 /// Laptop-first navigation shell (C5), in the style of Google Cloud /
@@ -72,10 +75,12 @@ class AppShell extends ConsumerWidget {
           title: Row(
             children: [
               if (wide) ...[
-                const Text('AJW BAGS Portal', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(width: 16),
-                Container(width: 1, height: 24, color: Colors.white24),
-                const SizedBox(width: 16),
+                const AjwLogo(height: 30),
+                const SizedBox(width: 10),
+                Text('BAGS Portal', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(width: Space.lg),
+                Container(width: 1, height: 24, color: AppColors.hairline),
+                const SizedBox(width: Space.lg),
               ],
               Flexible(
                 child: enterprise == null
@@ -84,7 +89,8 @@ class AppShell extends ConsumerWidget {
               ),
             ],
           ),
-          actions: [...actions, if (wide) const UserProfileBadge()],
+          actions: [...actions, if (wide) const UserProfileBadge(), const SizedBox(width: Space.sm)],
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(3), child: _BrandBar()),
         ),
         drawer: wide ? null : Drawer(child: menu),
         floatingActionButton: floatingActionButton,
@@ -193,54 +199,79 @@ class _SideMenu extends ConsumerWidget {
 
     Widget item(_NavEntry entry, bool selected) {
       if (!expanded) {
-        return Tooltip(
-          message: entry.label,
-          child: IconButton(
-            isSelected: selected,
-            icon: Icon(entry.icon),
-            onPressed: () => go(entry.onTap),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Tooltip(
+            message: entry.label,
+            child: IconButton(
+              isSelected: selected,
+              style: IconButton.styleFrom(
+                backgroundColor: selected ? AppColors.brandRedTint : null,
+                foregroundColor: selected ? AppColors.brandRed : AppColors.charcoalSoft,
+                minimumSize: const Size(48, 44),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+              ),
+              icon: Icon(entry.icon),
+              onPressed: () => go(entry.onTap),
+            ),
           ),
         );
       }
-      return ListTile(
-        dense: true,
-        selected: selected,
-        leading: Icon(entry.icon),
-        title: Text(entry.label),
-        shape: const StadiumBorder(),
-        onTap: () => go(entry.onTap),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 1),
+        child: ListTile(
+          selected: selected,
+          selectedTileColor: AppColors.brandRedTint,
+          selectedColor: AppColors.brandRedDeep,
+          iconColor: AppColors.charcoalSoft,
+          minTileHeight: 44,
+          contentPadding: const EdgeInsets.symmetric(horizontal: Space.md),
+          horizontalTitleGap: Space.md,
+          leading: Icon(entry.icon, size: 22),
+          title: Text(
+            entry.label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? AppColors.brandRedDeep : AppColors.charcoal,
+                ),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+          onTap: () => go(entry.onTap),
+        ),
       );
     }
 
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: AppColors.surface,
       child: SafeArea(
-        child: Column(
+        child: Stack(
+          children: [
+            // AJW watermark (guideline p.5), tucked into the menu's corner.
+            if (expanded)
+              const Positioned(left: -40, bottom: 56, child: AjwWatermark(height: 200, opacity: 0.05)),
+            Column(
           crossAxisAlignment: expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
           children: [
             if (inDrawer)
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: EdgeInsets.fromLTRB(Space.lg, Space.xl, Space.lg, Space.md),
                 child: UserProfileBadge(onAppBar: false),
               ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.md),
                 children: [
                   for (final entry in global) item(entry, entry.key == globalKey),
                   if (e != null) ...[
-                    if (global.isNotEmpty) const Divider(height: 24),
+                    if (global.isNotEmpty)
+                      const Padding(padding: EdgeInsets.symmetric(vertical: Space.md), child: Divider()),
                     if (expanded)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, Space.sm),
                         child: Text(
                           e.name.toUpperCase(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                letterSpacing: 0.8,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.1),
                         ),
                       ),
                     for (final entry in sections) item(entry, entry.key == e.currentSection),
@@ -250,12 +281,14 @@ class _SideMenu extends ConsumerWidget {
             ),
             const Divider(height: 1),
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(Space.md),
               child: item(
                 _NavEntry('signout', 'Sign out', Icons.logout, () => ref.read(authRepositoryProvider).signOut()),
                 false,
               ),
             ),
+          ],
+        ),
           ],
         ),
       ),
@@ -301,4 +334,36 @@ class _EnterpriseSwitcher extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A 3px strip under the top bar: charcoal then AJW red, meeting on the
+/// brand-stripe slant.
+class _BrandBar extends StatelessWidget {
+  const _BrandBar();
+
+  @override
+  Widget build(BuildContext context) =>
+      const SizedBox(height: 3, width: double.infinity, child: CustomPaint(painter: _BrandBarPainter()));
+}
+
+class _BrandBarPainter extends CustomPainter {
+  const _BrandBarPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.brandRed);
+    final split = size.width * 0.18;
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(split + 1, 0)
+        ..lineTo(split, size.height)
+        ..lineTo(0, size.height)
+        ..close(),
+      Paint()..color = AppColors.charcoal,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BrandBarPainter oldDelegate) => false;
 }

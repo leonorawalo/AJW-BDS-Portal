@@ -78,3 +78,13 @@ edge-functions.txt
 !web/legal.css
 !web/oauth/google-callback.html
 !supabase/config.toml
+
+# Commercial brand fonts (MyFonts, no confirmed web/app licence): never
+# commit or ship them. The app uses the OFL Google substitutes instead;
+# see DO_NOT_BREAK.md section 8.
+*Henderson*
+*henderson*
+*Jeko*
+*jeko*
+*Ambit*
+*ambit*

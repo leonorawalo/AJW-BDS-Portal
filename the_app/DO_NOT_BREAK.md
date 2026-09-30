@@ -178,3 +178,36 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   warning, max 100 users ever.
 - Verified: no warning, no cap. Keep scopes, branding pages and domain
   exactly as submitted, or Google may ask for re-review.
+
+---------------------------------------------------------------------
+## 8. Brand (AJW Brand Guideline, in `AJW Brand Elements/`)
+
+- Colours come from the guideline, p.9: AJW Red `#D13B3B`, Charcoal
+  `#494949`, Light Grey `#B2B2B2`. They live only in
+  `lib/core/theme/app_colors.dart`, and every other file reads them from there.
+  Error red is a deliberately different crimson (`#B42318`), always with
+  an icon and a message.
+- Fonts. The guideline's typefaces (pp.12-15), Henderson Sans (headers),
+  Jeko (sub-headers) and Ambit (body), are commercial MyFonts fonts with
+  NO confirmed web/app licence. They must NOT ship in the app or website
+  and must NOT be committed or pushed. `.gitignore` blocks their file
+  names, and `scripts/check_do_not_break.js` fails the deploy if one is
+  in `assets/fonts`, in the web build, or listed in pubspec.
+  The app uses the designer's approved free substitutes from the brand
+  folder ("Fonts available on Google", SIL OFL; licence texts in
+  `assets/fonts/OFL-*.txt`): Poppins Bold for headers, Livvic Medium for
+  sub-headers, Work Sans Regular and Medium for body. They're subset to
+  Latin to keep the web download small. The guideline doesn't state
+  this mapping; it was chosen by matching each role's look.
+  To switch back if AJW confirms web/app licences for the originals:
+  (1) put the licensed files in `assets/fonts` and remove their patterns
+  from `.gitignore` and the check script, (2) change the `fonts:` block
+  in `pubspec.yaml`, (3) change the families, weights and tracking in
+  `AppFonts` (`lib/core/theme/app_theme.dart`). Nothing else names a font.
+- The logo is vector, taken from the guideline PDF's cover page:
+  `lib/core/branding/ajw_logo_paths.dart` (generated) and
+  `web/brand/ajw-mark.svg`. The web loading screen uses the SVG. Favicon,
+  web icons and `assets/images/ajw_logo.webp` were rendered from it.
+  Don't swap in a low-res raster again.
+- Personal avatar colours (`AppColors.personalPalette`) belong to users,
+  not to AJW. Keep them muted, and keep white text on each at >= 4.5:1.

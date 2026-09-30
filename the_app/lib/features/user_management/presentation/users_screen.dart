@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/progress_dialog.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -12,6 +13,7 @@ import 'invite_user_dialog.dart';
 import '../../email/models/email_contact.dart';
 import '../../email/presentation/compose_email_dialog.dart';
 import '../../../core/widgets/app_shell.dart';
+import '../../../core/widgets/ajw_loader.dart';
 
 /// Admin: every account, with role, specialization and status
 /// (invited / active / suspended), plus resend invite, change
@@ -81,7 +83,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
           ),
           Expanded(
             child: usersAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AjwLoadingView(),
               error: (_, _) => const Center(child: Text('Could not load users. Pull to refresh.')),
               data: (users) {
                 final visible = users.where((u) {
@@ -255,7 +257,7 @@ class _UserTile extends ConsumerWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+              child: Text(label, style: TextStyle(color: color, fontWeight: AppFonts.bodyStrong, fontSize: 12)),
             ),
             if (actions.isNotEmpty)
               PopupMenuButton<_Action>(
