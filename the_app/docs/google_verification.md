@@ -76,61 +76,69 @@ has verified in Search Console. `*.supabase.co` can't be verified by AJW, so:
 > the portal's own contacts for that enterprise. No message content is
 > stored by the app.
 
-## Demo video (YouTube, "Unlisted") — shot list
+## Demo video: recording script (about 2½ minutes)
 
-Record the screen of the live site (https://ajwafrica-bags-portal.web.app)
-in English, 2–4 minutes, no editing needed. Google checks that the consent
-screen shown matches the app and that each sensitive scope is actually used.
+Before you record:
+- Sign in to Chrome with a Google account that is **not yet connected**
+  (or disconnect first), so the consent screen appears.
+- Have a second portal user (the Owner or another consultant) to invite, and
+  know their email.
+- Close unrelated tabs, set zoom to 100%, and turn off notifications.
+- Upload to YouTube as **Unlisted**, in English. Say the lines out loud or
+  put them on screen as captions. Either works.
 
-1. Show the browser address bar on the portal login page, then sign in as a
-   Consultant.
-2. Open an enterprise → **Sessions** tab → **Connect** (Google account).
-3. On Google's consent screen: pause so the **app name "AJW BAGS Portal"**
-   and the **list of permissions** are readable. Click the address bar once
-   so the URL (containing `client_id=...`) is visible. Then **Continue**.
-4. Back in the portal, show the card says **Google account connected**.
-5. **Schedule** a meeting: pick a participant, show the availability check
-   (free/busy), set a time, **Schedule**.
-6. Open **Google Calendar** in another tab: show the new event with the
-   **Google Meet** link and the invited participant (this is the
-   `calendar.events` use).
-7. Back in the portal, **Cancel session**; refresh Google Calendar to show
-   the event is gone.
-8. **Email** menu (envelope icon) → **Write email** → tick a recipient,
-   type a subject and message → **Send via Gmail**. Then open **Gmail →
-   Sent** to show the message (this is the `gmail.send` use).
-9. (Optional, non-sensitive) Export menu → **Loan-readiness report — Google
-   Docs** → Open, showing it in the "AJW BAGS Portal" Drive folder.
+| # | Time | Do (click / show) | Say |
+|---|---|---|---|
+| 1 | 0:00–0:15 | Open `https://ajwafrica-bags-portal.web.app`. Click the address bar so the domain is readable. Sign in as a **Consultant**. | "This is AJW Africa BAGS Portal, used by AJW's business advisers and the enterprises they support. I'm signing in as a consultant." |
+| 2 | 0:15–0:25 | Open an enterprise → **Sessions** in the side menu → on the "Connect your Google account" card, **Connect**. | "To hold meetings and send email from their own Google account, a user connects it once." |
+| 3 | 0:25–0:50 | On Google's consent screen **stop for 5 seconds**. Show the app name **"AJW Africa BAGS Portal"** and the permission list. Click the address bar once so `client_id=` is visible. Scroll slowly through the permissions, then **Continue**. | "Google shows the app name, AJW Africa BAGS Portal, and exactly what it asks for: create calendar events, check free/busy, files the app creates, and send email on my behalf." |
+| 4 | 0:50–0:55 | Back in the portal, show **Google account connected**. | "The account is now connected." |
+| 5 | 0:55–1:20 | **Schedule meeting**: pick the participant, set a time and title, **Schedule** (the free/busy check runs here; a clash shows "Calendar clash"). | "Scheduling a consultation. The app checks the participant's availability, then creates one event on my own calendar with a Google Meet link and invites them. This is the calendar.events permission." |
+| 6 | 1:20–1:35 | New tab → **Google Calendar**: open the new event and show the **Meet link** and the **invited participant**. | "Here is the event it created, with the Meet link and the invitee." |
+| 7 | 1:35–1:50 | Back in the portal, **Cancel session**. Refresh Google Calendar to show the event is gone. | "Cancelling in the portal deletes that same event. The app only touches events it created." |
+| 8 | 1:50–2:20 | Top bar **Email** (envelope) → **Write email**. Tick one recipient, type a short subject and message, then **Send via Gmail**. | "To email people working on this enterprise, I write the message here and choose from the enterprise's contacts. Send uses the gmail.send permission, one message and only when I click Send." |
+| 9 | 2:20–2:35 | New tab → **Gmail → Sent**: open the message just sent. | "It's sent from my own Gmail and appears in my Sent folder. The app never reads, searches or deletes my email." |
+| 10 | 2:35–2:45 | Optionally show the **Privacy policy** link on `/privacy.html`. | "Google user data is used only for these features, as described in our privacy policy." |
+
+What Google checks: the consent screen matches this app and project (step
+3), and each sensitive scope is visibly used: `calendar.events` in steps
+5–7 and `gmail.send` in steps 8–9.
 
 ## Console checklist
 
-- [ ] Search Console: verify `https://ajwafrica-bags-portal.web.app/` (URL
-      prefix, HTML file method; the file goes in `the_app/web/`).
-- [ ] OAuth client "Supabase Auth" → Authorised redirect URIs: **add**
+Status as of 2026-09-30:
+
+- [x] Search Console: `https://ajwafrica-bags-portal.web.app/` **verified**
+      (HTML file `web/googlec7b934ad5a1b7fa7.html`; never delete it).
+- [x] OAuth client "Supabase Auth" → Authorised redirect URIs: **only**
       `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`.
-- [ ] Then set the Edge Function secret
+- [x] Edge Function secret
       `GOOGLE_OAUTH_REDIRECT_URI=https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`
-      and test Connect.
-- [ ] Sign-in button: move to its own project (or remove), then **remove**
-      both `*.supabase.co` redirect URIs from this project's client.
-- [ ] Branding: app name, support email, logo, homepage
+      set. Connect through the relay tested and works.
+- [x] Sign-in button moved to its own project; both `*.supabase.co`
+      redirect URIs removed from this project's client.
+- [x] Data access scopes: openid, email, profile, calendar.freebusy,
+      drive.file (non-sensitive); calendar.events, gmail.send (sensitive).
+- [x] Branding: app name "AJW Africa BAGS Portal", logo, homepage
       (`/about.html`), privacy policy (`/privacy.html`), terms
-      (`/terms.html`), authorized domain `ajwafrica-bags-portal.web.app`
-      only, developer contact email.
-- [ ] Audience → **Publish app** (everyone can connect, with a warning,
-      while verification is pending).
-- [ ] Verification centre → submit with the justification and video link.
+      (`/terms.html`), authorised domain `ajwafrica-bags-portal.web.app`
+      only.
+- [x] Audience → published **"In production"** (unverified: warning
+      shown, 100-user cap).
+- [ ] **Waiting on Google brand verification**. "Prepare for
+      verification" unlocks after that.
+- [ ] Record the demo video (script above), upload as Unlisted.
+- [ ] Verification centre → submit with the justification texts and the
+      video link.
 
-## Sign-in button
+## Sign-in button (DONE 2026-09-30)
 
-"Continue with Google" (Supabase Auth → Providers → Google) only uses the
-non-sensitive `openid`, `email`, `profile` scopes, but its redirect URI must
-be `https://cgnmnqjyvlgyndhmicjl.supabase.co/auth/v1/callback`. Options:
+"Continue with Google" (Supabase Auth → Providers → Google) uses only
+`openid`, `email`, `profile`, and its redirect URI must be
+`https://cgnmnqjyvlgyndhmicjl.supabase.co/auth/v1/callback`, so it can't
+live in the verified project.
 
-- **Separate Google Cloud project** (e.g. "AJW BAGS Portal Sign-in") with
-  its own consent screen and OAuth client using only basic scopes. Basic
-  scopes don't require verification, so it can be published straight to
-  production. Put that client's ID/secret into Supabase Auth → Google.
-- **Remove the button** — email/password (invite) sign-in is unaffected.
-- (Later) Supabase custom domain add-on, which puts Supabase on an AJW
-  domain and removes the problem entirely.
+It now lives in Google Cloud project **ajw-bags-sign-in**, client
+**"Supabase sign-in"**, with basic scopes only. It is published, and needs
+no verification. Supabase's Google provider uses that client's ID and secret.
+Tested: works.
