@@ -70,11 +70,36 @@ function text(body: string, status = 200): Response {
   return new Response(body, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }
 
-async function callerId(req: Request): Promise<string | null> {
+type Caller = { id: string; loginHint: string | null };
+
+/// The signed-in user, plus which Google account to pre-select on the
+/// consent screen: the Google email they signed in with this session, if
+/// they used "Continue with Google", otherwise their BAGS account email.
+async function caller(req: Request): Promise<Caller | null> {
   const jwt = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!jwt) return null;
   const { data, error } = await admin.auth.getUser(jwt);
-  return error ? null : data.user.id;
+  if (error) return null;
+  const user = data.user;
+  const googleEmail = user.identities?.find((i) => i.provider === 'google')?.identity_data?.email as
+    | string
+    | undefined;
+  return {
+    id: user.id,
+    loginHint: (signedInWithOAuth(jwt) && googleEmail) || user.email || null,
+  };
+}
+
+/// Whether this session came from an OAuth sign-in (the JWT's amr claim).
+/// getUser() above has already verified the JWT.
+function signedInWithOAuth(jwt: string): boolean {
+  try {
+    const payload = JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    // deno-lint-ignore no-explicit-any
+    return (payload.amr ?? []).some((a: any) => a?.method === 'oauth');
+  } catch {
+    return false;
+  }
 }
 
 /// The id_token comes straight from Google's token endpoint over TLS in
@@ -90,7 +115,7 @@ function emailFromIdToken(idToken: string | undefined): string | null {
   }
 }
 
-async function start(userId: string): Promise<Response> {
+async function start(userId: string, loginHint: string | null): Promise<Response> {
   const state = crypto.randomUUID();
   // Opportunistic cleanup of abandoned consent attempts.
   await admin
@@ -112,6 +137,7 @@ async function start(userId: string): Promise<Response> {
     prompt: 'consent',
     include_granted_scopes: 'true',
     state,
+    ...(loginHint ? { login_hint: loginHint } : {}),
   }).toString();
   return json({ url: url.toString() });
 }
@@ -192,11 +218,11 @@ Deno.serve(async (req) => {
   if (req.method === 'GET') return callback(new URL(req.url).searchParams);
 
   if (req.method === 'POST') {
-    const userId = await callerId(req);
-    if (!userId) return json({ error: 'Not signed in' }, 401);
+    const user = await caller(req);
+    if (!user) return json({ error: 'Not signed in' }, 401);
     const { action } = await req.json().catch(() => ({}));
-    if (action === 'start') return start(userId);
-    if (action === 'disconnect') return disconnect(userId);
+    if (action === 'start') return start(user.id, user.loginHint);
+    if (action === 'disconnect') return disconnect(user.id);
     return json({ error: `Unknown action: ${action}` }, 400);
   }
 

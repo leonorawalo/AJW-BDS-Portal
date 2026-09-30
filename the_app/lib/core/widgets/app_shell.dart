@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/calendar/presentation/google_first_run_prompt.dart';
 import '../../features/enterprises/providers/enterprise_providers.dart';
 import '../../shared/models/user_profile.dart';
 import 'user_profile_badge.dart';
@@ -55,50 +56,52 @@ class AppShell extends ConsumerWidget {
       inDrawer: !wide,
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (innerContext) => IconButton(
-            icon: const Icon(Icons.menu),
-            tooltip: wide ? (collapsed ? 'Expand menu' : 'Collapse menu') : 'Menu',
-            onPressed: () => wide
-                ? ref.read(sideNavCollapsedProvider.notifier).toggle()
-                : Scaffold.of(innerContext).openDrawer(),
-          ),
-        ),
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            if (wide) ...[
-              const Text('AJW BAGS Portal', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 16),
-              Container(width: 1, height: 24, color: Colors.white24),
-              const SizedBox(width: 16),
-            ],
-            Flexible(
-              child: enterprise == null
-                  ? Text(title, overflow: TextOverflow.ellipsis)
-                  : _EnterpriseSwitcher(enterprise: enterprise!),
+    return GoogleFirstRunPrompt(
+      child: Scaffold(
+        appBar: AppBar(
+          leading: Builder(
+            builder: (innerContext) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: wide ? (collapsed ? 'Expand menu' : 'Collapse menu') : 'Menu',
+              onPressed: () => wide
+                  ? ref.read(sideNavCollapsedProvider.notifier).toggle()
+                  : Scaffold.of(innerContext).openDrawer(),
             ),
-          ],
-        ),
-        actions: [...actions, if (wide) const UserProfileBadge()],
-      ),
-      drawer: wide ? null : Drawer(child: menu),
-      floatingActionButton: floatingActionButton,
-      body: wide
-          ? Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: collapsed ? 72 : 248,
-                  child: menu,
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(child: body),
+          ),
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              if (wide) ...[
+                const Text('AJW BAGS Portal', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(width: 16),
+                Container(width: 1, height: 24, color: Colors.white24),
+                const SizedBox(width: 16),
               ],
-            )
-          : body,
+              Flexible(
+                child: enterprise == null
+                    ? Text(title, overflow: TextOverflow.ellipsis)
+                    : _EnterpriseSwitcher(enterprise: enterprise!),
+              ),
+            ],
+          ),
+          actions: [...actions, if (wide) const UserProfileBadge()],
+        ),
+        drawer: wide ? null : Drawer(child: menu),
+        floatingActionButton: floatingActionButton,
+        body: wide
+            ? Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: collapsed ? 72 : 248,
+                    child: menu,
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: body),
+                ],
+              )
+            : body,
+      ),
     );
   }
 }

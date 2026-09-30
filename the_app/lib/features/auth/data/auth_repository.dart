@@ -53,6 +53,33 @@ class AuthRepository {
   /// chosen a password; the router keeps them on /set-password until then.
   bool get needsPassword => _client.auth.currentUser?.userMetadata?['needs_password'] == true;
 
+  /// Set once the user has answered the first-run "Connect your Google
+  /// suite" prompt (Connect or Later), so it's only ever shown once.
+  bool get googlePromptDone => _client.auth.currentUser?.userMetadata?['google_prompt_done'] == true;
+
+  Future<void> markGooglePromptDone() async {
+    await _client.auth.updateUser(UserAttributes(data: {'google_prompt_done': true}));
+  }
+
+  /// The Google account this user signs in with ("Continue with Google"),
+  /// or null if they never have.
+  String? get googleSignInEmail {
+    final identities = _client.auth.currentUser?.identities ?? const <UserIdentity>[];
+    for (final identity in identities) {
+      if (identity.provider == 'google') return identity.identityData?['email'] as String?;
+    }
+    return null;
+  }
+
+  /// The connected Google email the user chose to keep even though it
+  /// differs from the one they sign in with.
+  String? get keptGoogleConnectionEmail =>
+      _client.auth.currentUser?.userMetadata?['google_connection_kept'] as String?;
+
+  Future<void> keepGoogleConnection(String connectedEmail) async {
+    await _client.auth.updateUser(UserAttributes(data: {'google_connection_kept': connectedEmail}));
+  }
+
   Future<void> setPassword(String password) {
     return _client.auth.updateUser(
       UserAttributes(password: password, data: {'needs_password': false}),
