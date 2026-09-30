@@ -71,7 +71,20 @@ type Input = {
   role_name: string;
   specialization?: string | null;
   enterprise_id?: string | null;
+  /// Set by the app on its one automatic retry after a network failure.
+  retry?: boolean;
 };
+
+/// A retry within this window doesn't email again: the first attempt most
+/// likely went through and only its response was lost.
+const RETRY_DEDUPE_MS = 2 * 60 * 1000;
+
+/// "an Administrator", "a Legal Consultant", "an Enterprise Owner" — for the
+/// invite email's "… invited you as …" line.
+function rolePhrase(roleName: string, specialization: string | null | undefined): string {
+  if (roleName === 'Consultant' && specialization) return `a ${specialization} Consultant`;
+  return /^[AEIOU]/.test(roleName) ? `an ${roleName}` : `a ${roleName}`;
+}
 
 function validate(input: Input): string | null {
   if (input.action !== 'invite' && input.action !== 'link') return `Unknown action: ${input.action}`;
@@ -113,12 +126,23 @@ Deno.serve(async (req) => {
   const invalid = validate(input);
   if (invalid) return json({ error: invalid }, 400);
 
+  const { data: inviter } = await admin
+    .from('users')
+    .select('first_name, last_name')
+    .eq('id', caller.user.id)
+    .maybeSingle();
+  const invitedBy = [inviter?.first_name, inviter?.last_name].filter(Boolean).join(' ').trim();
+
+  // invited_by / invited_as are only for the Invite email template:
+  //   {{ .Data.invited_by }} invited you as {{ .Data.invited_as }}.
   const metadata = {
     first_name: input.first_name.trim(),
     last_name: (input.last_name ?? '').trim(),
     role_name: input.role_name,
     specialization: input.role_name === 'Consultant' ? input.specialization : null,
     needs_password: true,
+    invited_by: invitedBy ? `${invitedBy} (AJW)` : 'AJW Africa',
+    invited_as: rolePhrase(input.role_name, input.specialization),
   };
 
   /// Links the Owner to the enterprise with the Admin's own JWT, so the
@@ -160,6 +184,10 @@ Deno.serve(async (req) => {
       const linkError = await linkEnterprise(existing.id);
       if (linkError) return json({ error: linkError }, 403);
       if (input.action === 'invite') {
+        const invitedAt = authUser.user?.invited_at ? Date.parse(authUser.user.invited_at) : 0;
+        if (input.retry && Date.now() - invitedAt < RETRY_DEDUPE_MS) {
+          return json({ status: 'sent', user_id: existing.id });
+        }
         const { error } = await admin.auth.admin.inviteUserByEmail(input.email, {
           data: metadata,
           redirectTo: appUrl()!,

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:printing/printing.dart';
 
 import '../../../core/widgets/progress_dialog.dart';
 import '../builders/enterprise_data_sheet_builder.dart';
 import '../builders/export_formatting.dart';
 import '../builders/loan_readiness_report_builder.dart';
-import '../builders/loan_readiness_report_pdf.dart';
 import '../builders/progress_deck_builder.dart';
 import '../models/enterprise_export_data.dart';
 import '../providers/google_export_providers.dart';
 import 'google_export_flow.dart';
+import 'pdf_export.dart' deferred as pdf_export;
 
 enum _ExportKind { pdf, doc, sheet, slides }
 
@@ -81,15 +80,16 @@ class ExportMenuButton extends ConsumerWidget {
   Future<void> _exportPdf(BuildContext context, WidgetRef ref) async {
     try {
       final (bytes, filename) = await withProgress(context, 'Preparing PDF…', () async {
+        await pdf_export.loadLibrary();
         final data = await _loadData(ref);
         final report = buildLoanReadinessReport(data);
         final safeName = data.enterprise.businessName.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '-');
         return (
-          await renderLoanReadinessReportPdf(report),
+          await pdf_export.renderReportPdf(report),
           'Loan-readiness-report-$safeName-${exportDate(data.exportedAt)}.pdf',
         );
       }());
-      await Printing.sharePdf(bytes: bytes, filename: filename);
+      await pdf_export.sharePdf(bytes, filename);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create PDF: $e')));

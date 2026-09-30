@@ -88,6 +88,10 @@ This list is enforced in two places. Change all three together:
 - Email OTP expiration = 86400 (24 h), so invite links last a day.
 - Invite email template link MUST be exactly:
   `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=invite`
+- The template's "who invited you" line uses metadata set by the
+  `invite-user` function (`invited_by`, `invited_as`). Renaming either key
+  in the function breaks that line:
+  `{{ if .Data.invited_by }}{{ .Data.invited_by }} invited you as {{ .Data.invited_as }}.{{ end }}`
 - Templates are only editable while custom SMTP is on.
 - SMTP = Gmail `ajw.bags.portal@gmail.com` with an APP PASSWORD.
   Changing that Gmail's password or turning off 2-Step Verification
@@ -139,6 +143,18 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   `npx firebase-tools deploy --only hosting`. The live site does not
   update by itself. The deploy runs `scripts/check_do_not_break.js`
   first and stops if it fails. Fix the cause, don't remove the check.
+- `web/index.html` holds the instant loading screen (`#ajw-splash`), removed
+  on Flutter's `flutter-first-frame` event. Keep both if you edit the page.
+- Cache headers (`firebase.json`): every `.js/.json/.html` file, `/` and
+  `.env` are `no-cache`. They have no content hash in their names, and that
+  includes the deferred chunks `main.dart.js_N.part.js`. Only images, fonts
+  and the local `/canvaskit/` copy are cached for a day. Never give
+  `main.dart.js` or its `.part.js` files a long max-age, or users get a mix
+  of old and new code after a deploy.
+- The PDF export (`pdf`, `printing`) and the document viewer (`pdfx`) are
+  deferred imports (`pdf_export.dart`, `open_document_viewer.dart`).
+  Importing those packages or those screens directly anywhere else pulls
+  them back into the first download.
 - Android: the APK only changes when rebuilt AND re-uploaded to
   Storage → downloads as `ajw-bags-portal.apk`.
 - Android release signing key (once created): NEVER lose the keystore or

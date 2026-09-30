@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="AJW Africa BAGS Portal: business advancement and growth services.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -31,8 +31,56 @@
 
   <title>AJW BAGS Portal</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Loading screen: shown instantly while the app (several MB) downloads,
+       removed on Flutter's first frame. Colours match lib/core/theme/app_colors.dart. -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #F7F7F7; }
+    #ajw-splash {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; background: #F7F7F7; color: #494949;
+      font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .35s ease;
+    }
+    #ajw-splash.hide { opacity: 0; pointer-events: none; }
+    #ajw-splash img { width: 96px; height: auto; }
+    .ajw-dots { display: flex; gap: 10px; }
+    .ajw-dots span {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #7A1F2B; opacity: .25;
+      animation: ajw-pulse 1.4s ease-in-out infinite;
+    }
+    .ajw-dots span:nth-child(2) { background: #494949; animation-delay: .2s; }
+    .ajw-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes ajw-pulse {
+      0%, 80%, 100% { opacity: .25; transform: scale(.85); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) { .ajw-dots span { animation-duration: 3s; } }
+    #ajw-splash-slow { font-size: 14px; color: #6B6B6E; visibility: hidden; text-align: center; padding: 0 16px; }
+  </style>
 </head>
 <body>
+  <div id="ajw-splash" role="status" aria-live="polite">
+    <img src="assets/assets/images/ajw_logo.webp" alt="AJW Africa">
+    <div>Loading AJW BAGS Portal…</div>
+    <div class="ajw-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div id="ajw-splash-slow">This is taking a while on this connection. Please keep the page open.</div>
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('ajw-splash');
+      var slow = setTimeout(function () {
+        document.getElementById('ajw-splash-slow').style.visibility = 'visible';
+      }, 15000);
+      window.addEventListener('flutter-first-frame', function () {
+        clearTimeout(slow);
+        splash.classList.add('hide');
+        setTimeout(function () { splash.remove(); }, 400);
+      }, { once: true });
+    })();
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

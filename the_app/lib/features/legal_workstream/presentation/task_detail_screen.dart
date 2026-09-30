@@ -6,7 +6,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../models/document.dart';
 import '../models/task.dart';
 import '../providers/legal_workstream_providers.dart';
-import 'document_viewer_screen.dart';
+import 'open_document_viewer.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({
@@ -107,9 +107,7 @@ class _TaskDocuments extends ConsumerWidget {
                         leading: const Icon(Icons.description),
                         title: Text(d.fileName),
                         subtitle: Text(d.category ?? 'Uncategorized'),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => DocumentViewerScreen(document: d),
-                        )),
+                        onTap: () => openDocumentViewer(context, d),
                       ))
                   .toList(),
             );

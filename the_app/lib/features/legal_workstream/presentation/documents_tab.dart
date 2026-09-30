@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/document.dart';
 import '../providers/legal_workstream_providers.dart';
-import 'document_viewer_screen.dart';
+import 'open_document_viewer.dart';
 
 class DocumentsTab extends ConsumerWidget {
   const DocumentsTab({super.key, required this.enterpriseId, required this.readOnly});
@@ -39,9 +39,7 @@ class DocumentsTab extends ConsumerWidget {
                   leading: Icon(d.isImage ? Icons.image : (d.isPdf ? Icons.picture_as_pdf : Icons.description)),
                   title: Text(d.fileName),
                   subtitle: Text(d.category ?? 'Uncategorized'),
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => DocumentViewerScreen(document: d),
-                  )),
+                  onTap: () => openDocumentViewer(context, d),
                 ),
               );
             },
