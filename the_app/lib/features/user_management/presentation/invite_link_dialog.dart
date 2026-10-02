@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/invite_request.dart';
+import '../../../core/site_links.dart';
 
 /// Shows a set-password link for the Admin to pass on themselves — the
 /// fallback when the invite email can't be sent, and handy in the field
@@ -13,7 +14,8 @@ Future<void> showInviteLinkDialog(
   required String link,
 }) {
   final message = 'Hi ${request.firstName}, you have been invited to the AJW BAGS Portal. '
-      'Open this link to set your password: $link';
+      'Open this link to set your password: $link\n\n'
+      'Then use the portal in your browser, or get the Android app here: ${SiteLinks.download}';
 
   return showDialog<void>(
     context: context,

@@ -2,10 +2,10 @@
    OAuth verification requires on AJW's own domain. Plain HTML, no Flutter,
    so they load instantly and are readable by Google's reviewers. */
 :root {
-  --brand: #7a1f2b;
-  --text: #333333;
+  --brand: #d13b3b; /* AJW Red, brand guideline p.9 */
+  --text: #494949;
   --muted: #6b6b6e;
-  --surface: #f7f7f7;
+  --surface: #f7f5f3;
   --line: #e2e2e2;
 }
 * { box-sizing: border-box; }
@@ -58,7 +58,7 @@ th { background: var(--surface); }
   background: var(--brand);
   color: #fff;
   padding: 10px 20px;
-  border-radius: 24px;
+  border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
 }

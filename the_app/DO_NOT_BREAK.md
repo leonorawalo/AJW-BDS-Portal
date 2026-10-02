@@ -30,6 +30,7 @@ Live site: https://ajwafrica-bags-portal.web.app
 | `web/googlec7b934ad5a1b7fa7.html` | Proves to Google that we own the site (Search Console). Deleted + redeployed = site un-verified = Google verification breaks. |
 | `web/about.html`, `web/privacy.html`, `web/terms.html`, `web/legal.css` | Linked from Google's consent screen (Branding) in BOTH Google projects. Google checks they stay live. |
 | `web/oauth/google-callback.html` | The redirect relay Google sends users back to after Connect. |
+| `web/download.html` | "Get the app" page linked from the invite email (the email must not link the .apk directly: spam signal). Its button points at the APK in Storage `downloads`. |
 | `.env` (listed under `flutter: assets:` in `pubspec.yaml`) | App config (Supabase URL + anon key). Removing it from assets = white screen. |
 | `supabase/config.toml` | Holds each Edge Function's "Verify JWT" setting. |
 
@@ -104,8 +105,9 @@ This list is enforced in two places. Change all three together:
 - SMTP = Gmail `ajw.bags.portal@gmail.com` with an APP PASSWORD.
   Changing that Gmail's password or turning off 2-Step Verification
   kills the app password, and then invite emails stop.
-- Storage bucket `downloads` (public) holds `ajw-bags-portal.apk`; the
-  invite template links to that exact file name.
+- Storage bucket `downloads` (public) holds `ajw-bags-portal.apk`;
+  `web/download.html` links to that exact file name. The invite email
+  links to `/download.html`, never to the .apk itself.
 
 ### Edge Function secrets (names must match the code)
 GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET · GOOGLE_OAUTH_REDIRECT_URI ·

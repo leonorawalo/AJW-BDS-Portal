@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/branding/ajw_logo.dart';
+import '../../../core/site_links.dart';
 import '../../../core/branding/brand_stripes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 
-const _siteUrl = 'https://ajwafrica-bags-portal.web.app';
 
 /// Shared frame for the sign-in, reset-password and set-password screens.
 ///
@@ -375,7 +375,7 @@ class _LegalLinks extends StatelessWidget {
         textStyle: Theme.of(context).textTheme.labelMedium,
         minimumSize: const Size(0, 36),
       ),
-      onPressed: () => launchUrl(Uri.parse('$_siteUrl/$path'), mode: LaunchMode.externalApplication),
+      onPressed: () => launchUrl(Uri.parse('${SiteLinks.site}/$path'), mode: LaunchMode.externalApplication),
       child: Text(label),
     );
     return Wrap(

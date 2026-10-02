@@ -77,6 +77,7 @@ edge-functions.txt
 !web/terms.html
 !web/legal.css
 !web/oauth/google-callback.html
+!web/download.html
 !supabase/config.toml
 
 # Commercial brand fonts (MyFonts, no confirmed web/app licence): never

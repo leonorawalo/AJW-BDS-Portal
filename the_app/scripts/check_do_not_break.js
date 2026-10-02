@@ -19,6 +19,7 @@ const SECTION_1_FILES = [
   'web/terms.html',
   'web/legal.css',
   'web/oauth/google-callback.html',
+  'web/download.html',
   '.env',
   'supabase/config.toml',
 ];
@@ -31,6 +32,7 @@ const BUILT_FILES = [
   'build/web/terms.html',
   'build/web/legal.css',
   'build/web/oauth/google-callback.html',
+  'build/web/download.html',
   'build/web/assets/.env',
 ];
 
