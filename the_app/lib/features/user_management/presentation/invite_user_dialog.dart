@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../models/invite_request.dart';
 import 'invite_flow.dart';
 
@@ -51,9 +52,45 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
     );
   }
 
+  /// "an Administrator", "a Legal Consultant" — the same wording the invite
+  /// email uses.
+  static String _asWhat(InviteRequest r) {
+    if (r.roleName == 'Consultant' && r.specialization != null) return 'a ${r.specialization} Consultant';
+    return RegExp('^[AEIOU]').hasMatch(r.roleName) ? 'an ${r.roleName}' : 'a ${r.roleName}';
+  }
+
+  /// Last look before anything is sent, so a wrong role or specialization
+  /// is caught here rather than fixed afterwards.
+  Future<bool> _confirm(InviteRequest r, {required bool asLink}) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(asLink ? 'Create an invite link?' : 'Send this invite?'),
+        content: Text.rich(
+          TextSpan(children: [
+            TextSpan(text: asLink ? 'Create a set-password link for ' : 'Invite '),
+            TextSpan(text: r.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
+            TextSpan(text: ' (${r.email}) as '),
+            TextSpan(text: _asWhat(r), style: const TextStyle(fontWeight: FontWeight.w600)),
+            const TextSpan(text: '?'),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Back')),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(asLink ? 'Create link' : 'Send'),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   Future<void> _submit({required bool asLink}) async {
     final request = _request();
     if (request == null) return;
+    if (!await _confirm(request, asLink: asLink) || !mounted) return;
     final done = asLink ? await shareInviteLink(context, ref, request) : await runInvite(context, ref, request);
     if (done && mounted) Navigator.pop(context);
   }
@@ -64,11 +101,14 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
 
     return AlertDialog(
       title: const Text('Invite a user'),
-      content: Form(
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 360, maxWidth: 440),
+        child: Form(
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               DropdownButtonFormField<String>(
                 initialValue: _role,
@@ -76,7 +116,8 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
                 items: [for (final r in _roles) DropdownMenuItem(value: r, child: Text(r))],
                 onChanged: (r) => setState(() => _role = r ?? _role),
               ),
-              if (_role == 'Consultant')
+              if (_role == 'Consultant') ...[
+                const SizedBox(height: Space.lg),
                 DropdownButtonFormField<String>(
                   initialValue: _specialization,
                   decoration: const InputDecoration(labelText: 'Specialization'),
@@ -84,22 +125,27 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
                   onChanged: (s) => setState(() => _specialization = s),
                   validator: (v) => v == null ? 'Pick a specialization' : null,
                 ),
+              ],
+              const SizedBox(height: Space.xl),
               TextFormField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(labelText: 'First name'),
                 validator: required,
               ),
+              const SizedBox(height: Space.lg),
               TextFormField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(labelText: 'Last name'),
                 validator: required,
               ),
+              const SizedBox(height: Space.lg),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
               ),
+              const SizedBox(height: Space.lg),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -108,6 +154,7 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
             ],
           ),
         ),
+      ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

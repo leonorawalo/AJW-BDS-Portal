@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
@@ -149,8 +150,16 @@ class _UserTile extends ConsumerWidget {
         case _Action.shareLink:
           await shareInviteLink(context, ref, _inviteRequest);
         case _Action.changeSpecialization:
+          // Assignments and tasks carry the specialization they were made
+          // under; the database refuses the change while any are active
+          // (migration 20261002100000), so explain that up front.
+          if (user.activeAssignments > 0) {
+            await _explainAssignmentsBlock(context);
+            return;
+          }
           final chosen = await _pickSpecialization(context);
           if (chosen == null || chosen == user.specialization || !context.mounted) return;
+          if (!await _confirmSpecialization(context, chosen) || !context.mounted) return;
           await withProgress(context, 'Saving…', repo.updateSpecialization(user.id, chosen));
         case _Action.suspend:
           if (!await _confirmSuspend(context) || !context.mounted) return;
@@ -159,11 +168,50 @@ class _UserTile extends ConsumerWidget {
           await withProgress(context, 'Reactivating…', repo.reactivate(user.id));
       }
       ref.invalidate(managedUsersProvider);
+    } on PostgrestException catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'.replaceFirst('Exception: ', ''))));
       }
     }
+  }
+
+  Future<void> _explainAssignmentsBlock(BuildContext context) {
+    final n = user.activeAssignments;
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Can't change the specialization yet"),
+        content: Text(
+          '${user.fullName} has $n active assignment${n == 1 ? '' : 's'}'
+          '${user.specialization != null ? ' as a ${user.specialization} consultant' : ''}, and the tasks on '
+          '${n == 1 ? 'that enterprise' : 'those enterprises'} belong to that discipline.\n\n'
+          'To change it: open each enterprise, go to Assign consultants, and end or reassign '
+          '${user.firstName}. Then come back here and change the specialization.',
+        ),
+        actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('OK'))],
+      ),
+    );
+  }
+
+  Future<bool> _confirmSpecialization(BuildContext context, String chosen) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change specialization?'),
+        content: Text(
+          '${user.fullName} will become a $chosen consultant'
+          '${user.specialization != null ? ' (currently ${user.specialization})' : ''}. '
+          'New assignments and their tasks will use $chosen.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Back')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Change')),
+        ],
+      ),
+    );
+    return ok ?? false;
   }
 
   Future<bool> _confirmSuspend(BuildContext context) async {
