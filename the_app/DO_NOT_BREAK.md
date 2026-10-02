@@ -92,6 +92,14 @@ This list is enforced in two places. Change all three together:
   `invite-user` function (`invited_by`, `invited_as`). Renaming either key
   in the function breaks that line:
   `{{ if .Data.invited_by }}{{ .Data.invited_by }} invited you as {{ .Data.invited_as }}.{{ end }}`
+- Reset Password ("Forgot password") template link MUST be exactly:
+  `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=recovery`
+  (the app exchanges the token, then makes the person choose a new
+  password before anything else).
+- Password policy (Authentication → Sign In / Providers → Email, or
+  Policies): minimum length 8; requirements "Lowercase, uppercase
+  letters, digits and symbols". Must match `PasswordRules` in
+  `lib/features/auth/presentation/password_field.dart`.
 - Templates are only editable while custom SMTP is on.
 - SMTP = Gmail `ajw.bags.portal@gmail.com` with an APP PASSWORD.
   Changing that Gmail's password or turning off 2-Step Verification

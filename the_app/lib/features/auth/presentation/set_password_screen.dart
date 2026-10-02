@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../providers/auth_providers.dart';
 import 'auth_layout.dart';
+import 'password_field.dart';
 
 /// First sign-in for an invited user (Phase 9a). Reached two ways:
 /// - from the invite email / an Admin-shared link:
@@ -30,6 +32,9 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
   final _confirmController = TextEditingController();
 
   bool _verifying = false;
+
+  /// Arrived from a "Forgot password" email rather than an invite.
+  bool get _isRecovery => widget.type == 'recovery';
   bool _saving = false;
   String? _error;
 
@@ -57,8 +62,10 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
       await ref.read(authRepositoryProvider).verifyInviteToken(tokenHash: token, type: widget.type ?? 'invite');
     } on AuthException {
       if (mounted) {
-        setState(() => _error = 'This invite link has expired or was already used. '
-            'Ask your AJW administrator to send a new one.');
+        setState(() => _error = _isRecovery
+            ? 'This reset link has expired or was already used. Request a new one from the sign-in page.'
+            : 'This invite link has expired or was already used. '
+                'Ask your AJW administrator to send a new one.');
       }
     } catch (_) {
       if (mounted) setState(() => _error = 'Could not open the invite. Check your connection and try again.');
@@ -75,6 +82,9 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
     });
     try {
       await ref.read(authRepositoryProvider).setPassword(_passwordController.text);
+      // A reset link keeps the router on this page (see app_router); move on
+      // to the role home now that the new password is saved.
+      if (_isRecovery && mounted) context.go('/');
       // No navigation here: the router sees needs_password cleared and
       // sends the user to their role home.
     } on AuthException catch (e) {
@@ -94,9 +104,11 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeading(
-            title: 'Welcome to BAGS',
-            subtitle: 'Choose a password to finish setting up your account.',
+          AuthHeading(
+            title: _isRecovery ? 'Choose a new password' : 'Welcome to BAGS',
+            subtitle: _isRecovery
+                ? 'Pick something you haven\'t used here before.'
+                : 'Choose a password to finish setting up your account.',
           ),
           const SizedBox(height: Space.xxl),
           if (_error != null) ...[
@@ -111,25 +123,21 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextFormField(
+                  PasswordField(
                     controller: _passwordController,
-                    obscureText: true,
+                    label: 'New password',
+                    showRules: true,
                     autofillHints: const [AutofillHints.newPassword],
-                    decoration: const InputDecoration(
-                      labelText: 'New password',
-                      helperText: 'At least 8 characters',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    validator: (v) => v == null || v.length < 8 ? 'Use at least 8 characters' : null,
+                    textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: Space.lg),
-                  TextFormField(
+                  PasswordField(
                     controller: _confirmController,
-                    obscureText: true,
+                    label: 'Confirm password',
                     autofillHints: const [AutofillHints.newPassword],
-                    onFieldSubmitted: (_) => _saving ? null : _save(),
-                    decoration: const InputDecoration(labelText: 'Confirm password', prefixIcon: Icon(Icons.lock_outline)),
-                    validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saving ? null : _save(),
+                    validator: (v) => v != _passwordController.text ? "The two passwords don't match." : null,
                   ),
                   const SizedBox(height: Space.xl),
                   FilledButton(

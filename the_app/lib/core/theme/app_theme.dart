@@ -125,9 +125,11 @@ final _roundedMd = RoundedRectangleBorder(borderRadius: BorderRadius.circular(Ra
 const _buttonSize = Size(64, 48);
 const _buttonPadding = EdgeInsets.symmetric(horizontal: Space.xl);
 
-OutlineInputBorder _inputBorder(Color color, [double width = 1]) => OutlineInputBorder(
+/// Filled fields: the label floats inside the rounded box (not above it),
+/// and focus/error show as a line along the bottom edge.
+UnderlineInputBorder _inputBorder(Color color, [double width = 1]) => UnderlineInputBorder(
       borderRadius: BorderRadius.circular(Radii.md),
-      borderSide: BorderSide(color: color, width: width),
+      borderSide: color == Colors.transparent ? BorderSide.none : BorderSide(color: color, width: width),
     );
 
 final ThemeData ajwLightTheme = ThemeData(

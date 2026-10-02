@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../providers/auth_providers.dart';
 import 'auth_layout.dart';
+import 'password_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +25,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isSubmitting = false;
-  bool _obscurePassword = true;
   String? _errorMessage;
   StreamSubscription<AuthState>? _authErrorSub;
 
@@ -129,27 +129,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
               const SizedBox(height: Space.lg),
-              TextFormField(
+              PasswordField(
                 controller: _passwordController,
-                obscureText: _obscurePassword,
                 autofillHints: const [AutofillHints.password],
                 textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _isSubmitting ? null : _submit(),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                    icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter your password';
-                  }
-                  return null;
-                },
+                onSubmitted: (_) => _isSubmitting ? null : _submit(),
+                validator: (value) => value == null || value.isEmpty ? 'Enter your password' : null,
               ),
               Align(
                 alignment: Alignment.centerRight,

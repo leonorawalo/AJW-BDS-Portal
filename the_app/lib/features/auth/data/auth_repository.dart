@@ -42,11 +42,22 @@ class AuthRepository {
   /// /set-password page rather than Supabase's default redirect, because
   /// this app uses the PKCE flow, which can't pick up a session from that
   /// redirect. See supabase/functions/invite-user.
-  Future<void> verifyInviteToken({required String tokenHash, required String type}) {
-    return _client.auth.verifyOTP(
+  ///
+  /// type 'recovery' is the "Forgot password" email: after the exchange the
+  /// account is flagged needs_password, so the router keeps the person on
+  /// the set-password screen until they've chosen a new one.
+  Future<void> verifyInviteToken({required String tokenHash, required String type}) async {
+    await _client.auth.verifyOTP(
       tokenHash: tokenHash,
-      type: type == 'magiclink' ? OtpType.magiclink : OtpType.invite,
+      type: switch (type) {
+        'magiclink' => OtpType.magiclink,
+        'recovery' => OtpType.recovery,
+        _ => OtpType.invite,
+      },
     );
+    if (type == 'recovery') {
+      await _client.auth.updateUser(UserAttributes(data: {'needs_password': true}));
+    }
   }
 
   /// Invited users carry needs_password in their metadata until they've

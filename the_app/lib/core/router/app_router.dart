@@ -88,6 +88,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isPublicRoute ? null : '/login';
       }
 
+      // A "Forgot password" link signs the person in before the screen has
+      // flagged needs_password; hold them on the page until they've chosen
+      // a new password (the screen then navigates on).
+      if (state.matchedLocation == '/set-password' && state.uri.queryParameters['type'] == 'recovery') {
+        return null;
+      }
+
       // Invited and hasn't chosen a password yet (Phase 9a): nowhere else
       // until they do.
       if (authRepo.needsPassword) {
