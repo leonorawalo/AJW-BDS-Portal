@@ -17,7 +17,9 @@ import '../../features/enterprises/presentation/register_enterprise_screen.dart'
 import '../../features/legal_workstream/presentation/consultant_workstream_screen.dart';
 import '../../features/legal_workstream/presentation/owner_workstream_screen.dart';
 import '../../features/legal_workstream/presentation/task_detail_screen.dart';
+import '../../features/portfolio/presentation/programme_screen.dart';
 import '../../features/user_management/presentation/users_screen.dart';
+import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../shared/models/user_profile.dart';
 
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
@@ -188,6 +190,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AssignConsultantScreen(),
           ),
           GoRoute(path: 'users', builder: (context, state) => const UsersScreen()),
+          GoRoute(path: 'programme', builder: (context, state) => const ProgrammeScreen()),
+          GoRoute(
+            path: 'workshops',
+            builder: (context, state) => const WorkshopsScreen(),
+            routes: [
+              GoRoute(
+                path: ':workshopId',
+                builder: (context, state) => WorkshopDetailScreen(workshopId: state.pathParameters['workshopId']!),
+              ),
+            ],
+          ),
           GoRoute(
             path: 'audit',
             builder: (context, state) => AuditLogScreen(
@@ -200,6 +213,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/consultant',
         builder: (context, state) => const ConsultantPortfolioScreen(),
         routes: [
+          GoRoute(
+            path: 'workshops',
+            builder: (context, state) => const WorkshopsScreen(),
+            routes: [
+              GoRoute(
+                path: ':workshopId',
+                builder: (context, state) => WorkshopDetailScreen(workshopId: state.pathParameters['workshopId']!),
+              ),
+            ],
+          ),
           GoRoute(
             path: 'enterprises/:enterpriseId',
             builder: (context, state) => ConsultantWorkstreamScreen(

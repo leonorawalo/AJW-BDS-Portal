@@ -185,11 +185,15 @@ class _SideMenu extends ConsumerWidget {
     final global = <_NavEntry>[
       if (role == UserRole.administrator) ...[
         _NavEntry('enterprises', 'Enterprises', Icons.business_outlined, () => context.go('/admin')),
+        _NavEntry('programme', 'Programme', Icons.insights_outlined, () => context.go('/admin/programme')),
+        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/admin/workshops')),
         _NavEntry('users', 'Users', Icons.manage_accounts_outlined, () => context.go('/admin/users')),
         _NavEntry('audit', 'Audit log', Icons.history, () => context.go('/admin/audit')),
       ],
-      if (role == UserRole.consultant)
+      if (role == UserRole.consultant) ...[
         _NavEntry('portfolio', 'My portfolio', Icons.work_outline, () => context.go('/consultant')),
+        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/consultant/workshops')),
+      ],
     ];
     final e = enterprise;
     final sections = [

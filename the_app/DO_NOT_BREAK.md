@@ -175,9 +175,20 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   them back into the first download.
 - Android: the APK only changes when rebuilt AND re-uploaded to
   Storage → downloads as `ajw-bags-portal.apk`.
-- Android release signing key (once created): NEVER lose the keystore or
-  its password. Back it up outside the repo and outside OneDrive. Losing it
-  = the app can never be updated under the same identity.
+- Android release signing key: `C:\Users\user\AJW-BDS-Keys\ajw-bags-upload.jks`
+  (alias `upload`; password in `README-KEEP-THIS-SAFE.txt` next to it).
+  `android/key.properties` (gitignored) points at it, and release builds
+  refuse to run without it (never debug-signed). NEVER lose it: back the
+  folder up outside the repo and outside OneDrive. Losing it = installed
+  apps can't take updates (users must uninstall and reinstall).
+- Release APKs: bump `version:` in pubspec first, then
+  `flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm`.
+  Upload to Storage `downloads` as `ajw-bags-portal.apk` (arm64, most
+  phones) and `ajw-bags-portal-32bit.apk` (armeabi-v7a);
+  `web/download.html` links both. The Supabase free plan caps a file at
+  50 MB, which is why the APK is split.
+- Package name stays `com.ajwafrica.the_app` (Firebase push is registered
+  to it).
 
 ---------------------------------------------------------------------
 ## 6. Never commit

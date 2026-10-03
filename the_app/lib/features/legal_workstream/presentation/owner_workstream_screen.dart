@@ -13,6 +13,7 @@ import 'documents_tab.dart';
 import 'recommendations_tab.dart';
 import 'tasks_tab.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../visits/presentation/visits_tab.dart';
 
 /// The Owner's home: their (single) enterprise's workspace. Sections come
 /// from the side menu (AppShell) and live in the URL (/owner?section=…).
@@ -24,6 +25,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
   static const sections = [
     ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
     ShellSection('tasks', 'Tasks', Icons.task_alt),
+    ShellSection('visits', 'Visits', Icons.where_to_vote_outlined),
     ShellSection('recommendations', 'Recommendations', Icons.lightbulb_outline),
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
@@ -76,6 +78,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             'recommendations' => RecommendationsTab(enterpriseId: enterprise.id, readOnly: true),
             'documents' => DocumentsTab(enterpriseId: enterprise.id, readOnly: false),
             'files' => FilesTab(enterpriseId: enterprise.id),
+            'visits' => VisitsTab(enterpriseId: enterprise.id),
             'sessions' => SessionsTab(enterpriseId: enterprise.id),
             _ => AssessmentDashboardTab(enterpriseId: enterprise.id, readOnly: true, showGreeting: true),
           },

@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../models/enterprise.dart';
+import '../../portfolio/models/programme_clock.dart';
 
 /// One enterprise in a list (Admin's Enterprises, a consultant's portfolio):
 /// a monogram, the business name, who owns it and where, and its status
@@ -62,6 +63,23 @@ class EnterpriseTile extends StatelessWidget {
                     Text(enterprise.businessName, style: text.titleMedium, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
                     Text(details, style: text.bodySmall, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: Space.xs),
+                    Builder(builder: (context) {
+                      final clock = ProgrammeClock(enterprise);
+                      final color = clock.isOverdue ? AppColors.errorRed : AppColors.charcoalSoft;
+                      return Row(
+                        children: [
+                          Icon(clock.isOverdue ? Icons.error_outline : Icons.schedule, size: 14, color: color),
+                          const SizedBox(width: Space.xs),
+                          Expanded(
+                            child: Text(
+                              'Month ${clock.month} of 12  ·  ${clock.headline}',
+                              style: text.bodySmall?.copyWith(color: color),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                     const SizedBox(height: Space.sm),
                     Wrap(
                       spacing: Space.sm,

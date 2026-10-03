@@ -53,6 +53,12 @@ class TaskTemplate {
   final String description;
   final TaskPriority priority;
   final TorPhase phase;
+  /// The ToR's portfolio-level target for this item ("Target: 90% of
+  /// portfolio" in [description]), or null when the ToR sets none.
+  int? get targetPercent {
+    final m = RegExp(r'Target:[^0-9]*([0-9]+)%').firstMatch(description);
+    return m == null ? null : int.parse(m.group(1)!);
+  }
 }
 
 /// The checklist for a discipline.

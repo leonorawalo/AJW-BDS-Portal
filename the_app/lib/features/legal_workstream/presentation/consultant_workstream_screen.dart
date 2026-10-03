@@ -12,6 +12,7 @@ import 'assessment_dashboard_tab.dart';
 import 'documents_tab.dart';
 import 'recommendations_tab.dart';
 import 'tasks_tab.dart';
+import '../../visits/presentation/visits_tab.dart';
 
 /// A consultant's workspace for one assigned enterprise. Sections come from
 /// the side menu (AppShell) and live in the URL (?section=…).
@@ -32,6 +33,7 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
   static const sections = [
     ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
     ShellSection('tasks', 'Tasks', Icons.task_alt),
+    ShellSection('visits', 'Visits', Icons.where_to_vote_outlined),
     ShellSection('recommendations', 'Recommendations', Icons.lightbulb_outline),
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
@@ -62,6 +64,7 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
         'recommendations' => RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
         'documents' => DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
         'files' => FilesTab(enterpriseId: enterpriseId),
+        'visits' => VisitsTab(enterpriseId: enterpriseId),
         'sessions' => SessionsTab(enterpriseId: enterpriseId),
         _ => AssessmentDashboardTab(enterpriseId: enterpriseId, readOnly: false),
       },

@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/greeting_header.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../../portfolio/presentation/programme_clock_card.dart';
 
 /// Loan-readiness dashboard — computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
@@ -105,6 +106,8 @@ class AssessmentDashboardTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (showGreeting) GreetingHeader(summary: enterprise.businessName),
+                  ProgrammeClockCard(enterprise: enterprise),
+                  const SizedBox(height: Space.xl),
                   Text('Loan readiness', style: text.titleLarge),
                   const SizedBox(height: Space.md),
                   if (wide)

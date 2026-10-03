@@ -14,6 +14,7 @@ import '../../legal_workstream/presentation/tasks_tab.dart';
 import '../providers/enterprise_providers.dart';
 import 'enterprise_details_tab.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../visits/presentation/visits_tab.dart';
 
 /// The Admin's home for a single enterprise. The loan-readiness Dashboard
 /// leads (the programme's purpose), then Tasks, Recommendations,
@@ -29,6 +30,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
   static const sections = [
     ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
     ShellSection('tasks', 'Tasks', Icons.task_alt),
+    ShellSection('visits', 'Visits', Icons.where_to_vote_outlined),
     ShellSection('recommendations', 'Recommendations', Icons.lightbulb_outline),
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
@@ -77,6 +79,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
             'recommendations' => RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
             'documents' => DocumentsTab(enterpriseId: enterpriseId, readOnly: false),
             'files' => FilesTab(enterpriseId: enterpriseId),
+            'visits' => VisitsTab(enterpriseId: enterpriseId),
             'sessions' => SessionsTab(enterpriseId: enterpriseId),
             'details' => EnterpriseDetailsTab(enterprise: enterprise),
             _ => AssessmentDashboardTab(enterpriseId: enterpriseId, readOnly: false),

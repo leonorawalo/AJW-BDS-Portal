@@ -17,7 +17,12 @@ class EnterpriseGrid extends StatelessWidget {
     required this.emptyState,
     this.showOwner = true,
     this.bottomPadding = 0,
+    this.header,
   });
+
+  /// Shown under the greeting, above the cards (e.g. a consultant's ToR
+  /// measures).
+  final Widget? header;
 
   final List<Enterprise> enterprises;
   final void Function(Enterprise) onOpen;
@@ -51,6 +56,11 @@ class EnterpriseGrid extends StatelessWidget {
                   child: PageBody(child: GreetingHeader(summary: enterprises.isEmpty ? null : _summary)),
                 ),
               ),
+              if (header != null)
+                SliverPadding(
+                  padding: padding.copyWith(top: 0),
+                  sliver: SliverToBoxAdapter(child: PageBody(child: header!)),
+                ),
               if (enterprises.isEmpty)
                 SliverFillRemaining(hasScrollBody: false, child: emptyState)
               else
@@ -58,21 +68,33 @@ class EnterpriseGrid extends StatelessWidget {
                   padding: padding.copyWith(top: 0, bottom: padding.bottom + bottomPadding),
                   sliver: SliverToBoxAdapter(
                     child: PageBody(
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: columns,
-                          mainAxisExtent: 112,
-                          crossAxisSpacing: Space.lg,
-                          mainAxisSpacing: Space.md,
-                        ),
-                        itemCount: enterprises.length,
-                        itemBuilder: (context, i) => EnterpriseTile(
-                          enterprise: enterprises[i],
-                          showOwner: showOwner,
-                          onTap: () => onOpen(enterprises[i]),
-                        ),
+                      // Rows of [columns] cards; each card sizes to its content
+                      // (chips may wrap), and cards in a row share a height.
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < enterprises.length; i += columns) ...[
+                            if (i > 0) const SizedBox(height: Space.md),
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (var j = i; j < i + columns; j++) ...[
+                                    if (j > i) const SizedBox(width: Space.lg),
+                                    Expanded(
+                                      child: j < enterprises.length
+                                          ? EnterpriseTile(
+                                              enterprise: enterprises[j],
+                                              showOwner: showOwner,
+                                              onTap: () => onOpen(enterprises[j]),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),

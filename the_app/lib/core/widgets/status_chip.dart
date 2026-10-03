@@ -32,7 +32,13 @@ class StatusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[Icon(icon, size: 14, color: fg), const SizedBox(width: 4)],
-          Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg, height: 1.2)),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg, height: 1.2),
+            ),
+          ),
         ],
       ),
     );
