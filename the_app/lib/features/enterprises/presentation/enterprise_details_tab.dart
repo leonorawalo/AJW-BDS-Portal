@@ -8,6 +8,9 @@ import '../providers/enterprise_providers.dart';
 import '../../user_management/models/invite_request.dart';
 import '../../user_management/presentation/invite_flow.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/labeled_value.dart';
 
 /// Business info, lifecycle status, Going Concern toggle, and current
 /// consultant assignments — what used to be the whole of the Admin's
@@ -57,69 +60,110 @@ class _EnterpriseDetailsTabState extends ConsumerState<EnterpriseDetailsTab> {
   Widget build(BuildContext context) {
     final enterprise = widget.enterprise;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(enterprise.businessName, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 4),
-          Text('Owner: ${enterprise.ownerName}'),
-          if (enterprise.phoneNumber != null) Text('Phone: ${enterprise.phoneNumber}'),
-          if (enterprise.email != null) Text('Email: ${enterprise.email}'),
-          if (enterprise.county != null) Text('County: ${enterprise.county}'),
-          if (enterprise.industry != null) Text('Industry: ${enterprise.industry}'),
-          if (enterprise.registrationNumber != null)
-            Text('Registration no.: ${enterprise.registrationNumber}'),
-          if (enterprise.kraPin != null) Text('KRA PIN: ${enterprise.kraPin}'),
-          Text('Enrolled: ${enterprise.enrolledAt.toLocal().toString().split(' ').first}'
-              ' (${enterprise.monthsSinceEnrolment} months ago)'),
-          const SizedBox(height: 24),
+    final text = Theme.of(context).textTheme;
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final enrolled = enterprise.enrolledAt.toLocal();
+    final facts = <(String, String)>[
+      ('Owner', enterprise.ownerName),
+      if (enterprise.phoneNumber != null) ('Phone', enterprise.phoneNumber!),
+      if (enterprise.email != null) ('Email', enterprise.email!),
+      if (enterprise.county != null) ('County', enterprise.county!),
+      if (enterprise.industry != null) ('Industry', enterprise.industry!),
+      if (enterprise.registrationNumber != null) ('Registration no.', enterprise.registrationNumber!),
+      if (enterprise.kraPin != null) ('KRA PIN', enterprise.kraPin!),
+      ('Enrolled', '${enrolled.day} ${months[enrolled.month - 1]} ${enrolled.year} (${enterprise.monthsSinceEnrolment} months ago)'),
+    ];
 
-          Text('Owner account', style: Theme.of(context).textTheme.titleMedium),
-          Text(
-            "The login account that sees this enterprise as \"theirs\" — separate from the "
-            '"Owner" text above, which is just a name.',
-            style: Theme.of(context).textTheme.bodySmall,
+    Widget section(String title, String? subtitle, Widget child) => Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(title, style: text.titleMedium),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: text.bodySmall),
+                ],
+                const SizedBox(height: Space.md),
+                child,
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          _OwnerAccountLink(enterprise: enterprise),
-          const SizedBox(height: 24),
+        );
 
-          Text('Consultants', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          _AssignedConsultants(enterpriseId: enterprise.id),
-          const SizedBox(height: 32),
-
-          Text('Lifecycle status', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          DropdownButton<LifecycleStatus>(
-            value: enterprise.lifecycleStatus,
-            onChanged: _isUpdating
-                ? null
-                : (status) {
-                    if (status != null) _updateLifecycleStatus(status);
+    return ListView(
+      padding: PageBody.paddingFor(context),
+      children: [
+        PageBody(
+          maxWidth: 900,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(enterprise.businessName, style: text.headlineMedium),
+              const SizedBox(height: Space.lg),
+              section(
+                'Business',
+                null,
+                LayoutBuilder(
+                  builder: (context, c) {
+                    final columns = c.maxWidth >= 560 ? 2 : 1;
+                    final w = (c.maxWidth - Space.lg * (columns - 1)) / columns;
+                    return Wrap(
+                      spacing: Space.lg,
+                      runSpacing: Space.md,
+                      children: [
+                        for (final (label, value) in facts) SizedBox(width: w, child: LabeledValue(label: label, value: value)),
+                      ],
+                    );
                   },
-            items: LifecycleStatus.values
-                .map((status) => DropdownMenuItem(value: status, child: Text(status.label)))
-                .toList(),
+                ),
+              ),
+              const SizedBox(height: Space.lg),
+              section(
+                'Owner account',
+                'The login that sees this enterprise as theirs. Separate from the owner name above, which is only a name.',
+                _OwnerAccountLink(enterprise: enterprise),
+              ),
+              const SizedBox(height: Space.lg),
+              section('Consultants', null, _AssignedConsultants(enterpriseId: enterprise.id)),
+              const SizedBox(height: Space.lg),
+              section(
+                'Programme status',
+                'Going concern is the ToR measure and is tracked separately from the lifecycle stage.',
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DropdownButtonFormField<LifecycleStatus>(
+                      initialValue: enterprise.lifecycleStatus,
+                      decoration: const InputDecoration(labelText: 'Lifecycle stage'),
+                      onChanged: _isUpdating
+                          ? null
+                          : (status) {
+                              if (status != null) _updateLifecycleStatus(status);
+                            },
+                      items: LifecycleStatus.values
+                          .map((status) => DropdownMenuItem(value: status, child: Text(status.label)))
+                          .toList(),
+                    ),
+                    const SizedBox(height: Space.md),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Going concern achieved'),
+                      subtitle: enterprise.goingConcernAchievedAt != null
+                          ? Text('Since ${enterprise.goingConcernAchievedAt!.toLocal().toString().split(' ').first}')
+                          : const Text('Not yet'),
+                      value: enterprise.goingConcernStatus == GoingConcernStatus.achieved,
+                      onChanged: _isUpdating ? null : _toggleGoingConcern,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-
-          Text('Going Concern (TOR KPI — independent of lifecycle status)',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Achieved'),
-            subtitle: enterprise.goingConcernAchievedAt != null
-                ? Text('Since ${enterprise.goingConcernAchievedAt!.toLocal().toString().split(' ').first}')
-                : const Text('Not yet achieved'),
-            value: enterprise.goingConcernStatus == GoingConcernStatus.achieved,
-            onChanged: _isUpdating ? null : _toggleGoingConcern,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

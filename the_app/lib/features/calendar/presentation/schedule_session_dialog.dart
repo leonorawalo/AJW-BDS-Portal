@@ -6,6 +6,7 @@ import '../models/participant_availability.dart';
 import '../models/session_invitee.dart';
 import '../providers/calendar_providers.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Books a meeting on the caller's own Google Calendar and invites the
 /// chosen participants. Who can be picked comes from
@@ -72,10 +73,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _time ?? const TimeOfDay(hour: 10, minute: 0),
-    );
+    final picked = await showTimePicker(context: context, initialTime: _time ?? const TimeOfDay(hour: 10, minute: 0));
     if (picked != null) {
       setState(() => _time = picked);
       _checkAvailability();
@@ -93,7 +91,9 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     }
     setState(() => _checkingAvailability = true);
     try {
-      final result = await ref.read(consultationSessionRepositoryProvider).checkAvailability(
+      final result = await ref
+          .read(consultationSessionRepositoryProvider)
+          .checkAvailability(
             enterpriseId: widget.enterpriseId,
             participantIds: _participantIds.toList(),
             startsAt: startsAt,
@@ -116,14 +116,8 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
         title: const Text('Calendar clash'),
         content: Text('Busy at this time: ${busy.join(', ')}.\n\nBook the meeting anyway?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Pick another time'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Book anyway'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Pick another time')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Book anyway')),
         ],
       ),
     );
@@ -160,14 +154,14 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     try {
       final repo = ref.read(consultationSessionRepositoryProvider);
       Future<void> book(bool force) => repo.scheduleSession(
-            enterpriseId: widget.enterpriseId,
-            participantIds: _participantIds.toList(),
-            title: title,
-            startsAt: startsAt,
-            endsAt: _endsAt,
-            description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-            force: force,
-          );
+        enterpriseId: widget.enterpriseId,
+        participantIds: _participantIds.toList(),
+        title: title,
+        startsAt: startsAt,
+        endsAt: _endsAt,
+        description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+        force: force,
+      );
       try {
         await book(force);
       } on SessionClashException catch (clash) {
@@ -180,8 +174,11 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
       if (mounted) Navigator.pop(context, true);
     } on GoogleNotConnectedException {
       ref.invalidate(myGoogleConnectionProvider);
-      setState(() => _error = 'Your Google Calendar is not connected (or access expired). '
-          'Connect it from the Sessions tab and try again.');
+      setState(
+        () => _error =
+            'Your Google Calendar is not connected (or access expired). '
+            'Connect it from the Sessions tab and try again.',
+      );
     } catch (e) {
       setState(() => _error = 'Could not schedule: $e');
     } finally {
@@ -196,96 +193,86 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
 
     return AlertDialog(
       title: const Text('Schedule meeting'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            const SizedBox(height: 12),
-            Text('Participants', style: Theme.of(context).textTheme.labelLarge),
-            candidatesAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(8),
-                child: AjwLoadingView(),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 360, maxWidth: 480),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
               ),
-              error: (_, _) => const Text('Could not load who you can invite.'),
-              data: (candidates) => _ParticipantPicker(
-                candidates: candidates,
-                selected: _participantIds,
-                onChanged: (id, checked) {
-                  setState(() => checked ? _participantIds.add(id) : _participantIds.remove(id));
+              const SizedBox(height: Space.lg),
+              Text('Participants', style: Theme.of(context).textTheme.labelLarge),
+              candidatesAsync.when(
+                loading: () => const Padding(padding: EdgeInsets.all(8), child: AjwLoadingView()),
+                error: (_, _) => const Text('Could not load who you can invite.'),
+                data: (candidates) => _ParticipantPicker(
+                  candidates: candidates,
+                  selected: _participantIds,
+                  onChanged: (id, checked) {
+                    setState(() => checked ? _participantIds.add(id) : _participantIds.remove(id));
+                    _checkAvailability();
+                  },
+                ),
+              ),
+              const SizedBox(height: Space.lg),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.event),
+                      label: Text(_date == null ? 'Date' : localizations.formatMediumDate(_date!)),
+                      onPressed: _pickDate,
+                    ),
+                  ),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.schedule),
+                      label: Text(_time == null ? 'Time' : localizations.formatTimeOfDay(_time!)),
+                      onPressed: _pickTime,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Space.lg),
+              DropdownButtonFormField<int>(
+                initialValue: _durationMinutes,
+                decoration: const InputDecoration(labelText: 'Duration'),
+                items: [for (final m in _durations) DropdownMenuItem(value: m, child: Text('$m minutes'))],
+                onChanged: (m) {
+                  setState(() => _durationMinutes = m ?? _durationMinutes);
                   _checkAvailability();
                 },
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.event),
-                    label: Text(_date == null ? 'Date' : localizations.formatMediumDate(_date!)),
-                    onPressed: _pickDate,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.schedule),
-                    label: Text(_time == null ? 'Time' : localizations.formatTimeOfDay(_time!)),
-                    onPressed: _pickTime,
-                  ),
-                ),
+              if (_checkingAvailability)
+                const Padding(padding: EdgeInsets.only(top: 12), child: LinearProgressIndicator())
+              else if (_availability != null) ...[
+                const SizedBox(height: Space.lg),
+                _AvailabilitySummary(availability: _availability!),
               ],
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: _durationMinutes,
-              decoration: const InputDecoration(labelText: 'Duration'),
-              items: [
-                for (final m in _durations) DropdownMenuItem(value: m, child: Text('$m minutes')),
+              const SizedBox(height: Space.lg),
+              TextField(
+                controller: _notesController,
+                decoration: const InputDecoration(labelText: 'Agenda / notes (optional)'),
+                maxLines: 3,
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: Space.lg),
+                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
-              onChanged: (m) {
-                setState(() => _durationMinutes = m ?? _durationMinutes);
-                _checkAvailability();
-              },
-            ),
-            if (_checkingAvailability)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: LinearProgressIndicator(),
-              )
-            else if (_availability != null) ...[
-              const SizedBox(height: 12),
-              _AvailabilitySummary(availability: _availability!),
             ],
-            const SizedBox(height: 12),
-            TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(labelText: 'Agenda / notes (optional)'),
-              maxLines: 3,
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ],
-          ],
+          ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context, false), child: const Text('Cancel')),
         FilledButton(
           onPressed: _isSaving ? null : _submit,
-          child: _isSaving
-              ? const AjwLoader(dotSize: 6)
-              : const Text('Schedule'),
+          child: _isSaving ? const AjwLoader(dotSize: 6) : const Text('Schedule'),
         ),
       ],
     );
@@ -333,19 +320,19 @@ class _AvailabilitySummary extends StatelessWidget {
     final busy = availability.where((a) => a.status == AvailabilityStatus.busy).toList();
 
     (IconData, Color, String) line(ParticipantAvailability a) => switch (a.status) {
-          AvailabilityStatus.free => (Icons.check_circle, Colors.green, '${a.name}: free'),
-          AvailabilityStatus.busy => (Icons.warning_amber, colors.error, '${a.name}: busy at this time'),
-          AvailabilityStatus.notConnected => (
-              Icons.mail_outline,
-              colors.onSurfaceVariant,
-              '${a.name}: hasn\'t connected Google, will be invited by email',
-            ),
-          AvailabilityStatus.unknown => (
-              Icons.help_outline,
-              colors.onSurfaceVariant,
-              '${a.name}: availability unknown (may need to reconnect Google)',
-            ),
-        };
+      AvailabilityStatus.free => (Icons.check_circle, Colors.green, '${a.name}: free'),
+      AvailabilityStatus.busy => (Icons.warning_amber, colors.error, '${a.name}: busy at this time'),
+      AvailabilityStatus.notConnected => (
+        Icons.mail_outline,
+        colors.onSurfaceVariant,
+        '${a.name}: hasn\'t connected Google, will be invited by email',
+      ),
+      AvailabilityStatus.unknown => (
+        Icons.help_outline,
+        colors.onSurfaceVariant,
+        '${a.name}: availability unknown (may need to reconnect Google)',
+      ),
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,19 +343,21 @@ class _AvailabilitySummary extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         for (final a in availability)
-          Builder(builder: (context) {
-            final (icon, color, text) = line(a);
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  Icon(icon, size: 18, color: color),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(text, style: Theme.of(context).textTheme.bodySmall)),
-                ],
-              ),
-            );
-          }),
+          Builder(
+            builder: (context) {
+              final (icon, color, text) = line(a);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 18, color: color),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(text, style: Theme.of(context).textTheme.bodySmall)),
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     );
   }

@@ -15,7 +15,7 @@ class DocumentRepository {
   Future<List<WorkstreamDocument>> fetchDocuments(String enterpriseId) async {
     final rows = await _client
         .from('documents')
-        .select()
+        .select('*, uploader:uploaded_by(first_name, last_name)')
         .eq('enterprise_id', enterpriseId)
         .order('uploaded_at', ascending: false);
     return (rows as List)
@@ -27,7 +27,7 @@ class DocumentRepository {
   Future<List<WorkstreamDocument>> fetchDocumentsForTask(String taskId) async {
     final rows = await _client
         .from('documents')
-        .select()
+        .select('*, uploader:uploaded_by(first_name, last_name)')
         .eq('task_id', taskId)
         .order('uploaded_at', ascending: false);
     return (rows as List)

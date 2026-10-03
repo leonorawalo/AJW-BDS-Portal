@@ -9,6 +9,7 @@ class WorkstreamDocument {
     required this.storagePath,
     this.mimeType,
     required this.uploadedAt,
+    this.uploaderName,
   });
 
   factory WorkstreamDocument.fromMap(Map<String, dynamic> map) => WorkstreamDocument(
@@ -21,6 +22,9 @@ class WorkstreamDocument {
         storagePath: map['storage_path'] as String,
         mimeType: map['mime_type'] as String?,
         uploadedAt: DateTime.parse(map['uploaded_at'] as String),
+        uploaderName: map['uploader'] == null
+            ? null
+            : '${map['uploader']['first_name'] ?? ''} ${map['uploader']['last_name'] ?? ''}'.trim(),
       );
 
   final String id;
@@ -32,6 +36,7 @@ class WorkstreamDocument {
   final String storagePath;
   final String? mimeType;
   final DateTime uploadedAt;
+  final String? uploaderName;
 
   bool get isImage {
     final ext = fileName.split('.').last.toLowerCase();

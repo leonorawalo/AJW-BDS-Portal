@@ -8,6 +8,8 @@ import '../models/task.dart';
 import '../providers/legal_workstream_providers.dart';
 import 'open_document_viewer.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/status_chip.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({
@@ -33,38 +35,45 @@ class TaskDetailScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(task.title, style: Theme.of(context).textTheme.headlineSmall),
+              Text(task.title, style: Theme.of(context).textTheme.headlineMedium),
               if (task.description != null) ...[
                 const SizedBox(height: 8),
                 Text(task.description!),
               ],
               const SizedBox(height: 16),
-              Row(
+              Wrap(
+                spacing: Space.md,
+                runSpacing: Space.md,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Chip(label: Text(task.priority.dbValue)),
-                  const SizedBox(width: 8),
+                  StatusChip('${task.priority.dbValue} priority'),
+                  if (task.specialization != null) StatusChip(task.specialization!, tone: StatusTone.brand),
                   if (readOnly)
-                    Chip(label: Text(task.status.dbValue))
+                    StatusChip(task.status.dbValue)
                   else
-                    DropdownButton<TaskStatus>(
-                      value: task.status,
-                      items: TaskStatus.values
-                          .map((s) => DropdownMenuItem(value: s, child: Text(s.dbValue)))
-                          .toList(),
-                      onChanged: (status) async {
-                        if (status == null) return;
-                        try {
-                          await ref.read(taskRepositoryProvider).updateTaskStatus(taskId, status);
-                          ref.invalidate(taskProvider(taskId));
-                          ref.invalidate(tasksProvider(task.enterpriseId));
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Could not update status: $e')),
-                            );
+                    SizedBox(
+                      width: 220,
+                      child: DropdownButtonFormField<TaskStatus>(
+                        initialValue: task.status,
+                        decoration: const InputDecoration(labelText: 'Status', isDense: true),
+                        items: TaskStatus.values
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s.dbValue)))
+                            .toList(),
+                        onChanged: (status) async {
+                          if (status == null) return;
+                          try {
+                            await ref.read(taskRepositoryProvider).updateTaskStatus(taskId, status);
+                            ref.invalidate(taskProvider(taskId));
+                            ref.invalidate(tasksProvider(task.enterpriseId));
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Could not update status: $e')),
+                              );
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
                 ],
               ),

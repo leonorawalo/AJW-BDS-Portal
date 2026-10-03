@@ -8,6 +8,7 @@ import '../../google_exports/presentation/google_export_flow.dart' show offerGoo
 import '../models/email_contact.dart';
 import '../providers/email_providers.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// "Write email", sent from the user's own Gmail. Either about an
 /// enterprise ([enterpriseId]: recipients picked from its contacts,
@@ -132,7 +133,7 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
             children: [
               if (widget.fromEmail != null)
                 Text('From: ${widget.fromEmail} (your Gmail)', style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: Space.lg),
               Text('To', style: Theme.of(context).textTheme.labelLarge),
               contactsAsync.when(
                 loading: () => const Padding(
@@ -163,12 +164,12 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
                   );
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Space.lg),
               TextField(
                 controller: _subjectController,
                 decoration: const InputDecoration(labelText: 'Subject'),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Space.lg),
               TextField(
                 controller: _bodyController,
                 decoration: const InputDecoration(labelText: 'Message', alignLabelWithHint: true),
@@ -176,7 +177,7 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
                 maxLines: 12,
               ),
               if (_error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: Space.lg),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ],

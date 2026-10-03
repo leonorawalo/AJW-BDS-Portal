@@ -12,7 +12,11 @@ import '../../google_exports/presentation/google_export_flow.dart' show offerGoo
 import '../data/enterprise_file_repository.dart';
 import '../models/enterprise_file.dart';
 import '../providers/drive_files_providers.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/file_filter_bar.dart';
 
 /// B2: the enterprise's working Google files. Anyone on the enterprise
 /// (Admin, Owner, consultants) can create a Doc / Sheet / Slides; it's
@@ -70,12 +74,7 @@ class FilesTab extends ConsumerWidget {
                     ),
                   ),
                 ])
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-                  itemCount: files.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) => _FileCard(file: files[i]),
-                ),
+              : _FilteredFiles(files: files),
         ),
       ),
     );
@@ -235,6 +234,74 @@ class _FileCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The file list with search and filters (type, who created it, when).
+class _FilteredFiles extends StatefulWidget {
+  const _FilteredFiles({required this.files});
+  final List<EnterpriseFile> files;
+
+  @override
+  State<_FilteredFiles> createState() => _FilteredFilesState();
+}
+
+class _FilteredFilesState extends State<_FilteredFiles> {
+  FileFilters _filters = const FileFilters();
+
+  @override
+  Widget build(BuildContext context) {
+    final files = widget.files;
+    final creators = {for (final f in files) f.createdBy: f.creatorName ?? 'Someone'};
+    final shown = files
+        .where((f) => _filters.matches(name: f.title, kind: f.kind.label, uploaderId: f.createdBy, at: f.createdAt))
+        .toList();
+    final padding = PageBody.paddingFor(context);
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: padding.copyWith(bottom: padding.bottom + 88),
+      children: [
+        PageBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FileFilterBar(
+                filters: _filters,
+                onChanged: (f) => setState(() => _filters = f),
+                kindLabel: 'File type',
+                kinds: [for (final k in GoogleFileKind.values) k.label],
+                uploaders: creators,
+                searchHint: 'Search by file name',
+              ),
+              const SizedBox(height: Space.lg),
+              Text(
+                _filters.isActive ? '${shown.length} of ${files.length} files' : '${files.length} files',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.charcoalSoft),
+              ),
+              const SizedBox(height: Space.sm),
+              if (shown.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: Space.xl),
+                  child: EmptyState(
+                    icon: Icons.search_off,
+                    title: 'Nothing matches',
+                    message: 'Try another search, or clear the filters.',
+                    action: OutlinedButton(
+                      onPressed: () => setState(() => _filters = const FileFilters()),
+                      child: const Text('Clear filters'),
+                    ),
+                  ),
+                )
+              else
+                for (final f in shown) ...[
+                  _FileCard(file: f),
+                  const SizedBox(height: Space.sm),
+                ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

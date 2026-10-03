@@ -6,6 +6,8 @@ import '../providers/enterprise_providers.dart';
 import '../../user_management/models/invite_request.dart';
 import '../../user_management/presentation/invite_flow.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../auth/presentation/auth_layout.dart' show AuthErrorBanner;
 
 class RegisterEnterpriseScreen extends ConsumerStatefulWidget {
   const RegisterEnterpriseScreen({super.key});
@@ -111,37 +113,29 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                      AuthErrorBanner(_errorMessage!),
+                      const SizedBox(height: Space.lg),
                     ],
+                    const _Group('The business'),
                     TextFormField(
                       controller: _businessNameController,
                       decoration: const InputDecoration(labelText: 'Business name'),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.xl),
+                    const _Group('The owner'),
                     TextFormField(
                       controller: _ownerNameController,
                       decoration: const InputDecoration(labelText: 'Owner name'),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.lg),
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(labelText: 'Phone number (optional)'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.lg),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -158,27 +152,28 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
                           'Emails them a link to set a password; their account is linked to this enterprise.',
                         ),
                       ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.xl),
+                    const _Group('Location and registration (optional)'),
                     TextFormField(
                       controller: _countyController,
                       decoration: const InputDecoration(labelText: 'County (optional)'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.lg),
                     TextFormField(
                       controller: _industryController,
                       decoration: const InputDecoration(labelText: 'Industry (optional)'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.lg),
                     TextFormField(
                       controller: _registrationNumberController,
                       decoration: const InputDecoration(labelText: 'Registration number (optional)'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Space.lg),
                     TextFormField(
                       controller: _kraPinController,
                       decoration: const InputDecoration(labelText: 'KRA PIN (optional)'),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: Space.xxl),
                     FilledButton(
                       onPressed: _isSubmitting ? null : _submit,
                       child: _isSubmitting
@@ -194,4 +189,15 @@ class _RegisterEnterpriseScreenState extends ConsumerState<RegisterEnterpriseScr
       ),
     );
   }
+}
+/// A small heading over a group of fields.
+class _Group extends StatelessWidget {
+  const _Group(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: Space.md),
+        child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      );
 }
