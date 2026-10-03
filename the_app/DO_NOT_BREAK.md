@@ -142,6 +142,14 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
 - "Automatically expose new tables" is OFF. Every new table needs
   explicit GRANTs: to `authenticated` (plus RLS policies) if the app
   uses it, and to `service_role` if an Edge Function uses it.
+- Terms of Reference tasks: each checklist item's `key` in
+  `lib/features/legal_workstream/models/task_template.dart` is stored in
+  `tasks.tor_key`, unique per enterprise + discipline. Never change or
+  reuse a key (a changed key adds a second copy of that task everywhere).
+  Titles marked "score" are read by the loan-readiness dashboard by exact
+  text (a unit test checks this). Tasks are added only through
+  `ensure_tor_tasks()` (migration 20261003100000), never by a hand-made
+  checklist button.
 - The audit log is written only by database triggers, never by the app.
 - Non-admins can't change role/status/specialization/email (a trigger
   guards it). Don't remove it.

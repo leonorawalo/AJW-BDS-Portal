@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/loan_readiness.dart';
 import '../models/task.dart';
+import '../../../shared/models/user_profile.dart';
 import '../models/task_template.dart';
 
 class TaskRepository {
@@ -51,27 +52,43 @@ class TaskRepository {
     });
   }
 
-  /// Bulk-creates a standard checklist (Legal or Accounting) as real
-  /// task rows — identical in shape to a manually-created task, just
-  /// created in one batch. Existing custom tasks aren't touched or
-  /// duplicate-checked; re-running this would create a second copy of
-  /// each — acceptable since callers only apply this once per
-  /// specialization per enterprise (see assign_consultant_screen).
-  Future<void> applyChecklist({
+  /// Adds whatever is missing of [specialization]'s ToR checklist to the
+  /// enterprise, for the consultant currently assigned to that discipline
+  /// (ensure_tor_tasks, migration 20261003100000). Safe to call any number
+  /// of times: each item exists at most once. Returns how many were added
+  /// (0 when nobody holds that discipline yet).
+  ///
+  /// Due dates follow the ToR clock from enrolment: going-concern items at
+  /// 3 months, bankable items at 6. For an enterprise enrolled long ago the
+  /// date would already have passed, so those get two weeks from today.
+  Future<int> ensureTorTasks({
     required String enterpriseId,
-    required String consultantId,
-    required List<TaskTemplate> checklist,
+    required ConsultantSpecialization specialization,
+    required DateTime enrolledAt,
   }) async {
-    final rows = checklist
-        .map((t) => {
-              'enterprise_id': enterpriseId,
-              'consultant_id': consultantId,
-              'title': t.title,
-              'description': t.description,
-              'priority': t.priority.dbValue,
-            })
-        .toList();
-    await _client.from('tasks').insert(rows);
+    final soonest = DateTime.now().add(const Duration(days: 14));
+    String dueFor(TorPhase phase) {
+      final byToR = enrolledAt.add(Duration(days: phase.dueAfterDays));
+      final due = byToR.isBefore(soonest) ? soonest : byToR;
+      return due.toIso8601String().split('T').first;
+    }
+
+    final items = [
+      for (final t in torChecklistFor(specialization))
+        {
+          'tor_key': t.key,
+          'title': t.title,
+          'description': t.description,
+          'priority': t.priority.dbValue,
+          'due_date': dueFor(t.phase),
+        },
+    ];
+    final added = await _client.rpc('ensure_tor_tasks', params: {
+      'p_enterprise_id': enterpriseId,
+      'p_specialization': specialization.dbValue,
+      'p_items': items,
+    });
+    return (added as num?)?.toInt() ?? 0;
   }
 
   Future<void> updateTaskStatus(String taskId, TaskStatus status) async {

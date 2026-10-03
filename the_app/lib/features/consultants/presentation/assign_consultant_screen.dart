@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/user_profile.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../enterprises/models/enterprise.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
-import '../../legal_workstream/models/task_template.dart';
 import '../../legal_workstream/providers/legal_workstream_providers.dart';
 import '../providers/consultant_assignment_providers.dart';
 import '../../../core/widgets/labeled_value.dart';
@@ -63,34 +63,21 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
             assignedByUserId: currentUserId,
           );
 
-      // The assignment itself has now succeeded. Everything below is a
-      // best-effort side effect (auto-applying that specialization's
-      // standard checklist) and must never be allowed to make a
-      // successful assignment read back as a failure — this is
-      // deliberately isolated in its own try/catch rather than sharing
-      // the outer one.
-      final checklist = switch (specialization) {
-        ConsultantSpecialization.legal => standardLegalChecklist,
-        ConsultantSpecialization.accounting => standardAccountingChecklist,
-        ConsultantSpecialization.marketing => null,
-      };
-      if (checklist != null) {
-        try {
-          final existingTasks = await ref.read(taskRepositoryProvider).fetchTasks(enterpriseId);
-          // Scoped to THIS specialization's tasks — Legal's checklist
-          // already being applied must never block Accounting's from
-          // auto-applying too (and vice versa).
-          final alreadyApplied = existingTasks.any((t) => t.specialization == specialization.dbValue);
-          if (!alreadyApplied) {
-            await ref.read(taskRepositoryProvider).applyChecklist(
-                  enterpriseId: enterpriseId,
-                  consultantId: consultantId,
-                  checklist: checklist,
-                );
-          }
-        } catch (e) {
-          if (kDebugMode) debugPrint('Auto-applying the standard checklist failed: $e');
+      // The assignment itself has now succeeded. Adding that discipline's
+      // Terms of Reference tasks is best-effort here (the Tasks tab adds
+      // anything missing again when it opens), so a failure must never
+      // make a successful assignment read back as a failure.
+      try {
+        final enterprise = await ref.read(enterpriseDetailProvider(enterpriseId).future);
+        if (enterprise != null) {
+          await ref.read(taskRepositoryProvider).ensureTorTasks(
+                enterpriseId: enterpriseId,
+                specialization: specialization,
+                enrolledAt: enterprise.enrolledAt,
+              );
         }
+      } catch (e) {
+        if (kDebugMode) debugPrint('Adding the ToR tasks failed: $e');
       }
 
       ref.invalidate(assignmentsListProvider);
@@ -103,6 +90,10 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
           SnackBar(content: Text('${specialization.label} consultant assigned.')),
         );
       }
+    } on PostgrestException catch (e) {
+      // e.g. "This consultant has no specialization yet. Set it on the
+      // Users screen…" (require_assignment_specialization trigger).
+      setState(() => _errorMessage = e.message);
     } catch (e) {
       setState(
         () => _errorMessage = 'Could not assign the ${specialization.label} consultant. Please try again.',

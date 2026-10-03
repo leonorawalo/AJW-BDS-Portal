@@ -41,6 +41,7 @@ class WorkstreamTask {
     required this.status,
     this.completedAt,
     this.specialization,
+    this.torKey,
   });
 
   factory WorkstreamTask.fromMap(Map<String, dynamic> map) => WorkstreamTask(
@@ -55,6 +56,7 @@ class WorkstreamTask {
         completedAt:
             map['completed_at'] != null ? DateTime.parse(map['completed_at'] as String) : null,
         specialization: map['specialization'] as String?,
+        torKey: map['tor_key'] as String?,
       );
 
   final String id;
@@ -73,4 +75,10 @@ class WorkstreamTask {
   /// model doesn't otherwise depend on shared/models/user_profile.dart
   /// and a display label is all this needs.
   final String? specialization;
+
+  /// Set for a Terms of Reference checklist item (task_template.dart);
+  /// null for a custom task.
+  final String? torKey;
+
+  bool get isTor => torKey != null;
 }

@@ -122,6 +122,9 @@ async function resolveTarget(payload: WebhookPayload): Promise<NotificationTarge
     // (applying a ToR checklist inserts 5-10 at once). created_by is set
     // by the database (default auth.uid()).
     if (record.created_by && record.created_by === record.consultant_id) return null;
+    // Terms of Reference checklist items arrive 10-20 at once when a
+    // consultant is assigned; the assignment push already covers them.
+    if (record.tor_key) return null;
 
     const { data: enterprise } = await supabase
       .from('enterprises')

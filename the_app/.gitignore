@@ -89,3 +89,6 @@ edge-functions.txt
 *jeko*
 *Ambit*
 *ambit*
+
+# Internal AJW programme documents (ToR etc.): reference only, never commit.
+assets/*.pdf
