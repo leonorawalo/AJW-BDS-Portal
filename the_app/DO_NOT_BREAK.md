@@ -119,6 +119,12 @@ This list is enforced in two places. Change all three together:
   `invite-user` function (`invited_by`, `invited_as`). Renaming either key
   in the function breaks that line:
   `{{ if .Data.invited_by }}{{ .Data.invited_by }} invited you as {{ .Data.invited_as }}.{{ end }}`
+- Auth user metadata keys the app reads and writes (per account):
+  `needs_password`, `google_prompt_done`, `google_connection_kept`,
+  `tours_seen` (guided tours already shown) and `tips_off`. Renaming one
+  resets that behaviour for everyone (e.g. every tour shows again).
+  Tour ids (`lib/features/tutorial/models/tour_catalog.dart`) are stored
+  in `tours_seen`: never rename one either.
 - Reset Password ("Forgot password") template link MUST be exactly:
   `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=recovery`
   (the app exchanges the token, then makes the person choose a new

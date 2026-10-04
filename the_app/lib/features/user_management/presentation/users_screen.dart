@@ -15,6 +15,8 @@ import '../../email/models/email_contact.dart';
 import '../../email/presentation/compose_email_dialog.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Admin: every account, with role, specialization and status
 /// (invited / active / suspended), plus resend invite, change
@@ -44,26 +46,26 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
     return AppShell(
       title: 'Users',
       globalKey: 'users',
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: TourAnchor(id: TourAnchors.usersInvite, child: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text('Invite user'),
         onPressed: () async {
           await showInviteUserDialog(context);
           ref.invalidate(managedUsersProvider);
         },
-      ),
+      )),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: TextField(
+            child: TourAnchor(id: TourAnchors.usersSearch, child: TextField(
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
                 hintText: 'Search by name or email',
                 isDense: true,
               ),
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-            ),
+            )),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -308,11 +310,11 @@ class _UserTile extends ConsumerWidget {
               child: Text(label, style: TextStyle(color: color, fontWeight: AppFonts.bodyStrong, fontSize: 12)),
             ),
             if (actions.isNotEmpty)
-              PopupMenuButton<_Action>(
+              TourAnchor(id: TourAnchors.usersFirst, child: PopupMenuButton<_Action>(
                 tooltip: 'Actions',
                 onSelected: (a) => _run(context, ref, a),
                 itemBuilder: (_) => actions,
-              ),
+              )),
           ],
         ),
       ),

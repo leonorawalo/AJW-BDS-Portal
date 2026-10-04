@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/attention/models/attention_spots.dart';
 import '../../features/attention/providers/attention_providers.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/tutorial/models/tour_catalog.dart';
+import '../../features/tutorial/presentation/tour_anchor.dart';
+import '../../features/tutorial/presentation/tour_host.dart';
 import '../../features/calendar/presentation/google_first_run_prompt.dart';
 import '../../features/enterprises/providers/enterprise_providers.dart';
 import '../../shared/models/user_profile.dart';
@@ -78,15 +81,21 @@ class AppShell extends ConsumerWidget {
     );
 
     return GoogleFirstRunPrompt(
-      child: Scaffold(
+      child: TourHost(
+        place: e != null ? 'section.${e.currentSection}' : globalKey,
+        inEnterprise: e != null,
+        child: Scaffold(
         appBar: AppBar(
           leading: Builder(
-            builder: (innerContext) => IconButton(
-              icon: AttentionDot(show: menuHasDot && (!wide || collapsed), child: const Icon(Icons.menu)),
-              tooltip: wide ? (collapsed ? 'Expand menu' : 'Collapse menu') : 'Menu',
-              onPressed: () => wide
-                  ? ref.read(sideNavCollapsedProvider.notifier).toggle()
-                  : Scaffold.of(innerContext).openDrawer(),
+            builder: (innerContext) => TourAnchor(
+              id: TourAnchors.hamburger,
+              child: IconButton(
+                icon: AttentionDot(show: menuHasDot && (!wide || collapsed), child: const Icon(Icons.menu)),
+                tooltip: wide ? (collapsed ? 'Expand menu' : 'Collapse menu') : 'Menu',
+                onPressed: () => wide
+                    ? ref.read(sideNavCollapsedProvider.notifier).toggle()
+                    : Scaffold.of(innerContext).openDrawer(),
+              ),
             ),
           ),
           titleSpacing: 0,
@@ -103,11 +112,15 @@ class AppShell extends ConsumerWidget {
               Flexible(
                 child: enterprise == null
                     ? Text(title, overflow: TextOverflow.ellipsis)
-                    : _EnterpriseSwitcher(enterprise: enterprise!),
+                    : TourAnchor(id: TourAnchors.switcher, child: _EnterpriseSwitcher(enterprise: enterprise!)),
               ),
             ],
           ),
-          actions: [...actions, if (wide) const UserProfileBadge(), const SizedBox(width: Space.sm)],
+          actions: [
+            ...actions,
+            if (wide) const TourAnchor(id: TourAnchors.badge, child: UserProfileBadge()),
+            const SizedBox(width: Space.sm),
+          ],
           bottom: const PreferredSize(preferredSize: Size.fromHeight(3), child: _BrandBar()),
         ),
         drawer: wide ? null : Drawer(child: menu),
@@ -118,16 +131,20 @@ class AppShell extends ConsumerWidget {
           child: wide
               ? Row(
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: collapsed ? 72 : 248,
-                      child: menu,
+                    TourAnchor(
+                      id: TourAnchors.sideMenu,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: collapsed ? 72 : 248,
+                        child: menu,
+                      ),
                     ),
                     const VerticalDivider(width: 1),
                     Expanded(child: body),
                   ],
                 )
               : body,
+          ),
         ),
       ),
     );
@@ -266,7 +283,7 @@ class _SideMenu extends ConsumerWidget {
         for (final s in e.sections) _NavEntry(s.key, s.label, s.icon, () => e.onSelectSection(s.key)),
     ];
 
-    Widget item(_NavEntry entry, bool selected, {bool dot = false}) {
+    Widget tile(_NavEntry entry, bool selected, {bool dot = false}) {
       final icon = AttentionDot(show: dot && !selected, child: Icon(entry.icon, size: expanded ? 22 : null));
       if (!expanded) {
         return Padding(
@@ -310,6 +327,11 @@ class _SideMenu extends ConsumerWidget {
       );
     }
 
+    Widget item(_NavEntry entry, bool selected, {bool dot = false, String? anchor}) {
+      final t = tile(entry, selected, dot: dot);
+      return anchor == null ? t : TourAnchor(id: anchor, child: t);
+    }
+
     return Material(
       color: AppColors.surface,
       child: SafeArea(
@@ -324,14 +346,19 @@ class _SideMenu extends ConsumerWidget {
             if (inDrawer)
               const Padding(
                 padding: EdgeInsets.fromLTRB(Space.lg, Space.xl, Space.lg, Space.md),
-                child: UserProfileBadge(onAppBar: false),
+                child: TourAnchor(id: TourAnchors.badge, child: UserProfileBadge(onAppBar: false)),
               ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.md),
                 children: [
                   for (final entry in global)
-                    item(entry, entry.key == globalKey, dot: AppShell._dotForPage(spots, entry.key, globalKey)),
+                    item(
+                      entry,
+                      entry.key == globalKey,
+                      dot: AppShell._dotForPage(spots, entry.key, globalKey),
+                      anchor: TourAnchors.page(entry.key),
+                    ),
                   if (e != null) ...[
                     if (global.isNotEmpty)
                       const Padding(padding: EdgeInsets.symmetric(vertical: Space.md), child: Divider()),
@@ -346,7 +373,12 @@ class _SideMenu extends ConsumerWidget {
                         ),
                       ),
                     for (final entry in sections)
-                      item(entry, entry.key == e.currentSection, dot: AppShell._dotForSection(spots, e, entry.key)),
+                      item(
+                        entry,
+                        entry.key == e.currentSection,
+                        dot: AppShell._dotForSection(spots, e, entry.key),
+                        anchor: TourAnchors.section(entry.key),
+                      ),
                   ],
                 ],
               ),
@@ -354,9 +386,19 @@ class _SideMenu extends ConsumerWidget {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(Space.md),
-              child: item(
-                _NavEntry('signout', 'Sign out', Icons.logout, () => ref.read(authRepositoryProvider).signOut()),
-                false,
+              child: Column(
+                crossAxisAlignment: expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
+                children: [
+                  item(
+                    _NavEntry('help', 'Show tips for this page', Icons.help_outline, () => TourHost.replay(context)),
+                    false,
+                    anchor: TourAnchors.help,
+                  ),
+                  item(
+                    _NavEntry('signout', 'Sign out', Icons.logout, () => ref.read(authRepositoryProvider).signOut()),
+                    false,
+                  ),
+                ],
               ),
             ),
           ],

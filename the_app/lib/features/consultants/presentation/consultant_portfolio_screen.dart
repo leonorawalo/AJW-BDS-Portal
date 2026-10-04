@@ -10,6 +10,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../enterprises/presentation/enterprise_grid.dart';
 import '../../portfolio/presentation/monthly_report_button.dart';
 import '../../portfolio/presentation/portfolio_kpis_section.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Reuses enterprisesListProvider — the *same* query Admin's screen uses.
 /// What comes back differs per role purely because of RLS
@@ -40,7 +42,7 @@ class ConsultantPortfolioScreen extends ConsumerWidget {
         ),
         data: (enterprises) => EnterpriseGrid(
           enterprises: enterprises,
-          header: enterprises.isEmpty ? null : const PortfolioKpisSection(trailing: MonthlyReportButton()),
+          header: enterprises.isEmpty ? null : const TourAnchor(id: TourAnchors.kpis, child: PortfolioKpisSection(trailing: TourAnchor(id: TourAnchors.monthlyReport, child: MonthlyReportButton()))),
           onRefresh: () async => ref.invalidate(enterprisesListProvider),
           onOpen: (e) => context.go(
             '/consultant/enterprises/${e.id}?name=${Uri.encodeComponent(e.businessName)}',

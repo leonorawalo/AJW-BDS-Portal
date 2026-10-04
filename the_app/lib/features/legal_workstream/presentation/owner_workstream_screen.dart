@@ -14,6 +14,8 @@ import 'recommendations_tab.dart';
 import 'tasks_tab.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../visits/presentation/visits_tab.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// The Owner's home: their (single) enterprise's workspace. Sections come
 /// from the side menu (AppShell) and live in the URL (/owner?section=…).
@@ -69,8 +71,8 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             onSelectSection: (key) => context.go('/owner?section=$key'),
           ),
           actions: [
-            EmailMenuButton(enterpriseId: enterprise.id),
-            ExportMenuButton(enterpriseId: enterprise.id),
+            TourAnchor(id: TourAnchors.email, child: EmailMenuButton(enterpriseId: enterprise.id)),
+            TourAnchor(id: TourAnchors.export, child: ExportMenuButton(enterpriseId: enterprise.id)),
           ],
           body: switch (current) {
             // Owner can mark task status as well as create tasks and comment.

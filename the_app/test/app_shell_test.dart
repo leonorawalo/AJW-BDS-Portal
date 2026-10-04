@@ -9,6 +9,8 @@ import 'package:the_app/features/attention/providers/attention_providers.dart';
 import 'package:the_app/features/auth/providers/auth_providers.dart';
 import 'package:the_app/features/enterprises/models/enterprise.dart';
 import 'package:the_app/features/enterprises/providers/enterprise_providers.dart';
+import 'package:the_app/features/tutorial/data/tour_progress_repository.dart';
+import 'package:the_app/features/tutorial/providers/tutorial_providers.dart';
 import 'package:the_app/shared/models/user_profile.dart';
 
 /// C5: the side-navigation shell must lay out without overflow on a laptop
@@ -67,6 +69,8 @@ void main() {
         enterprisesListProvider.overrideWith((ref) async => [blueFarm]),
         attentionRepositoryProvider.overrideWithValue(attention),
         attentionProvider.overrideWith((ref) => attention.fetch()),
+        // Tours have their own tests (tutorial_test.dart); keep them out of these.
+        tourProgressRepositoryProvider.overrideWithValue(_NoTours()),
       ],
       child: MaterialApp.router(routerConfig: router),
     );
@@ -168,4 +172,17 @@ class _FakeAttention implements AttentionRepository {
   @override
   Future<void> markSeen({String? enterpriseId, required String section}) async =>
       seen.add('${enterpriseId ?? ''}|$section');
+}
+
+class _NoTours implements TourProgressRepository {
+  @override
+  bool get ready => false;
+  @override
+  bool get tipsOff => true;
+  @override
+  bool hasSeen(String tourId) => true;
+  @override
+  Future<void> markSeen(String tourId) async {}
+  @override
+  Future<void> setTipsOff(bool off) async {}
 }

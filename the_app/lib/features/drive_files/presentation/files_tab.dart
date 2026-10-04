@@ -17,6 +17,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/file_filter_bar.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// B2: the enterprise's working Google files. Anyone on the enterprise
 /// (Admin, Owner, consultants) can create a Doc / Sheet / Slides; it's
@@ -31,7 +33,7 @@ class FilesTab extends ConsumerWidget {
     final filesAsync = ref.watch(enterpriseFilesProvider(enterpriseId));
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: TourAnchor(id: TourAnchors.filesAdd, child: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('New file'),
         onPressed: () async {
@@ -53,7 +55,7 @@ class FilesTab extends ConsumerWidget {
           );
           if (kind != null && context.mounted) await _create(context, ref, kind);
         },
-      ),
+      )),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(enterpriseFilesProvider(enterpriseId)),
         child: filesAsync.when(
@@ -266,14 +268,14 @@ class _FilteredFilesState extends State<_FilteredFiles> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              FileFilterBar(
+              TourAnchor(id: TourAnchors.filesFilters, child: FileFilterBar(
                 filters: _filters,
                 onChanged: (f) => setState(() => _filters = f),
                 kindLabel: 'File type',
                 kinds: [for (final k in GoogleFileKind.values) k.label],
                 uploaders: creators,
                 searchHint: 'Search by file name',
-              ),
+              )),
               const SizedBox(height: Space.lg),
               Text(
                 _filters.isActive ? '${shown.length} of ${files.length} files' : '${files.length} files',
@@ -295,7 +297,7 @@ class _FilteredFilesState extends State<_FilteredFiles> {
                 )
               else
                 for (final f in shown) ...[
-                  _FileCard(file: f),
+                  TourAnchor(id: TourAnchors.filesFirst, child: _FileCard(file: f)),
                   const SizedBox(height: Space.sm),
                 ],
             ],

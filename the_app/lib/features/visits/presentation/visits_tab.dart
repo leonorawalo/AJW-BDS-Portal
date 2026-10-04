@@ -12,6 +12,8 @@ import '../../consultants/models/consultant_assignment.dart';
 import '../../consultants/providers/consultant_assignment_providers.dart';
 import '../models/enterprise_visit.dart';
 import '../providers/visit_providers.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 const _months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -36,11 +38,11 @@ class VisitsTab extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: canLog
-          ? FloatingActionButton.extended(
+          ? TourAnchor(id: TourAnchors.visitsAdd, child: FloatingActionButton.extended(
               onPressed: () => showLogVisitDialog(context, enterpriseId: enterpriseId),
               icon: const Icon(Icons.add_location_alt_outlined),
               label: const Text('Log a visit'),
-            )
+            ))
           : null,
       body: visitsAsync.when(
         loading: () => const AjwLoadingView(),
@@ -63,7 +65,7 @@ class VisitsTab extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ThisMonth(visits: visits, assignments: assignments),
+                    TourAnchor(id: TourAnchors.visitsMonth, child: _ThisMonth(visits: visits, assignments: assignments)),
                     const SizedBox(height: Space.xl),
                     if (visits.isEmpty)
                       Padding(
@@ -102,7 +104,7 @@ class VisitsTab extends ConsumerWidget {
         ));
         currentMonth = month;
       }
-      out.add(_VisitCard(visit: v, mine: v.consultantId == me?.id, enterpriseId: enterpriseId));
+      out.add(TourAnchor(id: TourAnchors.visitsFirst, child: _VisitCard(visit: v, mine: v.consultantId == me?.id, enterpriseId: enterpriseId)));
       out.add(const SizedBox(height: Space.sm));
     }
     return out;

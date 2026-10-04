@@ -13,6 +13,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/greeting_header.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../portfolio/presentation/programme_clock_card.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Loan-readiness dashboard — computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
@@ -75,7 +77,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
           _ScoreCard(label: 'Credit readiness', score: creditReadiness, compact: !wide),
           _KcbCard(met: kcbMet.length, total: kcbTotal),
         ];
-        final facts = Column(
+        final facts = TourAnchor(id: TourAnchors.facts, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SectionHeader(
@@ -86,8 +88,8 @@ class AssessmentDashboardTab extends ConsumerWidget {
             ),
             _EditableFacts(enterprise: enterprise, readOnly: readOnly),
           ],
-        );
-        final drivers = Column(
+        ));
+        final drivers = TourAnchor(id: TourAnchors.drivers, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _SectionHeader(
@@ -96,7 +98,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
             ),
             _DerivedFromTasksList(inputs: inputs),
           ],
-        );
+        ));
 
         return ListView(
           padding: PageBody.paddingFor(context),
@@ -106,12 +108,12 @@ class AssessmentDashboardTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (showGreeting) GreetingHeader(summary: enterprise.businessName),
-                  ProgrammeClockCard(enterprise: enterprise),
+                  TourAnchor(id: TourAnchors.clock, child: ProgrammeClockCard(enterprise: enterprise)),
                   const SizedBox(height: Space.xl),
                   Text('Loan readiness', style: text.titleLarge),
                   const SizedBox(height: Space.md),
                   if (wide)
-                    IntrinsicHeight(
+                    TourAnchor(id: TourAnchors.scores, child: IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -121,9 +123,9 @@ class AssessmentDashboardTab extends ConsumerWidget {
                           ],
                         ],
                       ),
-                    )
+                    ))
                   else ...[
-                    IntrinsicHeight(
+                    TourAnchor(id: TourAnchors.scores, child: IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -132,7 +134,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
                           Expanded(child: scores[1]),
                         ],
                       ),
-                    ),
+                    )),
                     const SizedBox(height: Space.md),
                     scores[2],
                   ],

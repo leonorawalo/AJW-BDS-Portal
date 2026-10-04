@@ -15,6 +15,8 @@ import '../../google_exports/presentation/google_export_flow.dart';
 import '../../google_exports/providers/google_export_providers.dart';
 import '../models/workshop.dart';
 import '../providers/workshop_providers.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 String _day(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
@@ -35,7 +37,7 @@ class WorkshopsScreen extends ConsumerWidget {
     return AppShell(
       title: 'Workshops',
       globalKey: 'workshops',
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: TourAnchor(id: TourAnchors.workshopsAdd, child: FloatingActionButton.extended(
         onPressed: () async {
           final id = await showDialog<String>(context: context, builder: (_) => const _NewWorkshopDialog());
           ref.invalidate(workshopsProvider);
@@ -43,7 +45,7 @@ class WorkshopsScreen extends ConsumerWidget {
         },
         icon: const Icon(Icons.add),
         label: const Text('New workshop'),
-      ),
+      )),
       body: workshopsAsync.when(
         loading: () => const AjwLoadingView(),
         error: (_, _) => EmptyState(
@@ -71,7 +73,7 @@ class WorkshopsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final w in workshops) ...[
-                      _WorkshopCard(workshop: w, onTap: () => context.go('${_home(role)}/workshops/${w.id}')),
+                      TourAnchor(id: TourAnchors.workshopsFirst, child: _WorkshopCard(workshop: w, onTap: () => context.go('${_home(role)}/workshops/${w.id}'))),
                       const SizedBox(height: Space.sm),
                     ],
                   ],

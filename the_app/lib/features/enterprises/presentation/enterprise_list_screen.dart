@@ -9,6 +9,8 @@ import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/widgets/empty_state.dart';
 import 'enterprise_grid.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 class EnterpriseListScreen extends ConsumerWidget {
   const EnterpriseListScreen({super.key});
@@ -20,12 +22,12 @@ class EnterpriseListScreen extends ConsumerWidget {
     return AppShell(
       title: 'Enterprises',
       globalKey: 'enterprises',
-      actions: const [PortfolioExportButton()],
-      floatingActionButton: FloatingActionButton.extended(
+      actions: const [TourAnchor(id: TourAnchors.portfolioExport, child: PortfolioExportButton())],
+      floatingActionButton: TourAnchor(id: TourAnchors.enterprisesAdd, child: FloatingActionButton.extended(
         onPressed: () => context.go('/admin/enterprises/new'),
         icon: const Icon(Icons.add),
         label: const Text('Register enterprise'),
-      ),
+      )),
       body: enterprisesAsync.when(
         loading: () => const AjwLoadingView(),
         error: (error, _) => EmptyState(

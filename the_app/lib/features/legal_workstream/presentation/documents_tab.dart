@@ -11,6 +11,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/file_filter_bar.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 class DocumentsTab extends ConsumerStatefulWidget {
   const DocumentsTab({super.key, required this.enterpriseId, required this.readOnly});
@@ -38,11 +40,11 @@ class _DocumentsTabState extends ConsumerState<DocumentsTab> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: TourAnchor(id: TourAnchors.documentsAdd, child: FloatingActionButton.extended(
         onPressed: () => _pickAndUpload(context, ref),
         icon: const Icon(Icons.upload_file),
         label: const Text('Upload'),
-      ),
+      )),
       body: docsAsync.when(
         loading: () => const AjwLoadingView(),
         error: (_, _) => EmptyState(
@@ -80,13 +82,13 @@ class _DocumentsTabState extends ConsumerState<DocumentsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    FileFilterBar(
+                    TourAnchor(id: TourAnchors.documentsFilters, child: FileFilterBar(
                       filters: _filters,
                       onChanged: (f) => setState(() => _filters = f),
                       kindLabel: 'Category',
                       kinds: [...documentCategories, 'Uncategorized'],
                       uploaders: uploaders,
-                    ),
+                    )),
                     const SizedBox(height: Space.lg),
                     Text(
                       _filters.isActive ? '${shown.length} of ${docs.length} documents' : '${docs.length} documents',

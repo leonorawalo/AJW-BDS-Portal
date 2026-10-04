@@ -11,6 +11,8 @@ import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/labeled_value.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Business info, lifecycle status, Going Concern toggle, and current
 /// consultant assignments — what used to be the whole of the Admin's
@@ -124,10 +126,10 @@ class _EnterpriseDetailsTabState extends ConsumerState<EnterpriseDetailsTab> {
               section(
                 'Owner account',
                 'The login that sees this enterprise as theirs. Separate from the owner name above, which is only a name.',
-                _OwnerAccountLink(enterprise: enterprise),
+                TourAnchor(id: TourAnchors.detailsOwner, child: _OwnerAccountLink(enterprise: enterprise)),
               ),
               const SizedBox(height: Space.lg),
-              section('Consultants', null, _AssignedConsultants(enterpriseId: enterprise.id)),
+              section('Consultants', null, TourAnchor(id: TourAnchors.detailsConsultants, child: _AssignedConsultants(enterpriseId: enterprise.id))),
               const SizedBox(height: Space.lg),
               section(
                 'Programme status',

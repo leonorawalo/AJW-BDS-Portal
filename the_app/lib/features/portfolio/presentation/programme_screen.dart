@@ -6,6 +6,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../providers/portfolio_providers.dart';
 import 'monthly_report_button.dart';
 import 'portfolio_kpis_section.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Admin: the whole programme against the Terms of Reference measures,
 /// across all three disciplines, plus the monthly report.
@@ -23,7 +25,7 @@ class ProgrammeScreen extends ConsumerWidget {
         child: ListView(
           padding: padding,
           children: const [
-            PageBody(child: PortfolioKpisSection(trailing: MonthlyReportButton())),
+            PageBody(child: TourAnchor(id: TourAnchors.kpis, child: PortfolioKpisSection(trailing: TourAnchor(id: TourAnchors.monthlyReport, child: MonthlyReportButton())))),
           ],
         ),
       ),

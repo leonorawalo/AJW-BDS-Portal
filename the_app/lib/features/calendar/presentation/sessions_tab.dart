@@ -12,6 +12,8 @@ import 'schedule_session_dialog.dart';
 import '../../email/data/gmail_links.dart';
 import '../../email/presentation/compose_email_dialog.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Meetings on one enterprise. Admins, Consultants and Owners can all
 /// connect their own Google Calendar and schedule meetings (who they can
@@ -30,7 +32,7 @@ class SessionsTab extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: isConnected
-          ? FloatingActionButton.extended(
+          ? TourAnchor(id: TourAnchors.sessionsAdd, child: FloatingActionButton.extended(
               icon: const Icon(Icons.video_call),
               label: const Text('Schedule'),
               onPressed: () async {
@@ -44,14 +46,14 @@ class SessionsTab extends ConsumerWidget {
                   }
                 }
               },
-            )
+            ))
           : null,
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(consultationSessionsProvider(enterpriseId)),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
           children: [
-            const GoogleCalendarConnectionCard(),
+            const TourAnchor(id: TourAnchors.sessionsGoogle, child: GoogleCalendarConnectionCard()),
             const SizedBox(height: 16),
             ...sessionsAsync.when(
               loading: () => [const AjwLoadingView()],
@@ -86,12 +88,12 @@ class SessionsTab extends ConsumerWidget {
       Text('Upcoming', style: textTheme.titleMedium),
       const SizedBox(height: 8),
       if (upcoming.isEmpty) const Text('Nothing upcoming.'),
-      for (final s in upcoming) _SessionCard(session: s, people: _peopleOf(s, people)),
+      for (final s in upcoming) TourAnchor(id: TourAnchors.sessionsFirst, child: _SessionCard(session: s, people: _peopleOf(s, people))),
       if (past.isNotEmpty) ...[
         const SizedBox(height: 24),
         Text('Past & cancelled', style: textTheme.titleMedium),
         const SizedBox(height: 8),
-        for (final s in past) _SessionCard(session: s, people: _peopleOf(s, people)),
+        for (final s in past) TourAnchor(id: TourAnchors.sessionsFirst, child: _SessionCard(session: s, people: _peopleOf(s, people))),
       ],
     ];
   }

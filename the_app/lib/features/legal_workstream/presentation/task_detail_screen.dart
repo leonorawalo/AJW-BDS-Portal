@@ -10,6 +10,9 @@ import 'open_document_viewer.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
+import '../../tutorial/presentation/tour_host.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({
@@ -25,7 +28,7 @@ class TaskDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final taskAsync = ref.watch(taskProvider(taskId));
 
-    return Scaffold(
+    return TourHost(place: 'task', child: Scaffold(
       appBar: AppBar(title: const Text('Task')),
       body: taskAsync.when(
         loading: () => const AjwLoadingView(),
@@ -49,9 +52,9 @@ class TaskDetailScreen extends ConsumerWidget {
                   StatusChip('${task.priority.dbValue} priority'),
                   if (task.specialization != null) StatusChip(task.specialization!, tone: StatusTone.brand),
                   if (readOnly)
-                    StatusChip(task.status.dbValue)
+                    TourAnchor(id: TourAnchors.taskStatus, child: StatusChip(task.status.dbValue))
                   else
-                    SizedBox(
+                    TourAnchor(id: TourAnchors.taskStatus, child: SizedBox(
                       width: 220,
                       child: DropdownButtonFormField<TaskStatus>(
                         initialValue: task.status,
@@ -74,22 +77,22 @@ class TaskDetailScreen extends ConsumerWidget {
                           }
                         },
                       ),
-                    ),
+                    )),
                 ],
               ),
               const Divider(height: 32),
               Text('Documents', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              _TaskDocuments(taskId: taskId, enterpriseId: task.enterpriseId),
+              TourAnchor(id: TourAnchors.taskDocuments, child: _TaskDocuments(taskId: taskId, enterpriseId: task.enterpriseId)),
               const Divider(height: 32),
               Text('Comments', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              _TaskComments(taskId: taskId),
+              TourAnchor(id: TourAnchors.taskComments, child: _TaskComments(taskId: taskId)),
             ],
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

@@ -16,6 +16,8 @@ import '../../enterprises/providers/enterprise_providers.dart';
 import '../models/task.dart';
 import '../models/task_template.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// An enterprise's tasks. Terms of Reference (ToR) tasks are grouped by
 /// the ToR's two milestones (going concern by month 3, bankable by month
@@ -105,11 +107,11 @@ class _TasksTabState extends ConsumerState<TasksTab> {
       backgroundColor: Colors.transparent,
       floatingActionButton: !showAddButton
           ? null
-          : FloatingActionButton.extended(
+          : TourAnchor(id: TourAnchors.tasksAdd, child: FloatingActionButton.extended(
               onPressed: () => _showCreateTaskDialog(context),
               icon: const Icon(Icons.add),
               label: const Text('Add a task'),
-            ),
+            )),
       body: tasksAsync.when(
         loading: () => const AjwLoadingView(),
         error: (_, _) => EmptyState(
@@ -217,7 +219,7 @@ class _TaskList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (tor.isNotEmpty) ...[
-                Card(
+                TourAnchor(id: TourAnchors.tasksProgress, child: Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
                     padding: const EdgeInsets.all(Space.lg),
@@ -239,7 +241,7 @@ class _TaskList extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
+                )),
                 const SizedBox(height: Space.xl),
               ],
               for (final (title, list) in sections) ...[
@@ -256,11 +258,11 @@ class _TaskList extends StatelessWidget {
                   ),
                 ),
                 for (final task in list) ...[
-                  _TaskCard(
+                  TourAnchor(id: TourAnchors.tasksFirst, child: _TaskCard(
                     task: task,
                     showDiscipline: showDiscipline,
                     onTap: () => context.push('/workstream/enterprises/$enterpriseId/tasks/${task.id}?readOnly=$readOnly'),
-                  ),
+                  )),
                   const SizedBox(height: Space.sm),
                 ],
                 const SizedBox(height: Space.xl),

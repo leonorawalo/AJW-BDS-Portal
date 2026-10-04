@@ -8,6 +8,8 @@ import '../models/audit_entry.dart';
 import '../providers/audit_providers.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Admin: the audit log (Phase 9c), newest first, filterable by
 /// enterprise, user (what they did or what happened to them) and date.
@@ -96,7 +98,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Wrap(
+            child: TourAnchor(id: TourAnchors.auditFilters, child: Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -154,7 +156,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     child: const Text('Clear filters'),
                   ),
               ],
-            ),
+            )),
           ),
           const Divider(height: 1),
           Expanded(child: _buildList(context)),

@@ -12,6 +12,9 @@ import '../../legal_workstream/providers/legal_workstream_providers.dart';
 import '../providers/consultant_assignment_providers.dart';
 import '../../../core/widgets/labeled_value.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
+import '../../tutorial/presentation/tour_host.dart';
 
 class AssignConsultantScreen extends ConsumerStatefulWidget {
   const AssignConsultantScreen({super.key, this.preselectedEnterpriseId});
@@ -108,7 +111,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
     final consultantsAsync = ref.watch(consultantsListProvider);
     final enterprisesAsync = ref.watch(enterprisesListProvider);
 
-    return Scaffold(
+    return TourHost(place: 'assign', child: Scaffold(
       appBar: AppBar(
         title: const Text('Assign consultants'),
         leading: BackButton(onPressed: () => context.pop()),
@@ -184,7 +187,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           for (final specialization in ConsultantSpecialization.values) ...[
-                            _SpecializationAssignmentCard(
+                            TourAnchor(id: TourAnchors.assignFirst, child: _SpecializationAssignmentCard(
                               specialization: specialization,
                               enterpriseId: _selectedEnterpriseId,
                               consultants: consultants
@@ -199,7 +202,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
                               enabled: _selectedEnterpriseId != null,
                               onChanged: (id) => setState(() => _selectedConsultantId[specialization] = id),
                               onAssign: () => _assign(specialization),
-                            ),
+                            )),
                             const SizedBox(height: 12),
                           ],
                         ],
@@ -212,7 +215,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

@@ -15,6 +15,8 @@ import '../providers/enterprise_providers.dart';
 import 'enterprise_details_tab.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../visits/presentation/visits_tab.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// The Admin's home for a single enterprise. The loan-readiness Dashboard
 /// leads (the programme's purpose), then Tasks, Recommendations,
@@ -54,17 +56,23 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
         onSwitchEnterprise: (id) => context.go('/admin/enterprises/$id?section=$current'),
       ),
       actions: [
-        EmailMenuButton(enterpriseId: enterpriseId),
-        ExportMenuButton(enterpriseId: enterpriseId),
-        IconButton(
-          icon: const Icon(Icons.history),
-          tooltip: 'Audit log for this enterprise',
-          onPressed: () => context.push('/admin/audit?enterprise=$enterpriseId'),
+        TourAnchor(id: TourAnchors.email, child: EmailMenuButton(enterpriseId: enterpriseId)),
+        TourAnchor(id: TourAnchors.export, child: ExportMenuButton(enterpriseId: enterpriseId)),
+        TourAnchor(
+          id: TourAnchors.audit,
+          child: IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Audit log for this enterprise',
+            onPressed: () => context.push('/admin/audit?enterprise=$enterpriseId'),
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.person_add_alt),
-          tooltip: 'Assign consultant',
-          onPressed: () => context.push('/admin/enterprises/$enterpriseId/assign-consultant'),
+        TourAnchor(
+          id: TourAnchors.assign,
+          child: IconButton(
+            icon: const Icon(Icons.person_add_alt),
+            tooltip: 'Assign consultant',
+            onPressed: () => context.push('/admin/enterprises/$enterpriseId/assign-consultant'),
+          ),
         ),
       ],
       body: enterpriseAsync.when(

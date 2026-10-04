@@ -13,6 +13,8 @@ import 'documents_tab.dart';
 import 'recommendations_tab.dart';
 import 'tasks_tab.dart';
 import '../../visits/presentation/visits_tab.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// A consultant's workspace for one assigned enterprise. Sections come from
 /// the side menu (AppShell) and live in the URL (?section=…).
@@ -56,8 +58,8 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
         onSwitchEnterprise: (id) => context.go('/consultant/enterprises/$id?section=$current'),
       ),
       actions: [
-        EmailMenuButton(enterpriseId: enterpriseId),
-        ExportMenuButton(enterpriseId: enterpriseId),
+        TourAnchor(id: TourAnchors.email, child: EmailMenuButton(enterpriseId: enterpriseId)),
+        TourAnchor(id: TourAnchors.export, child: ExportMenuButton(enterpriseId: enterpriseId)),
       ],
       body: switch (current) {
         'tasks' => TasksTab(enterpriseId: enterpriseId, readOnly: false),

@@ -5,6 +5,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/greeting_header.dart';
 import '../models/enterprise.dart';
 import 'enterprise_tile.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 /// A role's home list of enterprises: greeting, then the enterprises as
 /// cards (two columns on wide screens). Pull to refresh.
@@ -82,11 +84,11 @@ class EnterpriseGrid extends StatelessWidget {
                                     if (j > i) const SizedBox(width: Space.lg),
                                     Expanded(
                                       child: j < enterprises.length
-                                          ? EnterpriseTile(
+                                          ? TourAnchor(id: TourAnchors.enterprisesFirst, child: EnterpriseTile(
                                               enterprise: enterprises[j],
                                               showOwner: showOwner,
                                               onTap: () => onOpen(enterprises[j]),
-                                            )
+                                            ))
                                           : const SizedBox.shrink(),
                                     ),
                                   ],

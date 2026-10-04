@@ -9,6 +9,8 @@ import '../../../core/widgets/status_chip.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/recommendation.dart';
 import '../providers/legal_workstream_providers.dart';
+import '../../tutorial/models/tour_catalog.dart';
+import '../../tutorial/presentation/tour_anchor.dart';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 String _day(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
@@ -27,11 +29,11 @@ class RecommendationsTab extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       floatingActionButton: readOnly
           ? null
-          : FloatingActionButton.extended(
+          : TourAnchor(id: TourAnchors.recsAdd, child: FloatingActionButton.extended(
               onPressed: () => _showCreateDialog(context, ref),
               icon: const Icon(Icons.add),
               label: const Text('Add recommendation'),
-            ),
+            )),
       body: recsAsync.when(
         loading: () => const AjwLoadingView(),
         error: (_, _) => EmptyState(
@@ -71,14 +73,14 @@ class RecommendationsTab extends ConsumerWidget {
                           child: Text('$title (${list.length})', style: text.titleMedium),
                         ),
                         for (final r in list) ...[
-                          _RecommendationCard(
+                          TourAnchor(id: TourAnchors.recsFirst, child: _RecommendationCard(
                             rec: r,
                             canAction: !readOnly && r.status == RecommendationStatus.open,
                             onActioned: () async {
                               await ref.read(recommendationRepositoryProvider).updateStatus(r.id, RecommendationStatus.actioned);
                               ref.invalidate(recommendationsProvider(enterpriseId));
                             },
-                          ),
+                          )),
                           const SizedBox(height: Space.sm),
                         ],
                         const SizedBox(height: Space.xl),
