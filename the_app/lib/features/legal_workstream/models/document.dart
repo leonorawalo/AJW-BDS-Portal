@@ -1,8 +1,10 @@
 class WorkstreamDocument {
   const WorkstreamDocument({
     required this.id,
-    required this.enterpriseId,
+    this.enterpriseId,
     this.taskId,
+    this.workshopId,
+    this.workshopTitle,
     required this.uploadedBy,
     this.category,
     required this.fileName,
@@ -14,8 +16,10 @@ class WorkstreamDocument {
 
   factory WorkstreamDocument.fromMap(Map<String, dynamic> map) => WorkstreamDocument(
         id: map['id'] as String,
-        enterpriseId: map['enterprise_id'] as String,
+        enterpriseId: map['enterprise_id'] as String?,
         taskId: map['task_id'] as String?,
+        workshopId: map['workshop_id'] as String?,
+        workshopTitle: (map['workshop'] as Map<String, dynamic>?)?['title'] as String?,
         uploadedBy: map['uploaded_by'] as String,
         category: map['category'] as String?,
         fileName: map['file_name'] as String,
@@ -28,8 +32,12 @@ class WorkstreamDocument {
       );
 
   final String id;
-  final String enterpriseId;
+
+  /// Null for programme files (e.g. a workshop registration list).
+  final String? enterpriseId;
   final String? taskId;
+  final String? workshopId;
+  final String? workshopTitle;
   final String uploadedBy;
   final String? category;
   final String fileName;
@@ -58,3 +66,6 @@ const List<String> documentCategories = [
   'ID/Photo Evidence',
   'Other',
 ];
+
+/// Category of the programme file a workshop's registration list is saved as.
+const workshopRegistrationListCategory = 'Workshop registration list';

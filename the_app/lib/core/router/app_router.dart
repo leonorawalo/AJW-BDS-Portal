@@ -18,6 +18,7 @@ import '../../features/legal_workstream/presentation/consultant_workstream_scree
 import '../../features/legal_workstream/presentation/owner_workstream_screen.dart';
 import '../../features/legal_workstream/presentation/task_detail_screen.dart';
 import '../../features/portfolio/presentation/programme_screen.dart';
+import '../../features/legal_workstream/presentation/programme_documents_screen.dart';
 import '../../features/user_management/presentation/users_screen.dart';
 import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../shared/models/user_profile.dart';
@@ -191,6 +192,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(path: 'users', builder: (context, state) => const UsersScreen()),
           GoRoute(path: 'programme', builder: (context, state) => const ProgrammeScreen()),
+          GoRoute(path: 'documents', builder: (context, state) => const ProgrammeDocumentsScreen()),
           GoRoute(
             path: 'workshops',
             builder: (context, state) => const WorkshopsScreen(),

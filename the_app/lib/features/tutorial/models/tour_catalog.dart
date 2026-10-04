@@ -52,6 +52,7 @@ abstract final class TourAnchors {
   static const auditFilters = 'audit.filters';
   static const workshopsAdd = 'workshops.add';
   static const workshopsFirst = 'workshops.first';
+  static const programmeDocumentsFilters = 'documents.programmeFilters';
 
   // Enterprise sections
   static const clock = 'dashboard.clock';
@@ -142,14 +143,14 @@ const _monthlyReport = TourStep(
 const _workshops = [
   TourStep(
     title: 'New workshop',
-    body: 'Record an onboarding, induction or BDS workshop. Then add attendees '
-        'one after another as they register.',
+    body: 'Record an onboarding, induction or BDS workshop. Open it afterwards to '
+        'add who came and submit the list.',
     anchors: [_A.workshopsAdd],
   ),
   TourStep(
     title: 'Registration lists',
-    body: 'Each list must reach M&E within 5 days. Open a workshop to export its '
-        'list to Google Sheets and mark it sent; late lists turn red.',
+    body: "Each workshop's list goes to AJW within 5 days, as the ToR asks. "
+        'Submitting it saves an Excel file in Documents for the admins; late lists turn red.',
     anchors: [_A.workshopsFirst],
   ),
 ];
@@ -217,7 +218,7 @@ final Map<String, List<TourStep>> _tours = {
     ),
     TourStep(
       title: 'Your menu',
-      body: 'Enterprises, Programme, Workshops, Users and the Audit log are here. '
+      body: 'Enterprises, Programme, Workshops, Documents, Users and the Audit log are here. '
           "When you open an enterprise, its sections appear underneath.",
       anchors: [_A.sideMenu, _A.hamburger],
     ),
@@ -310,6 +311,14 @@ final Map<String, List<TourStep>> _tours = {
     _monthlyReport,
   ],
   'admin.workshops': _workshops,
+  'admin.documents': const [
+    TourStep(
+      title: 'Programme documents',
+      body: 'Files that belong to no single enterprise, such as workshop registration '
+          'lists submitted by consultants. A red dot means a new one arrived.',
+      anchors: [_A.programmeDocumentsFilters],
+    ),
+  ],
   'admin.users': const [
     TourStep(
       title: 'Invite people',

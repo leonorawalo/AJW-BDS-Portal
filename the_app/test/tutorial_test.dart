@@ -23,7 +23,7 @@ import 'package:the_app/shared/models/user_profile.dart';
 /// spot that isn't on screen, and can always be skipped or turned off.
 void main() {
   const places = [
-    'welcome', 'enterprise', 'enterprises', 'programme', 'workshops', 'users', 'audit', 'portfolio',
+    'welcome', 'enterprise', 'enterprises', 'programme', 'workshops', 'documents', 'users', 'audit', 'portfolio',
     'section.dashboard', 'section.tasks', 'section.visits', 'section.recommendations',
     'section.documents', 'section.files', 'section.sessions', 'section.details', 'task', 'assign',
   ];

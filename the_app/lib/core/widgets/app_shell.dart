@@ -40,8 +40,8 @@ class AppShell extends ConsumerWidget {
   final String title;
   final Widget body;
 
-  /// Which role-level page is current ('enterprises', 'users', 'audit',
-  /// 'portfolio'), highlighted in the menu. Null inside an enterprise.
+  /// Which role-level page is current ('enterprises', 'documents', 'users',
+  /// 'audit', 'portfolio', ...), highlighted in the menu. Null inside an enterprise.
   final String? globalKey;
 
   /// Set when the screen is one enterprise's workspace.
@@ -197,6 +197,7 @@ List<_NavEntry> _globalEntries(BuildContext context, UserRole? role) => <_NavEnt
         _NavEntry('enterprises', 'Enterprises', Icons.business_outlined, () => context.go('/admin')),
         _NavEntry('programme', 'Programme', Icons.insights_outlined, () => context.go('/admin/programme')),
         _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/admin/workshops')),
+        _NavEntry('documents', 'Documents', Icons.folder_outlined, () => context.go('/admin/documents')),
         _NavEntry('users', 'Users', Icons.manage_accounts_outlined, () => context.go('/admin/users')),
         _NavEntry('audit', 'Audit log', Icons.history, () => context.go('/admin/audit')),
       ],

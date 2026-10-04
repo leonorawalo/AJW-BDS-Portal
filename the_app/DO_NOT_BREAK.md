@@ -188,10 +188,16 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   `ensure_tor_tasks()` (migration 20261003100000), never by a hand-made
   checklist button.
 - The audit log is written only by database triggers, never by the app.
+- Workshop registration lists are programme files: `documents` rows with
+  NO enterprise and a `workshop_id`, stored in Storage `documents` under
+  `<workshop id>/...` (migration 20261005120000). The first folder must
+  stay a uuid: the older per-enterprise storage policies cast it to one.
+  Only Admins (and the submitter) can read them; Owners never.
 - Red dots (migration 20261005100000): `my_attention()` returns section
   names that must equal the app's keys: enterprise `ShellSection` keys
   (`tasks`, `recommendations`, `documents`, `sessions`), `new`, and page
-  `globalKey`s (`users`, `workshops`). Rename one on either side = its
+  `globalKey`s (`users`, `workshops`, `documents`; latest definition in
+  migration 20261005120000). Rename one on either side = its
   dot silently never shows. `attention_seen` is written only through
   `mark_seen()` (the app shell calls it when a page opens).
 - Non-admins can't change role/status/specialization/email (a trigger

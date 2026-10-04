@@ -66,6 +66,15 @@ final documentsProvider =
   return ref.watch(documentRepositoryProvider).fetchDocuments(enterpriseId);
 });
 
+/// Programme files (workshop registration lists): Admin's Documents page.
+final programmeDocumentsProvider = FutureProvider.autoDispose<List<WorkstreamDocument>>((ref) {
+  return ref.watch(documentRepositoryProvider).fetchProgrammeDocuments();
+});
+
+final workshopListsProvider = FutureProvider.autoDispose.family<List<WorkstreamDocument>, String>((ref, workshopId) {
+  return ref.watch(documentRepositoryProvider).fetchWorkshopLists(workshopId);
+});
+
 final taskDocumentsProvider =
     FutureProvider.autoDispose.family<List<WorkstreamDocument>, String>((ref, taskId) {
   return ref.watch(documentRepositoryProvider).fetchDocumentsForTask(taskId);

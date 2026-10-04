@@ -10,9 +10,10 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../google_exports/models/sheet_tab.dart';
-import '../../google_exports/presentation/google_export_flow.dart';
-import '../../google_exports/providers/google_export_providers.dart';
+import '../../legal_workstream/models/document.dart';
+import '../../legal_workstream/presentation/open_document_viewer.dart';
+import '../../legal_workstream/providers/legal_workstream_providers.dart';
+import '../models/registration_list.dart';
 import '../models/workshop.dart';
 import '../providers/workshop_providers.dart';
 import '../../tutorial/models/tour_catalog.dart';
@@ -60,8 +61,8 @@ class WorkshopsScreen extends ConsumerWidget {
             return const EmptyState(
               icon: Icons.groups_outlined,
               title: 'No workshops yet',
-              message: 'Record each onboarding & induction workshop and its registration list. '
-                  'The Terms of Reference ask for the list to reach M&E within 5 days.',
+              message: 'Record each onboarding or induction workshop and who came, then submit '
+                  'the registration list to AJW. The Terms of Reference give 5 days after the workshop.',
             );
           }
           final padding = PageBody.paddingFor(context);
@@ -94,7 +95,7 @@ class _RegistrationChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (workshop.registrationSentAt != null) {
-      return const StatusChip('List sent to M&E', tone: StatusTone.success, icon: Icons.check_circle);
+      return const StatusChip('List submitted', tone: StatusTone.success, icon: Icons.check_circle);
     }
     if (workshop.registrationOverdue) {
       return StatusChip('List overdue (was due ${_day(workshop.registrationDue)})', tone: StatusTone.danger, icon: Icons.error_outline);
@@ -295,107 +296,27 @@ class WorkshopDetailScreen extends ConsumerWidget {
                     const SizedBox(height: Space.xs),
                     Text([_day(w.heldOn), w.kind, if (w.location != null) w.location!].join('  ·  '), style: text.bodyMedium),
                     const SizedBox(height: Space.md),
-                    Wrap(
-                      spacing: Space.sm,
-                      runSpacing: Space.sm,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _RegistrationChip(workshop: w),
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.table_chart_outlined),
-                          label: const Text('Registration list to Sheets'),
-                          onPressed: attendees.isEmpty
-                              ? null
-                              : () => runGoogleExport(
-                                    context,
-                                    ref,
-                                    appName: 'Google Sheets',
-                                    create: () => ref.read(googleExportRepositoryProvider).exportSheet(
-                                          title: 'Registration list: ${w.title}, ${_day(w.heldOn)}',
-                                          tabs: [
-                                            SheetTab(name: 'Registration', rows: [
-                                              ['#', 'Full name', 'Phone', 'Business', 'Workshop', 'Date', 'Location'],
-                                              for (var i = 0; i < attendees.length; i++)
-                                                [
-                                                  i + 1,
-                                                  attendees[i].fullName,
-                                                  attendees[i].phone ?? '',
-                                                  attendees[i].businessName ?? '',
-                                                  w.title,
-                                                  _day(w.heldOn),
-                                                  w.location ?? '',
-                                                ],
-                                            ]),
-                                          ],
-                                        ),
-                                  ),
-                        ),
-                        if (w.registrationSentAt == null)
-                          FilledButton.tonalIcon(
-                            icon: const Icon(Icons.outgoing_mail),
-                            label: const Text('Mark list sent to M&E'),
-                            onPressed: () async {
-                              await ref.read(workshopRepositoryProvider).setRegistrationSent(w.id, true);
-                              refresh();
-                            },
-                          )
-                        else
-                          TextButton(
-                            onPressed: () async {
-                              await ref.read(workshopRepositoryProvider).setRegistrationSent(w.id, false);
-                              refresh();
-                            },
-                            child: const Text('Undo "sent"'),
-                          ),
-                      ],
-                    ),
+                    Align(alignment: Alignment.centerLeft, child: _RegistrationChip(workshop: w)),
                     const SizedBox(height: Space.xl),
-                    Row(
-                      children: [
-                        Expanded(child: Text('Registration list (${attendees.length})', style: text.titleLarge)),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.person_add_alt_1_outlined),
-                          label: const Text('Add attendee'),
-                          onPressed: () async {
-                            await showDialog<void>(context: context, builder: (_) => _AddAttendeeDialog(workshopId: w.id));
-                            refresh();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: Space.md),
-                    if (attendees.isEmpty)
-                      Text('No one registered yet.', style: text.bodyMedium)
-                    else
-                      Card(
-                        margin: EdgeInsets.zero,
-                        child: Column(
-                          children: [
-                            for (var i = 0; i < attendees.length; i++) ...[
-                              if (i > 0) const Divider(indent: Space.lg, endIndent: Space.lg),
-                              ListTile(
-                                leading: CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: AppColors.surfaceSunken,
-                                  child: Text('${i + 1}', style: text.labelMedium),
-                                ),
-                                title: Text(attendees[i].fullName),
-                                subtitle: Text(
-                                  [attendees[i].businessName, attendees[i].phone].whereType<String>().join('  ·  '),
-                                ),
-                                trailing: IconButton(
-                                  tooltip: 'Remove',
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () async {
-                                    await ref.read(workshopRepositoryProvider).removeAttendee(attendees[i].id);
-                                    refresh();
-                                  },
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                    _Step(
+                      number: 1,
+                      title: 'Record who came',
+                      explanation: 'Add each person who attended, from the sign-in sheet or as they arrive. '
+                          'A name is enough; a phone number and business help M&E follow up.',
+                      action: FilledButton.icon(
+                        icon: const Icon(Icons.person_add_alt_1_outlined),
+                        label: const Text('Add attendee'),
+                        onPressed: () async {
+                          await showDialog<void>(context: context, builder: (_) => _AddAttendeeDialog(workshopId: w.id));
+                          refresh();
+                        },
                       ),
+                      child: attendees.isEmpty
+                          ? Text('No one added yet.', style: text.bodyMedium)
+                          : _AttendeeList(attendees: attendees, onChanged: refresh),
+                    ),
+                    const SizedBox(height: Space.lg),
+                    _SubmitStep(workshop: w, attendees: attendees, onSubmitted: refresh),
                   ],
                 ),
               ),
@@ -403,6 +324,194 @@ class WorkshopDetailScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// One numbered step of the workshop flow.
+class _Step extends StatelessWidget {
+  const _Step({required this.number, required this.title, required this.explanation, this.action, required this.child});
+
+  final int number;
+  final String title;
+  final String explanation;
+  final Widget? action;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(Space.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: AppColors.brandRedTint,
+                  child: Text('$number', style: text.labelLarge?.copyWith(color: AppColors.brandRedDeep)),
+                ),
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: text.titleMedium),
+                      const SizedBox(height: Space.xs),
+                      Text(explanation, style: text.bodyMedium?.copyWith(color: AppColors.charcoalSoft)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (action != null) ...[
+              const SizedBox(height: Space.md),
+              Align(alignment: Alignment.centerLeft, child: action),
+            ],
+            const SizedBox(height: Space.md),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AttendeeList extends ConsumerWidget {
+  const _AttendeeList({required this.attendees, required this.onChanged});
+  final List<WorkshopAttendee> attendees;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        for (var i = 0; i < attendees.length; i++) ...[
+          if (i > 0) const Divider(height: 1),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.surfaceSunken,
+              child: Text('${i + 1}', style: text.labelMedium),
+            ),
+            title: Text(attendees[i].fullName),
+            subtitle: Text([attendees[i].businessName, attendees[i].phone].whereType<String>().join('  ·  ')),
+            trailing: IconButton(
+              tooltip: 'Remove',
+              icon: const Icon(Icons.close),
+              onPressed: () async {
+                await ref.read(workshopRepositoryProvider).removeAttendee(attendees[i].id);
+                onChanged();
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Step 2: save the list as an Excel file in AJW's Documents (Admins).
+/// This is the ToR's "registration list to M&E within 5 days".
+class _SubmitStep extends ConsumerStatefulWidget {
+  const _SubmitStep({required this.workshop, required this.attendees, required this.onSubmitted});
+  final Workshop workshop;
+  final List<WorkshopAttendee> attendees;
+  final VoidCallback onSubmitted;
+
+  @override
+  ConsumerState<_SubmitStep> createState() => _SubmitStepState();
+}
+
+class _SubmitStepState extends ConsumerState<_SubmitStep> {
+  bool _busy = false;
+
+  Future<void> _submit() async {
+    final me = ref.read(currentUserProfileProvider).value;
+    if (me == null) return;
+    final list = RegistrationList(widget.workshop, widget.attendees);
+    setState(() => _busy = true);
+    try {
+      await ref.read(documentRepositoryProvider).uploadWorkshopList(
+            workshopId: widget.workshop.id,
+            uploadedByUserId: me.id,
+            fileName: list.fileName,
+            bytes: list.toBytes(),
+          );
+      await ref.read(workshopRepositoryProvider).setRegistrationSent(widget.workshop.id, true);
+      ref.invalidate(workshopListsProvider(widget.workshop.id));
+      widget.onSubmitted();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("List submitted. AJW's admins will find it under Documents.")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't submit the list. Check your connection and try again.")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = widget.workshop;
+    final text = Theme.of(context).textTheme;
+    final submitted = ref.watch(workshopListsProvider(w.id)).value ?? const <WorkstreamDocument>[];
+    final latest = submitted.isEmpty ? null : submitted.first;
+    final due = 'Due ${_day(w.registrationDue)}: the Terms of Reference give 5 days after the workshop.';
+
+    final Widget action = _busy
+        ? const AjwLoader(dotSize: 7, semanticsLabel: 'Submitting')
+        : latest == null
+            ? FilledButton.icon(
+                icon: const Icon(Icons.upload_file_outlined),
+                label: const Text('Submit list'),
+                onPressed: widget.attendees.isEmpty ? null : _submit,
+              )
+            : OutlinedButton.icon(
+                icon: const Icon(Icons.upload_file_outlined),
+                label: const Text('Submit an updated list'),
+                onPressed: widget.attendees.isEmpty ? null : _submit,
+              );
+
+    return _Step(
+      number: 2,
+      title: 'Submit the list to AJW',
+      explanation: 'Saves the list as an Excel file in Documents, where AJW\'s admins (M&E) pick it up. '
+          'Nothing is emailed. $due',
+      action: action,
+      child: latest == null
+          ? Text(
+              widget.attendees.isEmpty ? 'Add at least one attendee first.' : 'Not submitted yet.',
+              style: text.bodyMedium,
+            )
+          : Row(
+              children: [
+                const Icon(Icons.check_circle, color: AppColors.successGreen, size: 20),
+                const SizedBox(width: Space.sm),
+                Expanded(
+                  child: Text(
+                    'Submitted ${_day(latest.uploadedAt.toLocal())}'
+                    '${latest.uploaderName == null ? '' : ' by ${latest.uploaderName}'}'
+                    '${submitted.length > 1 ? ' (${submitted.length} versions)' : ''}.',
+                    style: text.bodyMedium,
+                  ),
+                ),
+                TextButton(onPressed: () => openDocumentViewer(context, latest), child: const Text('Open')),
+              ],
+            ),
     );
   }
 }
