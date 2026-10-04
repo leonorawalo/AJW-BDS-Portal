@@ -16,3 +16,6 @@ test_logins*.txt
 # Local Flutter SDK clone, if any; it was once added by mistake as a
 # broken submodule pointer.
 /flutter/
+
+# Original starter app (replaced by the_app); kept locally, not in git.
+/ajw_bds_app_flutter_v1/
