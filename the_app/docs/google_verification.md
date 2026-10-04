@@ -149,30 +149,23 @@ What Google checks: the consent screen matches this app and project (step
 3), and each sensitive scope is visibly used: `calendar.events` in steps
 5–7 and `gmail.send` in steps 8–9.
 
-## Data access justification (as pasted)
+## Data access justification (as submitted, 5 Oct 2026)
 
 Google Auth Platform → Data access has **one shared justification box**
-(1000-character limit) for all sensitive scopes, so the two texts above
-had to be combined. You've already pasted your combined version there.
-
-> **TO FILL IN:** paste here the exact text you saved in Data access, so
-> the doc matches what Google has. The draft below (923 characters) was
-> written on 2026-10-05 for comparison only; it is **not** a copy of what
-> was submitted.
+(1000-character limit) for all sensitive scopes. This is the exact text
+submitted on 5 Oct 2026. Don't edit it here unless it's also changed in
+the console (and not while the review is open).
 
 ```
-AJW BAGS Portal supports AJW Africa's business advisory programme: administrators, consultants and enterprise owners plan meetings and exchange emails about each enterprise's progress.
-
-calendar.events: when a user schedules a meeting in the portal, the app creates one event with a Google Meet link on that user's own calendar and invites the chosen participants; cancelling deletes that same event. It never reads or changes other events. calendar.freebusy cannot create events, and a Meet link requires inserting an event.
-
-gmail.send: the user writes a message in the portal, picks recipients from that enterprise's contacts and clicks Send; the app sends exactly that message from their own Gmail. It never reads, lists or deletes email, so we do not request gmail.readonly, modify or compose.
-
-Data is used only for these features, never sold or used for ads. Tokens are stored server-side and deleted on disconnect.
+AJW BAGS Portal supports AJW Africa's Business Advancement and Growth Services programme (administrators, consultants and enterprise owners).
+calendar.events: when a user schedules a meeting in the portal, the app creates one event with a Google Meet link on their own calendar and invites the chosen participants; cancelling deletes that same event. It never reads or edits other events. calendar.freebusy and calendar.readonly cannot create events or Meet links, and we don't request the full calendar scope.
+gmail.send: the user writes a message in the portal, picks recipients from the enterprise's contacts and clicks "Send via Gmail"; the app sends exactly that message from their Gmail, so replies reach them. It never reads, searches or deletes email.
+Data is used only for these features, never sold or used for ads; tokens are encrypted server-side and deleted on disconnect.
 ```
 
 ## Console checklist
 
-Status as of 2026-10-05. Portal address: **https://portal.ajwafrica.org**
+Status as of 2026-10-05 (SUBMITTED). Portal address: **https://portal.ajwafrica.org**
 (Firebase custom domain; Bluehost CNAME `portal` →
 `ajwafrica-bags-portal.web.app`).
 
@@ -200,17 +193,24 @@ Done:
 - [x] Audience → published **"In production"** (unverified until the
       review passes: warning shown, 100-user cap).
 
-Remaining, in order:
+- [x] Demo video recorded and uploaded to YouTube (Unlisted).
+- [x] **Verification SUBMITTED 5 Oct 2026** (video link + justification).
+      Google: first email in 3–5 days; full review up to 4–6 weeks.
+
+**While the review is open (from 5 Oct 2026), change NOTHING in the
+console:** publishing status, user type, scopes, branding or authorised
+domains. So the old web.app redirect URI and the web.app authorised
+domain stay **as they are** for now.
+
+After Google approves (later, optional):
 - [ ] Google OAuth client "Supabase Auth" (project ajw-bags-portal):
       remove the old redirect URI
-      `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`
-      (you, in the console).
-- [ ] Branding → Authorised domains: remove `ajwafrica-bags-portal.web.app`
-      so only `ajwafrica.org` is left (you, in the console).
-- [ ] After both: Connect once more on https://portal.ajwafrica.org to
-      confirm nothing depended on them.
-- [ ] Record the demo video (script above), upload to YouTube as Unlisted.
-- [ ] Verification centre → submit with the video link.
+      `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`.
+- [ ] Branding → Authorised domains: remove `ajwafrica-bags-portal.web.app`.
+- [ ] Then Connect once more on https://portal.ajwafrica.org to confirm
+      nothing depended on them.
+- [ ] Answer any follow-up email from Google's review team promptly
+      (it goes to the project's support/developer contact).
 
 Keep `https://ajwafrica-bags-portal.web.app/**` in **Supabase** →
 Authentication → Redirect URLs: that's for the web.app fallback's

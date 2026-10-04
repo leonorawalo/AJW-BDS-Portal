@@ -244,6 +244,11 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   warning, max 100 users ever.
 - Verified: no warning, no cap. Keep scopes, branding pages and domain
   exactly as submitted, or Google may ask for re-review.
+- **UNDER REVIEW since 5 Oct 2026** (submitted; review up to 4–6 weeks).
+  Until Google answers, change NOTHING in Google Auth Platform:
+  publishing status, user type, scopes, branding, authorised domains or
+  the "Supabase Auth" client's redirect URIs (the old web.app ones stay
+  for now). Details: `docs/google_verification.md`.
 
 ---------------------------------------------------------------------
 ## 8. Brand (AJW Brand Guideline, in `AJW Brand Elements/`)
