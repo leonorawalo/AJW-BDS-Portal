@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../enterprises/models/enterprise.dart';
+import '../../enterprises/models/loan_purpose.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
 import '../models/loan_readiness.dart';
 import '../providers/legal_workstream_providers.dart';
@@ -473,6 +474,7 @@ class _EditableFacts extends ConsumerStatefulWidget {
 class _EditableFactsState extends ConsumerState<_EditableFacts> {
   late TextEditingController _turnoverController;
   late TextEditingController _loanPurposeController;
+  String? _purposeChoice;
   DateTime? _businessStartedDate;
   bool _isSaving = false;
 
@@ -481,7 +483,7 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     super.initState();
     _turnoverController =
         TextEditingController(text: widget.enterprise.annualTurnover?.toStringAsFixed(0) ?? '');
-    _loanPurposeController = TextEditingController(text: widget.enterprise.loanPurpose ?? '');
+    _setPurpose(widget.enterprise.loanPurpose);
     _businessStartedDate = widget.enterprise.businessStartedDate;
   }
 
@@ -494,7 +496,8 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     }
     if (oldWidget.enterprise.id != widget.enterprise.id ||
         oldWidget.enterprise.loanPurpose != widget.enterprise.loanPurpose) {
-      _loanPurposeController.text = widget.enterprise.loanPurpose ?? '';
+      _loanPurposeController.dispose();
+      _setPurpose(widget.enterprise.loanPurpose);
     }
     if (oldWidget.enterprise.id != widget.enterprise.id ||
         oldWidget.enterprise.businessStartedDate != widget.enterprise.businessStartedDate) {
@@ -507,6 +510,12 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     _turnoverController.dispose();
     _loanPurposeController.dispose();
     super.dispose();
+  }
+
+  /// Dropdown choice plus, for "Other", the owner's own words.
+  void _setPurpose(String? stored) {
+    _purposeChoice = loanPurposeChoice(stored);
+    _loanPurposeController = TextEditingController(text: _purposeChoice == loanPurposeOther ? stored!.trim() : '');
   }
 
   Future<void> _pickDate() async {
@@ -534,8 +543,10 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     }
     setState(() => _isSaving = true);
     try {
-      final rawPurpose = _loanPurposeController.text.trim();
-      final loanPurpose = rawPurpose.isEmpty ? null : rawPurpose;
+      final otherText = _loanPurposeController.text.trim();
+      final loanPurpose = _purposeChoice == loanPurposeOther
+          ? (otherText.isEmpty ? null : otherText)
+          : _purposeChoice;
 
       await ref.read(enterpriseRepositoryProvider).updateFinancialFacts(
             enterpriseId: widget.enterprise.id,
@@ -633,13 +644,35 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
               onEditingComplete: _save,
             ),
             const SizedBox(height: Space.md),
-            TextField(
-              controller: _loanPurposeController,
-              enabled: !widget.readOnly,
-              decoration: const InputDecoration(labelText: 'Loan purpose (if known)'),
-              onSubmitted: (_) => _save(),
-              onEditingComplete: _save,
+            DropdownButtonFormField<String>(
+              // Rebuilt when the saved value changes (another enterprise, a save).
+              key: ValueKey('${widget.enterprise.id}|${widget.enterprise.loanPurpose}'),
+              initialValue: _purposeChoice,
+              decoration: const InputDecoration(
+                labelText: 'Loan purpose',
+                helperText: 'What a loan would pay for. Banks ask for this specifically.',
+              ),
+              items: [
+                for (final p in [...loanPurposes, loanPurposeOther]) DropdownMenuItem(value: p, child: Text(p)),
+              ],
+              onChanged: widget.readOnly
+                  ? null
+                  : (value) {
+                      setState(() => _purposeChoice = value);
+                      // "Other" saves once its description is typed.
+                      if (value != loanPurposeOther) _save();
+                    },
             ),
+            if (_purposeChoice == loanPurposeOther) ...[
+              const SizedBox(height: Space.md),
+              TextField(
+                controller: _loanPurposeController,
+                enabled: !widget.readOnly,
+                decoration: const InputDecoration(labelText: 'Describe the loan purpose'),
+                onSubmitted: (_) => _save(),
+                onEditingComplete: _save,
+              ),
+            ],
             if (_isSaving) ...[
               const SizedBox(height: Space.md),
               const Center(child: AjwLoader(dotSize: 7, semanticsLabel: 'Saving')),
