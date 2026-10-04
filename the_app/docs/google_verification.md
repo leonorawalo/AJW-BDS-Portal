@@ -78,14 +78,59 @@ has verified in Search Console. `*.supabase.co` can't be verified by AJW, so:
 
 ## Demo video: recording script (about 2½ minutes)
 
-Before you record:
-- Sign in to Chrome with a Google account that is **not yet connected**
-  (or disconnect first), so the consent screen appears.
-- Have a second portal user (the Owner or another consultant) to invite, and
-  know their email.
-- Close unrelated tabs, set zoom to 100%, and turn off notifications.
-- Upload to YouTube as **Unlisted**, in English. Say the lines out loud or
-  put them on screen as captions. Either works.
+### Pre-recording checklist
+
+**Record as the demo Consultant.** Consultants use both sensitive scopes
+(they schedule sessions and email the enterprise's people), and the script
+signs in as one.
+
+**The enterprise** (set up as Admin the day before):
+- [ ] One demo enterprise with a realistic name, county and industry. Its
+      **Owner** is the demo owner account, so the Owner shows up as a
+      meeting invitee and an email recipient.
+- [ ] The demo Consultant is **assigned** to it (Assign consultants, with
+      their specialization). Sign in as the Consultant once and open
+      **Tasks**: the ToR tasks appear by themselves.
+- [ ] Make it look lived-in: mark 3–4 ToR tasks **Completed** (the
+      Dashboard scores move), add one recommendation, log one visit,
+      upload one document.
+- [ ] Fill the Business facts on the Dashboard (turnover, start date, loan
+      purpose).
+- [ ] No leftover test enterprises in the Consultant's portfolio (only the
+      demo one, so the switcher and portfolio look clean).
+
+**Reset the Google connection, so the consent screen appears:**
+- [ ] As the Consultant: Sessions → Google card → **Disconnect**.
+- [ ] In the Google account you'll connect, go to
+      https://myaccount.google.com/permissions → **AJW Africa BAGS
+      Portal** → **Remove all access**. Then the consent screen lists every
+      permission fresh. (Connect always asks for consent, but after a
+      revoke the list is complete and clean.)
+- [ ] If the Consultant has never connected, the "Connect your Google
+      suite" prompt appears after sign-in. Tap **Later** before recording,
+      so step 2 starts from the Sessions card as scripted.
+- [ ] Dry run once (Connect, schedule, cancel, send one email), then reset
+      again with the two steps above.
+
+**Browser and screen:**
+- [ ] Use a **separate Chrome profile** signed in only to the demo Google
+      account. Then Google's account picker shows no personal accounts,
+      and no personal bookmarks or autofill appear.
+- [ ] Hide the bookmarks bar (Ctrl+Shift+B), set zoom to 100%, and close
+      other tabs. Have Google Calendar and Gmail → Sent open in two tabs
+      for steps 6 and 9.
+- [ ] Windows: turn on **Do not disturb** (no pop-up notifications), close
+      WhatsApp, email and chat apps, and hide desktop icons if they'll show.
+- [ ] Red dots in the portal menu are fine to show. Open any dotted
+      sections beforehand if you'd rather start clean.
+- [ ] Until verification passes, Google shows an "unverified app" warning
+      before the consent screen. That's expected: click **Advanced →
+      Go to AJW Africa BAGS Portal**, and keep it in the recording.
+- [ ] Don't show the Supabase/Google consoles, test_logins.txt, or any
+      password on screen.
+
+**Upload:** YouTube, **Unlisted**, in English. Say the lines out loud or
+put them on screen as captions; either works.
 
 | # | Time | Do (click / show) | Say |
 |---|---|---|---|
