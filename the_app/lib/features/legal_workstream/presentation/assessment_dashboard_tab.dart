@@ -417,51 +417,49 @@ class _DerivedFromTasksList extends StatelessWidget {
     final rows = LoanReadiness.drivers(inputs);
     final text = Theme.of(context).textTheme;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Space.sm),
-        child: Column(
-          children: [
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0) const Divider(indent: 56),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      rows[i].$1 ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: rows[i].$1 ? AppColors.successGreen : AppColors.lightGray,
-                      size: 22,
-                    ),
-                    const SizedBox(width: Space.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(rows[i].$2, style: text.bodyMedium?.copyWith(fontWeight: AppFonts.bodyStrong)),
-                          if (!rows[i].$1) ...[
-                            const SizedBox(height: 2),
-                            Text(rows[i].$3, style: text.bodySmall),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+    // Read-only status rows, not checkboxes: the colour says done or not,
+    // and nothing here looks tappable. Completing the named task in Tasks
+    // is what turns a row green.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: Space.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
+            decoration: BoxDecoration(
+              color: rows[i].$1 ? AppColors.successGreen.withValues(alpha: 0.10) : AppColors.surfaceSunken,
+              borderRadius: BorderRadius.circular(Radii.md),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(rows[i].$2, style: text.bodyMedium?.copyWith(fontWeight: AppFonts.bodyStrong)),
+                      const SizedBox(height: 2),
+                      Text(rows[i].$3, style: text.bodySmall),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-      ),
+                const SizedBox(width: Space.md),
+                Text(
+                  rows[i].$1 ? 'Done' : 'Not yet',
+                  style: text.labelMedium?.copyWith(
+                    color: rows[i].$1 ? AppColors.successGreen : AppColors.charcoalSoft,
+                    fontWeight: AppFonts.bodyStrong,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// The three facts (turnover, business-started date, loan purpose)
-/// nothing else in the schema captures — small inline editors right
-/// where their effect on the score is visible.
 class _EditableFacts extends ConsumerStatefulWidget {
   const _EditableFacts({required this.enterprise, required this.readOnly});
 
