@@ -142,6 +142,11 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
 - "Automatically expose new tables" is OFF. Every new table needs
   explicit GRANTs: to `authenticated` (plus RLS policies) if the app
   uses it, and to `service_role` if an Edge Function uses it.
+- "Automatically enable RLS on new tables" is ON: event trigger
+  `ensure_rls` → `public.rls_auto_enable()` (migration 20261004110000).
+  Every new `public` table starts with RLS on and NO policies, so it is
+  unreadable to the app until it gets policies + GRANTs. Don't drop the
+  trigger to "fix" an empty table; add the policies.
 - Terms of Reference tasks: each checklist item's `key` in
   `lib/features/legal_workstream/models/task_template.dart` is stored in
   `tasks.tor_key`, unique per enterprise + discipline. Never change or
