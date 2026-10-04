@@ -182,6 +182,12 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   `ensure_tor_tasks()` (migration 20261003100000), never by a hand-made
   checklist button.
 - The audit log is written only by database triggers, never by the app.
+- Red dots (migration 20261005100000): `my_attention()` returns section
+  names that must equal the app's keys: enterprise `ShellSection` keys
+  (`tasks`, `recommendations`, `documents`, `sessions`), `new`, and page
+  `globalKey`s (`users`, `workshops`). Rename one on either side = its
+  dot silently never shows. `attention_seen` is written only through
+  `mark_seen()` (the app shell calls it when a page opens).
 - Non-admins can't change role/status/specialization/email (a trigger
   guards it). Don't remove it.
 

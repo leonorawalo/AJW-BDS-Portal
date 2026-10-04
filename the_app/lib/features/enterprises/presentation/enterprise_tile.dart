@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/attention_dot.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../../attention/providers/attention_providers.dart';
 import '../models/enterprise.dart';
 import '../../portfolio/models/programme_clock.dart';
 
 /// One enterprise in a list (Admin's Enterprises, a consultant's portfolio):
 /// a monogram, the business name, who owns it and where, and its status
-/// chips. Used by both lists so they look and behave the same.
-class EnterpriseTile extends StatelessWidget {
+/// chips, with a red dot when something new inside needs the user's
+/// attention. Used by both lists so they look and behave the same.
+class EnterpriseTile extends ConsumerWidget {
   const EnterpriseTile({super.key, required this.enterprise, required this.onTap, this.showOwner = true});
 
   final Enterprise enterprise;
@@ -30,8 +34,9 @@ class EnterpriseTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final dot = ref.watch(attentionProvider).value?.enterprise(enterprise.id) ?? false;
     final details = [
       if (showOwner && enterprise.ownerName.isNotEmpty) enterprise.ownerName,
       enterprise.county ?? 'No county set',
@@ -45,15 +50,18 @@ class EnterpriseTile extends StatelessWidget {
           padding: const EdgeInsets.all(Space.lg),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceSunken,
-                  borderRadius: BorderRadius.circular(Radii.md),
+              AttentionDot(
+                show: dot,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSunken,
+                    borderRadius: BorderRadius.circular(Radii.md),
+                  ),
+                  child: Text(_monogram, style: text.titleMedium?.copyWith(color: AppColors.charcoal)),
                 ),
-                child: Text(_monogram, style: text.titleMedium?.copyWith(color: AppColors.charcoal)),
               ),
               const SizedBox(width: Space.lg),
               Expanded(

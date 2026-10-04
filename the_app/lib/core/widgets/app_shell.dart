@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/attention/models/attention_spots.dart';
+import '../../features/attention/providers/attention_providers.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/calendar/presentation/google_first_run_prompt.dart';
 import '../../features/enterprises/providers/enterprise_providers.dart';
@@ -9,6 +11,7 @@ import '../../shared/models/user_profile.dart';
 import '../branding/ajw_logo.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import 'attention_dot.dart';
 import 'user_profile_badge.dart';
 
 /// Laptop-first navigation shell (C5), in the style of Google Cloud /
@@ -45,11 +48,26 @@ class AppShell extends ConsumerWidget {
 
   static const _wideBreakpoint = 1000.0;
 
+  /// The open place never shows a dot: opening it is what clears it.
+  static bool _dotForPage(AttentionSpots spots, String key, String? openKey) {
+    if (key == openKey) return false;
+    return key == 'portfolio' ? spots.anyEnterprise : spots.page(key);
+  }
+
+  static bool _dotForSection(AttentionSpots spots, ShellEnterprise e, String key) =>
+      key != e.currentSection && spots.section(e.id, key);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
     final collapsed = ref.watch(sideNavCollapsedProvider);
     final role = ref.watch(currentUserProfileProvider).value?.role;
+    final spots = ref.watch(attentionProvider).value ?? AttentionSpots.none;
+    // Phone (or collapsed menu): the hamburger carries a dot when anything
+    // in the menu has one.
+    final e = enterprise;
+    final menuHasDot = _globalEntries(context, role).any((g) => _dotForPage(spots, g.key, globalKey)) ||
+        (e != null && e.sections.any((s) => _dotForSection(spots, e, s.key)));
 
     final menu = _SideMenu(
       role: role,
@@ -64,7 +82,7 @@ class AppShell extends ConsumerWidget {
         appBar: AppBar(
           leading: Builder(
             builder: (innerContext) => IconButton(
-              icon: const Icon(Icons.menu),
+              icon: AttentionDot(show: menuHasDot && (!wide || collapsed), child: const Icon(Icons.menu)),
               tooltip: wide ? (collapsed ? 'Expand menu' : 'Collapse menu') : 'Menu',
               onPressed: () => wide
                   ? ref.read(sideNavCollapsedProvider.notifier).toggle()
@@ -94,19 +112,23 @@ class AppShell extends ConsumerWidget {
         ),
         drawer: wide ? null : Drawer(child: menu),
         floatingActionButton: floatingActionButton,
-        body: wide
-            ? Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: collapsed ? 72 : 248,
-                    child: menu,
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: body),
-                ],
-              )
-            : body,
+        body: _SeenMarker(
+          enterpriseId: enterprise?.id,
+          section: enterprise?.currentSection ?? globalKey,
+          child: wide
+              ? Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: collapsed ? 72 : 248,
+                      child: menu,
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: body),
+                  ],
+                )
+              : body,
+        ),
       ),
     );
   }
@@ -152,6 +174,60 @@ class SideNavCollapsed extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
+/// The role's own pages at the top of the menu.
+List<_NavEntry> _globalEntries(BuildContext context, UserRole? role) => <_NavEntry>[
+      if (role == UserRole.administrator) ...[
+        _NavEntry('enterprises', 'Enterprises', Icons.business_outlined, () => context.go('/admin')),
+        _NavEntry('programme', 'Programme', Icons.insights_outlined, () => context.go('/admin/programme')),
+        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/admin/workshops')),
+        _NavEntry('users', 'Users', Icons.manage_accounts_outlined, () => context.go('/admin/users')),
+        _NavEntry('audit', 'Audit log', Icons.history, () => context.go('/admin/audit')),
+      ],
+      if (role == UserRole.consultant) ...[
+        _NavEntry('portfolio', 'My portfolio', Icons.work_outline, () => context.go('/consultant')),
+        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/consultant/workshops')),
+      ],
+    ];
+
+/// Marks the open page / enterprise section as seen (clearing its red dot)
+/// when it opens, and again whenever the user moves to another one.
+class _SeenMarker extends ConsumerStatefulWidget {
+  const _SeenMarker({required this.enterpriseId, required this.section, required this.child});
+
+  final String? enterpriseId;
+  final String? section;
+  final Widget child;
+
+  @override
+  ConsumerState<_SeenMarker> createState() => _SeenMarkerState();
+}
+
+class _SeenMarkerState extends ConsumerState<_SeenMarker> {
+  @override
+  void initState() {
+    super.initState();
+    _mark();
+  }
+
+  @override
+  void didUpdateWidget(_SeenMarker old) {
+    super.didUpdateWidget(old);
+    if (old.enterpriseId != widget.enterpriseId || old.section != widget.section) _mark();
+  }
+
+  void _mark() {
+    final section = widget.section;
+    if (section == null) return;
+    // After the frame: providers can't be changed while building.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) markSeen(ref, enterpriseId: widget.enterpriseId, section: section);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class _NavEntry {
   const _NavEntry(this.key, this.label, this.icon, this.onTap);
   final String key;
@@ -177,31 +253,21 @@ class _SideMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final spots = ref.watch(attentionProvider).value ?? AttentionSpots.none;
     void go(VoidCallback action) {
       if (inDrawer) Navigator.of(context).pop();
       action();
     }
 
-    final global = <_NavEntry>[
-      if (role == UserRole.administrator) ...[
-        _NavEntry('enterprises', 'Enterprises', Icons.business_outlined, () => context.go('/admin')),
-        _NavEntry('programme', 'Programme', Icons.insights_outlined, () => context.go('/admin/programme')),
-        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/admin/workshops')),
-        _NavEntry('users', 'Users', Icons.manage_accounts_outlined, () => context.go('/admin/users')),
-        _NavEntry('audit', 'Audit log', Icons.history, () => context.go('/admin/audit')),
-      ],
-      if (role == UserRole.consultant) ...[
-        _NavEntry('portfolio', 'My portfolio', Icons.work_outline, () => context.go('/consultant')),
-        _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/consultant/workshops')),
-      ],
-    ];
+    final global = _globalEntries(context, role);
     final e = enterprise;
     final sections = [
       if (e != null)
         for (final s in e.sections) _NavEntry(s.key, s.label, s.icon, () => e.onSelectSection(s.key)),
     ];
 
-    Widget item(_NavEntry entry, bool selected) {
+    Widget item(_NavEntry entry, bool selected, {bool dot = false}) {
+      final icon = AttentionDot(show: dot && !selected, child: Icon(entry.icon, size: expanded ? 22 : null));
       if (!expanded) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -215,7 +281,7 @@ class _SideMenu extends ConsumerWidget {
                 minimumSize: const Size(48, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
               ),
-              icon: Icon(entry.icon),
+              icon: icon,
               onPressed: () => go(entry.onTap),
             ),
           ),
@@ -231,7 +297,7 @@ class _SideMenu extends ConsumerWidget {
           minTileHeight: 44,
           contentPadding: const EdgeInsets.symmetric(horizontal: Space.md),
           horizontalTitleGap: Space.md,
-          leading: Icon(entry.icon, size: 22),
+          leading: icon,
           title: Text(
             entry.label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -264,7 +330,8 @@ class _SideMenu extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.md),
                 children: [
-                  for (final entry in global) item(entry, entry.key == globalKey),
+                  for (final entry in global)
+                    item(entry, entry.key == globalKey, dot: AppShell._dotForPage(spots, entry.key, globalKey)),
                   if (e != null) ...[
                     if (global.isNotEmpty)
                       const Padding(padding: EdgeInsets.symmetric(vertical: Space.md), child: Divider()),
@@ -278,7 +345,8 @@ class _SideMenu extends ConsumerWidget {
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.1),
                         ),
                       ),
-                    for (final entry in sections) item(entry, entry.key == e.currentSection),
+                    for (final entry in sections)
+                      item(entry, entry.key == e.currentSection, dot: AppShell._dotForSection(spots, e, entry.key)),
                   ],
                 ],
               ),

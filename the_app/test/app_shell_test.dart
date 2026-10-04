@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:the_app/core/widgets/app_shell.dart';
+import 'package:the_app/features/attention/data/attention_repository.dart';
+import 'package:the_app/features/attention/models/attention_spots.dart';
+import 'package:the_app/features/attention/providers/attention_providers.dart';
 import 'package:the_app/features/auth/providers/auth_providers.dart';
 import 'package:the_app/features/enterprises/models/enterprise.dart';
 import 'package:the_app/features/enterprises/providers/enterprise_providers.dart';
@@ -10,7 +13,9 @@ import 'package:the_app/shared/models/user_profile.dart';
 
 /// C5: the side-navigation shell must lay out without overflow on a laptop
 /// and on a phone, show the role's pages plus the enterprise's sections,
-/// collapse on wide screens, and open as a drawer on phones.
+/// collapse on wide screens, and open as a drawer on phones. Red dots show
+/// on sections with something new, never on the open one, and opening a
+/// section marks it seen.
 void main() {
   const admin = UserProfile(
     id: 'u1',
@@ -30,6 +35,8 @@ void main() {
   );
 
   String? selected;
+  late _FakeAttention attention;
+  setUp(() => attention = _FakeAttention(AttentionSpots.none));
 
   Widget app() {
     final router = GoRouter(routes: [
@@ -58,6 +65,8 @@ void main() {
       overrides: [
         currentUserProfileProvider.overrideWith((ref) async => admin),
         enterprisesListProvider.overrideWith((ref) async => [blueFarm]),
+        attentionRepositoryProvider.overrideWithValue(attention),
+        attentionProvider.overrideWith((ref) => attention.fetch()),
       ],
       child: MaterialApp.router(routerConfig: router),
     );
@@ -113,4 +122,50 @@ void main() {
     expect(selected, 'files');
     expect(find.text('Dashboard'), findsNothing, reason: 'drawer closes after choosing');
   });
+
+  testWidgets('red dots: on sections with news, not the open one; opening marks it seen', (tester) async {
+    attention = _FakeAttention(AttentionSpots.fromRows([
+      {'enterprise_id': 'e1', 'section': 'tasks'},
+      {'enterprise_id': 'e1', 'section': 'dashboard'},
+      {'enterprise_id': null, 'section': 'users'},
+    ]));
+    await setSize(tester, const Size(390, 844));
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(attention.seen, ['e1|dashboard'], reason: 'the open section is marked seen');
+
+    Badge badgeOn(String label) => tester.widget<Badge>(
+          find.ancestor(of: find.byIcon(_icons[label]!), matching: find.byType(Badge)).first,
+        );
+    expect(badgeOn('Menu').isLabelVisible, isTrue, reason: 'phone: the hamburger carries the dot');
+
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pumpAndSettle();
+    expect(badgeOn('Tasks').isLabelVisible, isTrue);
+    expect(badgeOn('Users').isLabelVisible, isTrue);
+    expect(badgeOn('Dashboard').isLabelVisible, isFalse, reason: 'the open section never shows a dot');
+    expect(badgeOn('Google files').isLabelVisible, isFalse);
+  });
+}
+
+const _icons = {
+  'Menu': Icons.menu,
+  'Tasks': Icons.task_alt,
+  'Users': Icons.manage_accounts_outlined,
+  'Dashboard': Icons.dashboard_outlined,
+  'Google files': Icons.drive_file_move_outline,
+};
+
+class _FakeAttention implements AttentionRepository {
+  _FakeAttention(this.spots);
+  final AttentionSpots spots;
+  final seen = <String>[];
+
+  @override
+  Future<AttentionSpots> fetch() async => spots;
+
+  @override
+  Future<void> markSeen({String? enterpriseId, required String section}) async =>
+      seen.add('${enterpriseId ?? ''}|$section');
 }
