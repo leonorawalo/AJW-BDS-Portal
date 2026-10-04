@@ -31,7 +31,7 @@
 // The app exchanges the token itself (verifyOTP). The Invite email template
 // must use the same format — see context.txt.
 //
-// Secrets: APP_URL (e.g. https://ajwafrica-bags-portal.web.app). SUPABASE_*
+// Secrets: APP_URL (https://portal.ajwafrica.org). SUPABASE_*
 // are provided automatically.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';

@@ -3,7 +3,7 @@
 /// section 1.
 class SiteLinks {
   SiteLinks._();
-  static const site = 'https://ajwafrica-bags-portal.web.app';
+  static const site = 'https://portal.ajwafrica.org';
   static const download = '$site/download.html';
   static const about = '$site/about.html';
   static const privacy = '$site/privacy.html';

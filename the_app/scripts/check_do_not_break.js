@@ -86,6 +86,21 @@ if (fontAssets.some((l) => commercialFont.test(l))) {
   problems.push('pubspec.yaml fonts: still lists a commercial brand font');
 }
 
+// The portal's public address is https://portal.ajwafrica.org
+// (DO_NOT_BREAK.md section 0). web.app stays served as a fallback, but no
+// link the app, the pages or the emails hand out may point at it.
+const SITE = 'https://portal.ajwafrica.org';
+const siteLinks = fs.readFileSync(path.join(root, 'lib/core/site_links.dart'), 'utf8');
+if (!siteLinks.includes(`static const site = '${SITE}';`)) {
+  problems.push(`lib/core/site_links.dart: SiteLinks.site must be ${SITE}`);
+}
+for (const file of [...walk(path.join(root, 'lib')), ...walk(path.join(root, 'web'))]) {
+  if (!/\.(dart|html|js|css|json)$/.test(file)) continue;
+  if (fs.readFileSync(file, 'utf8').includes('ajwafrica-bags-portal.web.app')) {
+    problems.push(`Old web.app address hard-coded in ${path.relative(root, file)} (use ${SITE})`);
+  }
+}
+
 if (problems.length > 0) {
   console.error('\nDO_NOT_BREAK check FAILED, deploy stopped:');
   for (const p of problems) console.error(`  - ${p}`);

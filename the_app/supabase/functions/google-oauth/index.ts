@@ -26,7 +26,7 @@ const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
 // Google verification needs redirect URIs on a domain AJW owns, so in
 // production this is set to the relay page on the hosted site
-// (https://ajwafrica-bags-portal.web.app/oauth/google-callback.html), which
+// (https://portal.ajwafrica.org/oauth/google-callback.html), which
 // forwards Google's result here unchanged. Unset = the direct function URL
 // (the pre-verification setup). The same value must be listed as an
 // Authorised redirect URI on the OAuth client, and is used for both the

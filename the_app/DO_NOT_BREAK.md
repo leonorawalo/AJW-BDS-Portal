@@ -20,7 +20,21 @@ If you change one side of a pair below, change the other side the same day.
 `ajw-bags-portal` and `ajwafrica-bags-portal` both show the name
 "AJW BAGS Portal". Always check the ID, not the name.
 
-Live site: https://ajwafrica-bags-portal.web.app
+Live site: **https://portal.ajwafrica.org** (since 2026-10-04).
+`https://ajwafrica-bags-portal.web.app` is the same Firebase site and
+stays working as a fallback, but nothing we hand out links to it
+(`SiteLinks` in `lib/core/site_links.dart`; the deploy check fails if
+the old address is hard-coded in `lib/` or `web/`).
+
+### 0a. The custom domain (outside the repo, easy to break by accident)
+- Bluehost DNS for `ajwafrica.org` has a CNAME record `portal` →
+  `ajwafrica-bags-portal.web.app`. **Never delete or edit it**: the
+  portal (and every invite link, Google consent link and the Connect
+  relay) goes offline immediately.
+- Firebase Hosting → custom domain `portal.ajwafrica.org` (connected,
+  Firebase manages its HTTPS certificate). Don't remove it.
+- Search Console **Domain** property `ajwafrica.org` (DNS-verified) must
+  stay verified: Google's app verification relies on it.
 
 ---------------------------------------------------------------------
 ## 1. Files that must NEVER be deleted from the repo
@@ -50,9 +64,12 @@ This list is enforced in two places. Change all three together:
 ### 2a. Suite / Connect (project `ajw-bags-portal`, client "Supabase Auth")
 - Client ID + secret == Supabase Edge Function secrets
   `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`.
-- The redirect URI the code uses (Edge secret `GOOGLE_OAUTH_REDIRECT_URI`,
-  e.g. `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`)
-  MUST be listed under that client's Authorised redirect URIs.
+- The redirect URI the code uses (Edge secret `GOOGLE_OAUTH_REDIRECT_URI`
+  = `https://portal.ajwafrica.org/oauth/google-callback.html`, the relay
+  page `web/oauth/google-callback.html`) MUST be listed under that
+  client's Authorised redirect URIs **character for character** (same
+  scheme, host, path, no trailing slash). Any difference = Connect fails
+  with `redirect_uri_mismatch`.
 - Every scope the `google-oauth` function requests MUST be listed under
   Google Auth Platform → Data access:
   openid, userinfo.email, userinfo.profile, calendar.freebusy, drive.file
@@ -60,7 +77,9 @@ This list is enforced in two places. Change all three together:
   Adding a scope later = add it in the console + users reconnect +
   Google re-review.
 - Enabled APIs: Calendar, Drive, Docs, Sheets, Slides, Gmail.
-- Authorised domain: `ajwafrica-bags-portal.web.app` only (no supabase.co here).
+- Authorised domain: `ajwafrica.org` (no supabase.co here). Branding
+  links (home, privacy, terms) are on `https://portal.ajwafrica.org`, in
+  BOTH Google projects. Branding verified + published 2026-10-04.
 - Privacy Policy must describe every Google permission and keep Google's
   "Limited Use" statement.
 
@@ -73,16 +92,23 @@ This list is enforced in two places. Change all three together:
   accounts from Google).
 
 ### 2c. Search Console
-- Property `https://ajwafrica-bags-portal.web.app/` verified by the HTML
-  file in section 1, under the Google account that owns the Cloud projects.
+- Domain property `ajwafrica.org` (DNS-verified at Bluehost) covers the
+  portal. Keep it verified (see 0a).
+- Older URL property `https://ajwafrica-bags-portal.web.app/` is
+  verified by the HTML file in section 1. Keep the file anyway.
+- Both under the Google account that owns the Cloud projects.
 
 ---------------------------------------------------------------------
 ## 3. Supabase settings that must match the app
 
 - Authentication → URL Configuration:
-  - Site URL = `https://ajwafrica-bags-portal.web.app`
-  - Redirect URLs include `https://ajwafrica-bags-portal.web.app/**`,
+  - Site URL = `https://portal.ajwafrica.org` (every email link is built
+    from it, via `{{ .SiteURL }}`)
+  - Redirect URLs include `https://portal.ajwafrica.org/**`,
+    `https://ajwafrica-bags-portal.web.app/**` (fallback: "Continue with
+    Google" returns to whichever domain it started on),
     `http://localhost:3000/**`, `ajwbags://login-callback`
+- Edge secret `APP_URL` = `https://portal.ajwafrica.org` (invite links).
 - `ajwbags://login-callback` == the intent filter in
   `android/app/src/main/AndroidManifest.xml` (scheme `ajwbags`, host `login-callback`).
 - "Allow new users to sign up" = OFF (people only join by Admin invite).
