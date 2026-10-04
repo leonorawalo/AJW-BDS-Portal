@@ -1,0 +1,15 @@
+<p>Hello {{ .Data.first_name }},</p>
+
+<p>{{ if .Data.invited_by }}{{ .Data.invited_by }} has invited you{{ else }}You have been invited{{ end }} to the AJW BAGS Portal{{ if .Data.invited_as }} as {{ .Data.invited_as }}{{ end }}.</p>
+
+<p>To get started, choose your password:</p>
+
+<p><a href="{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=invite">Set my password</a></p>
+
+<p>The link works once and expires after 24 hours. If it has expired, ask your AJW administrator to send a new one.</p>
+
+<p>After that you can use the portal in your browser, or get the Android app here: <a href="{{ .SiteURL }}/download.html">{{ .SiteURL }}/download.html</a></p>
+
+<p>If you weren't expecting this invitation, you can ignore this email.</p>
+
+<p>AJW Africa<br>Business Advancement and Growth Services</p>
