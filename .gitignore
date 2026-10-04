@@ -2,3 +2,17 @@
 
 # Local archives/backups — never commit (GitHub rejects >100MB)
 *.zip
+
+# Videos and other recordings (e.g. the Google verification video) never
+# belong in git: large, and they can show private data.
+*.mp4
+*.mov
+*.webm
+*.mkv
+
+# Throwaway test passwords (the_app/test_logins.txt): never commit.
+test_logins*.txt
+
+# Local Flutter SDK clone, if any; it was once added by mistake as a
+# broken submodule pointer.
+/flutter/
