@@ -13,7 +13,7 @@ has verified in Search Console. `*.supabase.co` can't be verified by AJW, so:
 
 - **Calendar / Meet / exports connection** (`google-oauth` Edge Function):
   Google now redirects to
-  `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`, a relay
+  `https://portal.ajwafrica.org/oauth/google-callback.html`, a relay
   page on AJW's own hosting that forwards Google's result unchanged to the
   Edge Function. Controlled by the Edge Function secret
   `GOOGLE_OAUTH_REDIRECT_URI` (unset = old direct URL).
@@ -89,7 +89,7 @@ Before you record:
 
 | # | Time | Do (click / show) | Say |
 |---|---|---|---|
-| 1 | 0:00–0:15 | Open `https://ajwafrica-bags-portal.web.app`. Click the address bar so the domain is readable. Sign in as a **Consultant**. | "This is AJW Africa BAGS Portal, used by AJW's business advisers and the enterprises they support. I'm signing in as a consultant." |
+| 1 | 0:00–0:15 | Open `https://portal.ajwafrica.org`. Click the address bar so the domain is readable. Sign in as a **Consultant**. | "This is AJW Africa BAGS Portal, used by AJW's business advisers and the enterprises they support. I'm signing in as a consultant." |
 | 2 | 0:15–0:25 | Open an enterprise → **Sessions** in the side menu → on the "Connect your Google account" card, **Connect**. | "To hold meetings and send email from their own Google account, a user connects it once." |
 | 3 | 0:25–0:50 | On Google's consent screen **stop for 5 seconds**. Show the app name **"AJW Africa BAGS Portal"** and the permission list. Click the address bar once so `client_id=` is visible. Scroll slowly through the permissions, then **Continue**. | "Google shows the app name, AJW Africa BAGS Portal, and exactly what it asks for: create calendar events, check free/busy, files the app creates, and send email on my behalf." |
 | 4 | 0:50–0:55 | Back in the portal, show **Google account connected**. | "The account is now connected." |
@@ -98,38 +98,78 @@ Before you record:
 | 7 | 1:35–1:50 | Back in the portal, **Cancel session**. Refresh Google Calendar to show the event is gone. | "Cancelling in the portal deletes that same event. The app only touches events it created." |
 | 8 | 1:50–2:20 | Top bar **Email** (envelope) → **Write email**. Tick one recipient, type a short subject and message, then **Send via Gmail**. | "To email people working on this enterprise, I write the message here and choose from the enterprise's contacts. Send uses the gmail.send permission, one message and only when I click Send." |
 | 9 | 2:20–2:35 | New tab → **Gmail → Sent**: open the message just sent. | "It's sent from my own Gmail and appears in my Sent folder. The app never reads, searches or deletes my email." |
-| 10 | 2:35–2:45 | Optionally show the **Privacy policy** link on `/privacy.html`. | "Google user data is used only for these features, as described in our privacy policy." |
+| 10 | 2:35–2:45 | Optionally show the **Privacy policy** link on `https://portal.ajwafrica.org/privacy.html`. | "Google user data is used only for these features, as described in our privacy policy." |
 
 What Google checks: the consent screen matches this app and project (step
 3), and each sensitive scope is visibly used: `calendar.events` in steps
 5–7 and `gmail.send` in steps 8–9.
 
+## Data access justification (as pasted)
+
+Google Auth Platform → Data access has **one shared justification box**
+(1000-character limit) for all sensitive scopes, so the two texts above
+had to be combined. You've already pasted your combined version there.
+
+> **TO FILL IN:** paste here the exact text you saved in Data access, so
+> the doc matches what Google has. The draft below (923 characters) was
+> written on 2026-10-05 for comparison only; it is **not** a copy of what
+> was submitted.
+
+```
+AJW BAGS Portal supports AJW Africa's business advisory programme: administrators, consultants and enterprise owners plan meetings and exchange emails about each enterprise's progress.
+
+calendar.events: when a user schedules a meeting in the portal, the app creates one event with a Google Meet link on that user's own calendar and invites the chosen participants; cancelling deletes that same event. It never reads or changes other events. calendar.freebusy cannot create events, and a Meet link requires inserting an event.
+
+gmail.send: the user writes a message in the portal, picks recipients from that enterprise's contacts and clicks Send; the app sends exactly that message from their own Gmail. It never reads, lists or deletes email, so we do not request gmail.readonly, modify or compose.
+
+Data is used only for these features, never sold or used for ads. Tokens are stored server-side and deleted on disconnect.
+```
+
 ## Console checklist
 
-Status as of 2026-09-30:
+Status as of 2026-10-05. Portal address: **https://portal.ajwafrica.org**
+(Firebase custom domain; Bluehost CNAME `portal` →
+`ajwafrica-bags-portal.web.app`).
 
-- [x] Search Console: `https://ajwafrica-bags-portal.web.app/` **verified**
-      (HTML file `web/googlec7b934ad5a1b7fa7.html`; never delete it).
-- [x] OAuth client "Supabase Auth" → Authorised redirect URIs: **only**
-      `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`.
-- [x] Edge Function secret
-      `GOOGLE_OAUTH_REDIRECT_URI=https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`
-      set. Connect through the relay tested and works.
+Done:
+- [x] Search Console: **Domain property `ajwafrica.org`** verified (DNS).
+      The older URL property for web.app stays verified by
+      `web/googlec7b934ad5a1b7fa7.html` (never delete it).
+- [x] OAuth client "Supabase Auth" → Authorised redirect URIs include
+      `https://portal.ajwafrica.org/oauth/google-callback.html`.
+- [x] Edge Function secrets
+      `GOOGLE_OAUTH_REDIRECT_URI=https://portal.ajwafrica.org/oauth/google-callback.html`
+      and `APP_URL=https://portal.ajwafrica.org`. Connect on the new
+      domain tested and works.
+- [x] Supabase Auth: Site URL `https://portal.ajwafrica.org`, redirect
+      `https://portal.ajwafrica.org/**`.
 - [x] Sign-in button moved to its own project; both `*.supabase.co`
       redirect URIs removed from this project's client.
 - [x] Data access scopes: openid, email, profile, calendar.freebusy,
       drive.file (non-sensitive); calendar.events, gmail.send (sensitive).
-- [x] Branding: app name "AJW Africa BAGS Portal", logo, homepage
-      (`/about.html`), privacy policy (`/privacy.html`), terms
-      (`/terms.html`), authorised domain `ajwafrica-bags-portal.web.app`
-      only.
-- [x] Audience → published **"In production"** (unverified: warning
-      shown, 100-user cap).
-- [ ] **Waiting on Google brand verification**. "Prepare for
-      verification" unlocks after that.
-- [ ] Record the demo video (script above), upload as Unlisted.
-- [ ] Verification centre → submit with the justification texts and the
-      video link.
+- [x] Data access justification pasted (one shared box, see above).
+- [x] Branding in **both** projects: app name "AJW Africa BAGS Portal",
+      logo, homepage `https://portal.ajwafrica.org/about.html`, privacy
+      policy `/privacy.html`, terms `/terms.html`, authorised domain
+      `ajwafrica.org`. **Branding verified and published.**
+- [x] Audience → published **"In production"** (unverified until the
+      review passes: warning shown, 100-user cap).
+
+Remaining, in order:
+- [ ] Google OAuth client "Supabase Auth" (project ajw-bags-portal):
+      remove the old redirect URI
+      `https://ajwafrica-bags-portal.web.app/oauth/google-callback.html`
+      (you, in the console).
+- [ ] Branding → Authorised domains: remove `ajwafrica-bags-portal.web.app`
+      so only `ajwafrica.org` is left (you, in the console).
+- [ ] After both: Connect once more on https://portal.ajwafrica.org to
+      confirm nothing depended on them.
+- [ ] Record the demo video (script above), upload to YouTube as Unlisted.
+- [ ] Verification centre → submit with the video link.
+
+Keep `https://ajwafrica-bags-portal.web.app/**` in **Supabase** →
+Authentication → Redirect URLs: that's for the web.app fallback's
+"Continue with Google", not part of Google's review.
 
 ## Sign-in button (DONE 2026-09-30)
 
