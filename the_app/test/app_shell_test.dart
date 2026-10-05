@@ -8,7 +8,10 @@ import 'package:the_app/features/attention/models/attention_spots.dart';
 import 'package:the_app/features/attention/providers/attention_providers.dart';
 import 'package:the_app/features/auth/providers/auth_providers.dart';
 import 'package:the_app/features/enterprises/models/enterprise.dart';
+import 'package:the_app/features/enterprises/presentation/enterprise_workspace_screen.dart';
 import 'package:the_app/features/enterprises/providers/enterprise_providers.dart';
+import 'package:the_app/features/legal_workstream/presentation/consultant_workstream_screen.dart';
+import 'package:the_app/features/legal_workstream/presentation/owner_workstream_screen.dart';
 import 'package:the_app/features/tutorial/data/tour_progress_repository.dart';
 import 'package:the_app/features/tutorial/providers/tutorial_providers.dart';
 import 'package:the_app/shared/models/user_profile.dart';
@@ -40,7 +43,15 @@ void main() {
   late _FakeAttention attention;
   setUp(() => attention = _FakeAttention(AttentionSpots.none));
 
-  Widget app() {
+  Widget app({
+    UserProfile profile = admin,
+    List<ShellSection> sections = const [
+      ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
+      ShellSection('tasks', 'Tasks', Icons.task_alt),
+      ShellSection('files', 'Google files', Icons.drive_file_move_outline),
+    ],
+    String currentSection = 'dashboard',
+  }) {
     final router = GoRouter(routes: [
       GoRoute(
         path: '/',
@@ -49,12 +60,8 @@ void main() {
           enterprise: ShellEnterprise(
             id: 'e1',
             name: 'Blue Farm',
-            sections: const [
-              ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
-              ShellSection('tasks', 'Tasks', Icons.task_alt),
-              ShellSection('files', 'Google files', Icons.drive_file_move_outline),
-            ],
-            currentSection: 'dashboard',
+            sections: sections,
+            currentSection: currentSection,
             onSelectSection: (key) => selected = key,
             onSwitchEnterprise: (_) {},
           ),
@@ -65,7 +72,7 @@ void main() {
     ]);
     return ProviderScope(
       overrides: [
-        currentUserProfileProvider.overrideWith((ref) async => admin),
+        currentUserProfileProvider.overrideWith((ref) async => profile),
         enterprisesListProvider.overrideWith((ref) async => [blueFarm]),
         attentionRepositoryProvider.overrideWithValue(attention),
         attentionProvider.overrideWith((ref) => attention.fetch()),
@@ -150,6 +157,68 @@ void main() {
     expect(badgeOn('Users').isLabelVisible, isTrue);
     expect(badgeOn('Dashboard').isLabelVisible, isFalse, reason: 'the open section never shows a dot');
     expect(badgeOn('Google files').isLabelVisible, isFalse);
+  });
+
+  // Side menu at short heights (bug: the bottom items slid under the pinned
+  // footer, and the selected one's highlight was drawn over it). Every role,
+  // with its real sections, the last section selected.
+  group('side menu at short heights', () {
+    UserProfile as(UserRole role) => UserProfile(
+          id: 'u-${role.name}',
+          firstName: 'Test',
+          lastName: 'User',
+          email: '${role.name}@example.com',
+          role: role,
+          status: 'active',
+        );
+    final roles = {
+      UserRole.administrator: EnterpriseWorkspaceScreen.sections,
+      UserRole.consultant: ConsultantWorkstreamScreen.sections,
+      UserRole.enterpriseOwner: OwnerWorkstreamScreen.sections,
+    };
+
+    Future<void> checkLastSectionClear(WidgetTester tester, String label) async {
+      final item = tester.getRect(find.text(label));
+      final footer = tester.getRect(find.text('Show tips for this page'));
+      expect(item.bottom, lessThanOrEqualTo(footer.top), reason: '"$label" must sit fully above the footer');
+      // Its highlight is painted on the list's own clipped Material, not on
+      // the menu panel behind the footer.
+      final ink = tester.widget<Material>(
+        find.ancestor(of: find.text(label), matching: find.byType(Material)).first,
+      );
+      expect(ink.type, MaterialType.transparency);
+      expect(tester.takeException(), isNull);
+    }
+
+    for (final MapEntry(key: role, value: sections) in roles.entries) {
+      final last = sections.last;
+      testWidgets('${role.name}: laptop 1366x600, "${last.label}" selected', (tester) async {
+        await setSize(tester, const Size(1366, 600));
+        await tester.pumpWidget(app(profile: as(role), sections: sections, currentSection: last.key));
+        await tester.pumpAndSettle();
+        await checkLastSectionClear(tester, last.label);
+      });
+
+      testWidgets('${role.name}: phone drawer 390x600, "${last.label}" selected', (tester) async {
+        await setSize(tester, const Size(390, 600));
+        await tester.pumpWidget(app(profile: as(role), sections: sections, currentSection: last.key));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Menu'));
+        await tester.pumpAndSettle();
+        await checkLastSectionClear(tester, last.label);
+      });
+    }
+
+    testWidgets('very short window: the footer scrolls with the list, nothing overflows', (tester) async {
+      await setSize(tester, const Size(1366, 320));
+      await tester.pumpWidget(app(sections: EnterpriseWorkspaceScreen.sections, currentSection: 'details'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Details'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Sign out'), 100, scrollable: find.byType(Scrollable).first);
+      expect(find.text('Sign out'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }
 

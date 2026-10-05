@@ -269,6 +269,10 @@ class _SideMenu extends ConsumerWidget {
   final bool expanded;
   final bool inDrawer;
 
+  /// Below this height the footer (tips, sign out) scrolls with the list
+  /// rather than staying pinned.
+  static const pinnedFooterMinHeight = 360.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final spots = ref.watch(attentionProvider).value ?? AttentionSpots.none;
@@ -329,7 +333,13 @@ class _SideMenu extends ConsumerWidget {
     }
 
     Widget item(_NavEntry entry, bool selected, {bool dot = false, String? anchor}) {
-      final t = tile(entry, selected, dot: dot);
+      final t = _RevealWhenSelected(
+        selected: selected,
+        // Items added above (e.g. the role's pages once the profile loads)
+        // push the selected one down: reveal it again when the list changes.
+        menuShape: global.length * 100 + sections.length,
+        child: tile(entry, selected, dot: dot),
+      );
       return anchor == null ? t : TourAnchor(id: anchor, child: t);
     }
 
@@ -341,74 +351,161 @@ class _SideMenu extends ConsumerWidget {
             // AJW watermark (guideline p.5), tucked into the menu's corner.
             if (expanded)
               const Positioned(left: -40, bottom: 56, child: AjwWatermark(height: 200, opacity: 0.05)),
-            Column(
-          crossAxisAlignment: expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
-          children: [
-            if (inDrawer)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(Space.lg, Space.xl, Space.lg, Space.md),
-                child: TourAnchor(id: TourAnchors.badge, child: UserProfileBadge(onAppBar: false)),
-              ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.md),
-                children: [
-                  for (final entry in global)
+            LayoutBuilder(builder: (context, box) {
+              final align = expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center;
+              final badge = inDrawer
+                  ? const Padding(
+                      padding: EdgeInsets.fromLTRB(Space.lg, Space.xl, Space.lg, Space.md),
+                      child: TourAnchor(id: TourAnchors.badge, child: UserProfileBadge(onAppBar: false)),
+                    )
+                  : null;
+              final pages = <Widget>[
+                for (final entry in global)
+                  item(
+                    entry,
+                    entry.key == globalKey,
+                    dot: AppShell._dotForPage(spots, entry.key, globalKey),
+                    anchor: TourAnchors.page(entry.key),
+                  ),
+                if (e != null) ...[
+                  if (global.isNotEmpty)
+                    const Padding(padding: EdgeInsets.symmetric(vertical: Space.md), child: Divider()),
+                  if (expanded)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, Space.sm),
+                      child: Text(
+                        e.name.toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.1),
+                      ),
+                    ),
+                  for (final entry in sections)
                     item(
                       entry,
-                      entry.key == globalKey,
-                      dot: AppShell._dotForPage(spots, entry.key, globalKey),
-                      anchor: TourAnchors.page(entry.key),
+                      entry.key == e.currentSection,
+                      dot: AppShell._dotForSection(spots, e, entry.key),
+                      anchor: TourAnchors.section(entry.key),
                     ),
-                  if (e != null) ...[
-                    if (global.isNotEmpty)
-                      const Padding(padding: EdgeInsets.symmetric(vertical: Space.md), child: Divider()),
-                    if (expanded)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, Space.sm),
-                        child: Text(
-                          e.name.toUpperCase(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.1),
-                        ),
-                      ),
-                    for (final entry in sections)
-                      item(
-                        entry,
-                        entry.key == e.currentSection,
-                        dot: AppShell._dotForSection(spots, e, entry.key),
-                        anchor: TourAnchors.section(entry.key),
-                      ),
+                ],
+              ];
+              final footer = Padding(
+                padding: const EdgeInsets.all(Space.md),
+                child: Column(
+                  crossAxisAlignment: align,
+                  children: [
+                    item(
+                      _NavEntry('help', 'Show tips for this page', Icons.help_outline, () => TourHost.replay(context)),
+                      false,
+                      anchor: TourAnchors.help,
+                    ),
+                    item(
+                      _NavEntry('signout', 'Sign out', Icons.logout, () => ref.read(authRepositoryProvider).signOut()),
+                      false,
+                    ),
                   ],
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(Space.md),
-              child: Column(
-                crossAxisAlignment: expanded ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
+                ),
+              );
+              const listPadding = EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.md);
+
+              // A very short window: the footer scrolls with the list instead
+              // of squeezing it to nothing.
+              if (box.maxHeight < _SideMenu.pinnedFooterMinHeight) {
+                return _MenuScroll(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: align,
+                      children: [
+                        ?badge,
+                        Padding(padding: listPadding, child: Column(crossAxisAlignment: align, children: pages)),
+                        const Divider(height: 1),
+                        footer,
+                      ],
+                    ),
+                  ),
+                );
+              }
+              // Normal: the list scrolls in its own area; the footer stays
+              // pinned below it and is never overlapped.
+              return Column(
+                crossAxisAlignment: align,
                 children: [
-                  item(
-                    _NavEntry('help', 'Show tips for this page', Icons.help_outline, () => TourHost.replay(context)),
-                    false,
-                    anchor: TourAnchors.help,
+                  ?badge,
+                  // Not a ListView: a menu is short, and every item must be
+                  // built so the selected one can be scrolled into view.
+                  Expanded(
+                    child: _MenuScroll(
+                      child: SingleChildScrollView(
+                        padding: listPadding,
+                        child: Column(crossAxisAlignment: align, children: pages),
+                      ),
+                    ),
                   ),
-                  item(
-                    _NavEntry('signout', 'Sign out', Icons.logout, () => ref.read(authRepositoryProvider).signOut()),
-                    false,
-                  ),
+                  const Divider(height: 1),
+                  footer,
                 ],
-              ),
-            ),
-          ],
-        ),
+              );
+            }),
           ],
         ),
       ),
     );
   }
+}
+
+/// The scrolling part of the side menu. A ListTile paints its selected and
+/// hover colours on the nearest Material, which was the whole menu panel,
+/// outside the list's clip: a tile scrolled under the footer had its text
+/// clipped but its highlight drawn over the footer. Giving the list its own
+/// (clipped) Material keeps every highlight inside the list.
+class _MenuScroll extends StatelessWidget {
+  const _MenuScroll({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      ClipRect(child: Material(type: MaterialType.transparency, child: child));
+}
+
+/// Scrolls the selected menu item into view when the menu opens or the
+/// selection changes, so the current section is never hidden below the fold.
+class _RevealWhenSelected extends StatefulWidget {
+  const _RevealWhenSelected({required this.selected, required this.menuShape, required this.child});
+  final bool selected;
+
+  /// Changes when items are added to or removed from the menu.
+  final int menuShape;
+  final Widget child;
+
+  @override
+  State<_RevealWhenSelected> createState() => _RevealWhenSelectedState();
+}
+
+class _RevealWhenSelectedState extends State<_RevealWhenSelected> {
+  @override
+  void initState() {
+    super.initState();
+    _reveal();
+  }
+
+  @override
+  void didUpdateWidget(_RevealWhenSelected old) {
+    super.didUpdateWidget(old);
+    if (widget.selected && (!old.selected || old.menuShape != widget.menuShape)) _reveal();
+  }
+
+  void _reveal() {
+    if (!widget.selected) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Whichever edge it's past: below the fold, or scrolled off the top.
+      Scrollable.ensureVisible(context, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
+      Scrollable.ensureVisible(context, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// The enterprise name in the top bar; for Admins and consultants it's a
