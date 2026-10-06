@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/app_update/presentation/update_notice.dart';
 import '../../features/attention/models/attention_spots.dart';
 import '../../features/attention/providers/attention_providers.dart';
 import '../../features/auth/providers/auth_providers.dart';
@@ -81,7 +82,8 @@ class AppShell extends ConsumerWidget {
     );
 
     return GoogleFirstRunPrompt(
-      child: TourHost(
+      child: UpdateNotice(
+        child: TourHost(
         place: e != null ? 'section.${e.currentSection}' : globalKey,
         inEnterprise: e != null,
         child: Scaffold(
@@ -146,6 +148,7 @@ class AppShell extends ConsumerWidget {
               : body,
           ),
         ),
+      ),
       ),
     );
   }

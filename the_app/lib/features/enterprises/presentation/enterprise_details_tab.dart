@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../shared/models/user_profile.dart';
 import '../../consultants/providers/consultant_assignment_providers.dart';
@@ -8,6 +9,7 @@ import '../providers/enterprise_providers.dart';
 import '../../user_management/models/invite_request.dart';
 import '../../user_management/presentation/invite_flow.dart';
 import '../../../core/widgets/ajw_loader.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/labeled_value.dart';
@@ -15,7 +17,7 @@ import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
 
 /// Business info, lifecycle status, Going Concern toggle, and current
-/// consultant assignments — what used to be the whole of the Admin's
+/// consultant assignments: what used to be the whole of the Admin's
 /// enterprise detail screen, now one tab alongside the loan-readiness
 /// Dashboard, Tasks, Recommendations, and Documents.
 class EnterpriseDetailsTab extends ConsumerStatefulWidget {
@@ -125,7 +127,8 @@ class _EnterpriseDetailsTabState extends ConsumerState<EnterpriseDetailsTab> {
               const SizedBox(height: Space.lg),
               section(
                 'Owner account',
-                'The login that sees this enterprise as theirs. Separate from the owner name above, which is only a name.',
+                'The account the owner signs in with. It is what gives them access; the owner name above is only a label. '
+                    "An enterprise has one owner, so once linked this can't be changed.",
                 TourAnchor(id: TourAnchors.detailsOwner, child: _OwnerAccountLink(enterprise: enterprise)),
               ),
               const SizedBox(height: Space.lg),
@@ -171,7 +174,7 @@ class _EnterpriseDetailsTabState extends ConsumerState<EnterpriseDetailsTab> {
 }
 
 /// Shows which login account (if any) is linked as this enterprise's
-/// owner, and lets the Admin link or relink one — the only place this
+/// owner, and lets the Admin link or relink one: the only place this
 /// can currently be set, since nothing does it automatically.
 class _OwnerAccountLink extends ConsumerStatefulWidget {
   const _OwnerAccountLink({required this.enterprise});
@@ -202,6 +205,8 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
           const SnackBar(content: Text('Owner account linked.')),
         );
       }
+    } on PostgrestException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _isLinking = false);
     }
@@ -212,60 +217,78 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
     final currentOwnerUserId = widget.enterprise.ownerUserId;
     final ownerAccountsAsync = ref.watch(ownerAccountsProvider);
 
+    final text = Theme.of(context).textTheme;
+
+    // Linked: final. Show who, and only offer to resend the invite.
+    if (currentOwnerUserId != null) {
+      final linkedAsync = ref.watch(linkedOwnerAccountProvider(currentOwnerUserId));
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          linkedAsync.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (_, _) => const Text('Could not load the linked account.'),
+            data: (account) => Row(
+              children: [
+                const Icon(Icons.lock_outline, size: 18, color: AppColors.charcoalSoft),
+                const SizedBox(width: Space.sm),
+                Expanded(
+                  child: Text(
+                    account == null
+                        ? 'Linked account no longer exists.'
+                        : 'Linked to ${account['first_name']} ${account['last_name']} (${account['email']})',
+                    style: text.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Space.md),
+          Text("Owner hasn't set a password yet? Send the invite again:", style: text.bodySmall),
+          const SizedBox(height: Space.xs),
+          _InviteOwnerActions(enterprise: widget.enterprise),
+        ],
+      );
+    }
+
+    // Not linked yet: invite the owner, or link an owner who already has an
+    // account (someone who owns another business in the programme).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (currentOwnerUserId == null)
-          const Text('Not linked to any login account yet.')
-        else
-          Consumer(
-            builder: (context, ref, _) {
-              final linkedAsync = ref.watch(linkedOwnerAccountProvider(currentOwnerUserId));
-              return linkedAsync.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (_, _) => const Text('Could not load the linked account.'),
-                data: (account) => Text(
-                  account == null
-                      ? 'Linked account no longer exists.'
-                      : 'Linked to: ${account['first_name']} ${account['last_name']} (${account['email']})',
-                ),
-              );
-            },
-          ),
-        const SizedBox(height: 8),
+        Text('Not linked to a login yet. Invite the owner:', style: text.bodyMedium),
+        const SizedBox(height: Space.sm),
         _InviteOwnerActions(enterprise: widget.enterprise),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.lg),
         ownerAccountsAsync.when(
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => const Text('Could not load Owner accounts.'),
           data: (accounts) {
-            if (accounts.isEmpty) {
-              return const Text('No Enterprise Owner accounts exist yet.');
-            }
+            if (accounts.isEmpty) return const SizedBox.shrink();
             return Row(
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _selectedOwnerUserId,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       isDense: true,
-                      labelText: 'Link a different Owner account',
+                      labelText: 'Or: an owner who already has an account',
+                      helperText: 'For an owner with another business here. This link is permanent.',
                     ),
                     items: accounts
                         .map((a) => DropdownMenuItem(
                               value: a['id'] as String,
-                              child: Text('${a['first_name']} ${a['last_name']} (${a['email']})'),
+                              child: Text('${a['first_name']} ${a['last_name']} (${a['email']})', overflow: TextOverflow.ellipsis),
                             ))
                         .toList(),
                     onChanged: (v) => setState(() => _selectedOwnerUserId = v),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: Space.sm),
                 FilledButton(
-                  onPressed: (_selectedOwnerUserId != null && !_isLinking) ? _link : null,
-                  child: _isLinking
-                      ? const AjwLoader(dotSize: 6)
-                      : const Text('Link'),
+                  onPressed: (_selectedOwnerUserId != null && !_isLinking) ? _confirmAndLink : null,
+                  child: _isLinking ? const AjwLoader(dotSize: 6) : const Text('Link'),
                 ),
               ],
             );
@@ -273,6 +296,24 @@ class _OwnerAccountLinkState extends ConsumerState<_OwnerAccountLink> {
         ),
       ],
     );
+  }
+
+  Future<void> _confirmAndLink() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text('Link this owner?'),
+        content: const Text(
+          "An enterprise has one owner. Once linked, this can't be changed, "
+          'so check it is the right person.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Back')),
+          FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Link')),
+        ],
+      ),
+    );
+    if (ok == true) await _link();
   }
 }
 

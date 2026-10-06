@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Shown instead of the real app when startup config is missing, so a
 /// broken setup names its cause on screen rather than leaving a blank page.
-/// Deliberately standalone (no theme, router or Supabase) — none of those
+/// Deliberately standalone (no theme, router or Supabase): none of those
 /// are available when this runs.
 class ConfigErrorApp extends StatelessWidget {
   const ConfigErrorApp({super.key, required this.message});

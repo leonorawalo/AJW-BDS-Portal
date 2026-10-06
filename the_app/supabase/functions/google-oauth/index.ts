@@ -1,7 +1,7 @@
 // Supabase Edge Function: google-oauth
 //
 // Connects a user's own Google account (Calendar + Meet) to the app.
-// Deploy with JWT verification OFF — Google's redirect back to this
+// Deploy with JWT verification OFF: Google's redirect back to this
 // function carries no Supabase JWT. The POST actions verify the caller's
 // JWT themselves instead.
 //
@@ -13,8 +13,8 @@
 //        -> revokes the token at Google and deletes the connection
 //
 // Required secrets (Dashboard -> Edge Functions -> Secrets):
-//   GOOGLE_CLIENT_ID     — OAuth client (type "Web application")
-//   GOOGLE_CLIENT_SECRET — same client
+//   GOOGLE_CLIENT_ID: OAuth client (type "Web application")
+//   GOOGLE_CLIENT_SECRET: same client
 // The OAuth client's "Authorized redirect URI" must be exactly
 //   https://<project-ref>.supabase.co/functions/v1/google-oauth
 // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are provided automatically.
@@ -37,10 +37,10 @@ const SCOPES = [
   'email',
   'https://www.googleapis.com/auth/calendar.events',
   // Availability checks before booking (calendar-sessions). Busy/free
-  // only — no event details.
+  // only: no event details.
   'https://www.googleapis.com/auth/calendar.freebusy',
   // Exports to Docs/Sheets/Slides (google-export). drive.file only sees
-  // files this app created — never the rest of the user's Drive.
+  // files this app created: never the rest of the user's Drive.
   'https://www.googleapis.com/auth/drive.file',
   // "Write email" (gmail-send): send-only, as the user, from their own
   // Gmail. No read access to their mailbox.
@@ -202,7 +202,7 @@ async function disconnect(userId: string): Promise<Response> {
     .eq('user_id', userId)
     .maybeSingle();
   if (data?.refresh_token) {
-    // Best effort — the local row is removed even if Google already
+    // Best effort: the local row is removed even if Google already
     // considers the token revoked.
     await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(data.refresh_token)}`, {
       method: 'POST',

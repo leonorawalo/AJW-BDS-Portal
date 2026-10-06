@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/invite_request.dart';
 import '../../../core/site_links.dart';
 
-/// Shows a set-password link for the Admin to pass on themselves — the
+/// Shows a set-password link for the Admin to pass on themselves: the
 /// fallback when the invite email can't be sent, and handy in the field
 /// where WhatsApp is how people actually talk.
 Future<void> showInviteLinkDialog(

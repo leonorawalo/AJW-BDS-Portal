@@ -41,7 +41,7 @@ class SessionsTab extends ConsumerWidget {
                   ref.invalidate(consultationSessionsProvider(enterpriseId));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meeting scheduled — participants have been invited.')),
+                      const SnackBar(content: Text('Meeting scheduled. Participants have been invited.')),
                     );
                   }
                 }

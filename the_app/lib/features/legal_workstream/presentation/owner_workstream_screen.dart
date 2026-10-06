@@ -17,12 +17,15 @@ import '../../visits/presentation/visits_tab.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
 
-/// The Owner's home: their (single) enterprise's workspace. Sections come
-/// from the side menu (AppShell) and live in the URL (/owner?section=…).
+/// The Owner's home: their enterprise's workspace. Sections come from the
+/// side menu (AppShell) and live in the URL (/owner?section=...). An owner
+/// with more than one business (rare) gets the enterprise switcher, and the
+/// chosen one is in the URL too (`&enterprise=<id>`).
 class OwnerWorkstreamScreen extends ConsumerWidget {
-  const OwnerWorkstreamScreen({super.key, this.section});
+  const OwnerWorkstreamScreen({super.key, this.section, this.enterpriseId});
 
   final String? section;
+  final String? enterpriseId;
 
   static const sections = [
     ShellSection('dashboard', 'Dashboard', Icons.dashboard_outlined),
@@ -58,7 +61,7 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
           );
         }
 
-        final enterprise = enterprises.first;
+        final enterprise = enterprises.firstWhere((e) => e.id == enterpriseId, orElse: () => enterprises.first);
         final current = sections.any((s) => s.key == section) ? section! : 'dashboard';
 
         return AppShell(
@@ -68,7 +71,9 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             name: enterprise.businessName,
             sections: sections,
             currentSection: current,
-            onSelectSection: (key) => context.go('/owner?section=$key'),
+            onSelectSection: (key) => context.go('/owner?enterprise=${enterprise.id}&section=$key'),
+            onSwitchEnterprise:
+                enterprises.length > 1 ? (id) => context.go('/owner?enterprise=$id&section=$current') : null,
           ),
           actions: [
             TourAnchor(id: TourAnchors.email, child: EmailMenuButton(enterpriseId: enterprise.id)),

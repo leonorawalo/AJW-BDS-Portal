@@ -5,7 +5,7 @@ import '../../google_exports/data/google_export_repository.dart' show GoogleReco
 import '../models/email_contact.dart';
 
 /// "Write email": sent from the user's own Gmail by the gmail-send Edge
-/// Function (gmail.send — send only, no mailbox access).
+/// Function (gmail.send: send only, no mailbox access).
 class EmailRepository {
   EmailRepository(this._client);
 

@@ -1,5 +1,5 @@
 /// Someone the caller may invite to a meeting on an enterprise, from the
-/// session_invitee_candidates() RPC — which is where the invite rules live
+/// session_invitee_candidates() RPC: which is where the invite rules live
 /// (Admin -> Owner/consultants, Consultant -> Owner, Owner ->
 /// consultants/Admins).
 class SessionInvitee {

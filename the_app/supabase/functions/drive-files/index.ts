@@ -1,4 +1,4 @@
-// Supabase Edge Function: drive-files   (B2 — working Google files per enterprise)
+// Supabase Edge Function: drive-files   (B2: working Google files per enterprise)
 //
 // Deploy with JWT verification ON.
 //

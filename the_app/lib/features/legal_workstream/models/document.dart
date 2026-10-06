@@ -54,7 +54,7 @@ class WorkstreamDocument {
   bool get isPdf => fileName.toLowerCase().endsWith('.pdf');
 }
 
-/// Fixed category list — a real dropdown, not freeform text, so
+/// Fixed category list: a real dropdown, not freeform text, so
 /// reporting on document types later stays consistent.
 const List<String> documentCategories = [
   'Registration Certificate',

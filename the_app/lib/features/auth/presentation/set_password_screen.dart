@@ -11,7 +11,7 @@ import 'password_field.dart';
 
 /// First sign-in for an invited user (Phase 9a). Reached two ways:
 /// - from the invite email / an Admin-shared link:
-///   /set-password?token_hash=…&type=invite|magiclink — the token is
+///   /set-password?token_hash=…&type=invite|magiclink: the token is
 ///   exchanged for a session here, then the user picks a password;
 /// - by the router, for any signed-in user still flagged needs_password.
 /// Once the password is saved the flag clears and the router sends them to
@@ -43,7 +43,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
     super.initState();
     final token = widget.tokenHash;
     // Skip if a session already exists (e.g. the page was reloaded after
-    // the token was used — tokens are single-use).
+    // the token was used: tokens are single-use).
     if (token != null && ref.read(authRepositoryProvider).currentUser == null) {
       _verify(token);
     }

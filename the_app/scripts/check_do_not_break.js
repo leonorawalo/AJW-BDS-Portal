@@ -101,6 +101,33 @@ for (const file of [...walk(path.join(root, 'lib')), ...walk(path.join(root, 'we
   }
 }
 
+// The Android update notice compares the installed build with
+// web/android-latest.json (DO_NOT_BREAK.md section 5). The app's own
+// version constant must equal pubspec, and the published "latest" can't
+// be newer than the code that exists.
+const versionLine = /^version:\s*([0-9.]+)\+([0-9]+)\s*$/m.exec(pubspec);
+const appVersion = fs.readFileSync(path.join(root, 'lib/core/app_version.dart'), 'utf8');
+const constName = /appVersionName = '([^']+)'/.exec(appVersion);
+const constBuild = /appBuildNumber = ([0-9]+)/.exec(appVersion);
+if (!versionLine || !constName || !constBuild) {
+  problems.push('Could not read the version from pubspec.yaml or lib/core/app_version.dart');
+} else {
+  if (constName[1] !== versionLine[1] || constBuild[1] !== versionLine[2]) {
+    problems.push(
+      `lib/core/app_version.dart (${constName[1]}+${constBuild[1]}) differs from pubspec.yaml (${versionLine[1]}+${versionLine[2]}): bump both`,
+    );
+  }
+  const latestPath = path.join(root, 'web/android-latest.json');
+  if (!fs.existsSync(latestPath)) {
+    problems.push('Missing web/android-latest.json (the Android update notice reads it)');
+  } else {
+    const latest = JSON.parse(fs.readFileSync(latestPath, 'utf8'));
+    if (latest.build > Number(versionLine[2])) {
+      problems.push(`web/android-latest.json says build ${latest.build}, newer than the code (${versionLine[2]})`);
+    }
+  }
+}
+
 if (problems.length > 0) {
   console.error('\nDO_NOT_BREAK check FAILED, deploy stopped:');
   for (const p of problems) console.error(`  - ${p}`);

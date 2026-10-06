@@ -1,22 +1,22 @@
 // Supabase Edge Function: send-push
 //
 // Triggered by a Database Webhook (configured in the Supabase dashboard,
-// NOT in a committed migration — see setup notes handed to the developer
+// NOT in a committed migration: see setup notes handed to the developer
 // separately) on INSERT to `consultant_assignments` and `tasks`. Resolves
 // who should be notified, looks up their device_tokens, and sends a push
 // via the FCM HTTP v1 API using a Firebase service account.
 //
 // Required secrets (set with `supabase secrets set`, never committed):
-//   FIREBASE_PROJECT_ID   — e.g. ajwafrica-bags-portal
-//   FIREBASE_CLIENT_EMAIL — from the service account JSON
-//   FIREBASE_PRIVATE_KEY  — from the service account JSON, `\n` literal
+//   FIREBASE_PROJECT_ID: e.g. ajwafrica-bags-portal
+//   FIREBASE_CLIENT_EMAIL: from the service account JSON
+//   FIREBASE_PRIVATE_KEY: from the service account JSON, `\n` literal
 //                            escapes are unescaped to real newlines below
-//   WEBHOOK_SECRET         — shared secret checked against the
+//   WEBHOOK_SECRET: shared secret checked against the
 //                            x-webhook-secret header set on the Database
 //                            Webhook, so this function can't be invoked
 //                            by anyone who just finds the URL
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided automatically
-// by the Edge Functions runtime — no need to set them.
+// by the Edge Functions runtime: no need to set them.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -24,7 +24,7 @@ interface WebhookPayload {
   type: 'INSERT' | 'UPDATE' | 'DELETE';
   table: string;
   record: Record<string, unknown>;
-  /// Only present on UPDATE — the row's values before this change.
+  /// Only present on UPDATE: the row's values before this change.
   old_record?: Record<string, unknown>;
   schema: string;
 }
@@ -41,7 +41,7 @@ const supabase = createClient(
 );
 
 /// The ToR/Accounting checklist tasks that actually move the
-/// Business Health / Credit Readiness scores — see
+/// Business Health / Credit Readiness scores: see
 /// lib/features/legal_workstream/models/loan_readiness.dart. Kept as
 /// its own list (not importable from the Dart side) so completing one
 /// of these gets a "loan readiness improved" message instead of a
@@ -60,7 +60,7 @@ const SCORE_RELEVANT_TASK_TITLES = new Set([
 
 /// Admin gets oversight visibility on assignment/completion events, on
 /// top of whoever the event is specifically about. Cached per-request
-/// isn't needed — Deno instances are warm/short-lived either way.
+/// isn't needed: Deno instances are warm/short-lived either way.
 async function getAdminUserIds(): Promise<string[]> {
   const { data: admins } = await supabase
     .from('users')
@@ -103,7 +103,7 @@ async function resolveTarget(payload: WebhookPayload): Promise<NotificationTarge
       .maybeSingle();
     if (!enterprise) return null;
 
-    // owner_user_id can be null — an enterprise registered before its
+    // owner_user_id can be null: an enterprise registered before its
     // Owner has an account, or one an Admin hasn't linked yet (see
     // EnterpriseDetailsTab._OwnerAccountLink). Still notify the
     // consultant and admins either way.
@@ -257,7 +257,7 @@ async function sendToToken(fcmToken: string, title: string, body: string): Promi
   if (!response.ok) {
     const errorBody = await response.text();
     // A token FCM reports as unregistered is stale (app uninstalled,
-    // token rotated) — remove it so future sends don't keep failing.
+    // token rotated): remove it so future sends don't keep failing.
     if (response.status === 404 || errorBody.includes('UNREGISTERED')) {
       await supabase.from('device_tokens').delete().eq('fcm_token', fcmToken);
     } else {
@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
   // leave this function open to anyone who finds the URL.
   const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
   if (!expectedSecret) {
-    console.error('WEBHOOK_SECRET is not set — refusing all calls');
+    console.error('WEBHOOK_SECRET is not set: refusing all calls');
     return new Response('Server misconfigured', { status: 500 });
   }
   if (req.headers.get('x-webhook-secret') !== expectedSecret) {

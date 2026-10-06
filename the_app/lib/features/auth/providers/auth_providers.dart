@@ -19,7 +19,7 @@ final authStateChangesProvider = StreamProvider<AuthState>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;
 });
 
-/// The signed-in user's profile row (name, role, status) — null when
+/// The signed-in user's profile row (name, role, status): null when
 /// signed out. This is what every role-based redirect and role-gated
 /// widget should read, never the raw Supabase User.
 final currentUserProfileProvider = FutureProvider<UserProfile?>((ref) async {

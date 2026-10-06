@@ -8,7 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/loan_readiness_report.dart';
 import 'export_formatting.dart';
 
-/// Renders the loan-readiness report as a PDF, entirely on the device — no
+/// Renders the loan-readiness report as a PDF, entirely on the device: no
 /// Google connection needed (Owners typically won't have one). Same
 /// content as the Google Doc: both come from buildLoanReadinessReport().
 ///

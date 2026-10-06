@@ -20,7 +20,7 @@ class EnterpriseRepository {
     return row == null ? null : Enterprise.fromMap(row);
   }
 
-  /// Admin-only per FR-009 — enterprises are registered by AJW Africa staff,
+  /// Admin-only per FR-009: enterprises are registered by AJW Africa staff,
   /// never self-registered by an Owner. RLS backs this up independently:
   /// there's no insert policy for non-admins, so this call fails safely
   /// even if a non-admin somehow reaches this code path.
@@ -66,7 +66,7 @@ class EnterpriseRepository {
     return Enterprise.fromMap(row);
   }
 
-  /// Users with the Enterprise Owner role — for linking an enterprise to
+  /// Users with the Enterprise Owner role: for linking an enterprise to
   /// its owner's actual login account. Nothing does this automatically:
   /// `owner_name` on this table is free text, never matched against
   /// `users` by name/email, so a new Owner account stays unlinked
@@ -103,7 +103,7 @@ class EnterpriseRepository {
 
   /// Updates the loan-readiness facts nothing else in the schema
   /// captures (see migration 20260916180000). All three are always
-  /// written — a null clears that fact.
+  /// written: a null clears that fact.
   Future<Enterprise> updateFinancialFacts({
     required String enterpriseId,
     double? annualTurnover,
@@ -128,7 +128,7 @@ class EnterpriseRepository {
     required GoingConcernStatus status,
   }) async {
     // going_concern_achieved_at is set/cleared automatically by the
-    // check_going_concern_consistency trigger — never set it from here.
+    // check_going_concern_consistency trigger: never set it from here.
     final row = await _client
         .from('enterprises')
         .update({'going_concern_status': status.dbValue})

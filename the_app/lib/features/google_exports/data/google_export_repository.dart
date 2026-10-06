@@ -6,7 +6,7 @@ import '../models/exported_file.dart';
 import '../models/sheet_tab.dart';
 
 /// Thrown when the user connected Google before exports existed, so their
-/// token lacks drive.file — reconnecting once fixes it.
+/// token lacks drive.file: reconnecting once fixes it.
 class GoogleReconnectNeededException implements Exception {
   const GoogleReconnectNeededException();
 }

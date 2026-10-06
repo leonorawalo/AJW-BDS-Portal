@@ -129,7 +129,7 @@ class Enterprise {
   final DateTime? businessStartedDate;
   final String? loanPurpose;
 
-  /// Months since enrolment — used to surface the TOR's "50% Going Concern
+  /// Months since enrolment: used to surface the TOR's "50% Going Concern
   /// within 3 months" KPI against the same baseline for every enterprise.
   int get monthsSinceEnrolment {
     final now = DateTime.now();

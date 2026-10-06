@@ -80,7 +80,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     }
   }
 
-  /// Runs whenever the time or the participants change. Advisory only —
+  /// Runs whenever the time or the participants change. Advisory only:
   /// the server checks again when booking.
   Future<void> _checkAvailability() async {
     final startsAt = _startsAt;

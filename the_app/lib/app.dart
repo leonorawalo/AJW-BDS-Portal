@@ -16,7 +16,7 @@ class AjwBagsApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     // Side-effect-only provider (keeps public.device_tokens in sync with
-    // sign-in state) — watched here purely to keep it alive for the life
+    // sign-in state): watched here purely to keep it alive for the life
     // of the app.
     ref.watch(notificationSyncProvider);
 
@@ -40,7 +40,7 @@ class AjwBagsApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _scaffoldMessengerKey,
       // Real theme (deep brand red for primary/logo, semantic red reserved
-      // for "Overdue" only) lands with lib/core/theme — placeholder here
+      // for "Overdue" only) lands with lib/core/theme: placeholder here
       // so Module 1 isn't blocked on the theme system.
       theme: ajwLightTheme,
       routerConfig: router,

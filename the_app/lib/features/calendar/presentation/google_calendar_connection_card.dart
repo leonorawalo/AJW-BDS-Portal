@@ -6,11 +6,11 @@ import '../../auth/providers/auth_providers.dart';
 import '../models/google_connection.dart';
 import '../providers/calendar_providers.dart';
 
-/// Connect / disconnect the signed-in user's own Google account — used for
+/// Connect / disconnect the signed-in user's own Google account: used for
 /// meetings (Calendar + Meet, free/busy) and exports (Docs/Sheets/Slides).
 ///
 /// Google's consent page opens in the external browser and redirects to
-/// the google-oauth Edge Function, not back into the app — so the
+/// the google-oauth Edge Function, not back into the app: so the
 /// connection status is simply re-fetched whenever the app returns to the
 /// foreground (plus a manual refresh button as a fallback on web).
 class GoogleCalendarConnectionCard extends ConsumerStatefulWidget {

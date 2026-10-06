@@ -4,7 +4,7 @@ import '../models/enterprise_export_data.dart';
 import '../models/loan_readiness_report.dart';
 import 'export_formatting.dart';
 
-/// The report's content — the single definition shared by the Google Doc
+/// The report's content: the single definition shared by the Google Doc
 /// (renderLoanReadinessReportHtml) and the PDF (loan_readiness_report_pdf.dart).
 LoanReadinessReport buildLoanReadinessReport(EnterpriseExportData d) {
   final e = d.enterprise;

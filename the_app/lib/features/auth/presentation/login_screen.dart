@@ -91,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authRepositoryProvider)
           .signIn(email: _emailController.text.trim(), password: _passwordController.text);
-      // No manual navigation here — routerProvider's redirect picks up
+      // No manual navigation here: routerProvider's redirect picks up
       // the auth state change and sends the user to their role home.
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);

@@ -8,4 +8,8 @@ class SiteLinks {
   static const about = '$site/about.html';
   static const privacy = '$site/privacy.html';
   static const terms = '$site/terms.html';
+
+  /// The newest released Android build (web/android-latest.json), read by
+  /// the app's update notice. Changed only when a new APK is released.
+  static const androidLatest = '$site/android-latest.json';
 }

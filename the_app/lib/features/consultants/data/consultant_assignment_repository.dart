@@ -7,11 +7,11 @@ class ConsultantAssignmentRepository {
 
   final SupabaseClient _client;
 
-  /// Users with the Consultant role — for the Admin's assignment dropdown.
+  /// Users with the Consultant role: for the Admin's assignment dropdown.
   /// RLS on `users` already lets an Admin see every row, so this is a
   /// plain filtered select, not a special-cased query. specialization
   /// is included so the dropdown can label each option (Legal /
-  /// Accounting / Marketing) — the ToR "Trio" model means picking a
+  /// Accounting / Marketing): the ToR "Trio" model means picking a
   /// consultant without knowing which specialization they are isn't
   /// meaningful.
   Future<List<Map<String, dynamic>>> fetchConsultants() async {
@@ -22,7 +22,7 @@ class ConsultantAssignmentRepository {
     return (rows as List).cast<Map<String, dynamic>>();
   }
 
-  /// The currently active assignment(s) for one enterprise — up to three
+  /// The currently active assignment(s) for one enterprise: up to three
   /// (one per specialization). Used to populate "assign this task to"
   /// pickers, and to show the Admin which specializations are still
   /// unfilled.
@@ -38,7 +38,7 @@ class ConsultantAssignmentRepository {
   }
 
   /// All assignments, with the consultant and enterprise names joined in
-  /// — this is what Admin's assignment list screen displays. A
+  ///: this is what Admin's assignment list screen displays. A
   /// Consultant calling this would only get their own rows back (RLS),
   /// but this method is intended for the Admin view specifically.
   Future<List<ConsultantAssignment>> fetchAll() async {
@@ -56,10 +56,10 @@ class ConsultantAssignmentRepository {
   }
 
   /// Assigns a consultant to an enterprise. Up to three concurrent
-  /// active assignments per enterprise are allowed — one per
+  /// active assignments per enterprise are allowed: one per
   /// specialization (the ToR "Trio" model). If this enterprise already
   /// has an active consultant of the *same* specialization as the one
-  /// being assigned, that one is ended — handled server-side by the
+  /// being assigned, that one is ended: handled server-side by the
   /// `consultant_assignments_before_insert` trigger, which derives
   /// specialization from the consultant's profile, so this is just a
   /// plain insert.

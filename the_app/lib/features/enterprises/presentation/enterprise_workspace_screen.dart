@@ -82,7 +82,7 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
           if (enterprise == null) return const Center(child: Text('Enterprise not found.'));
           return switch (current) {
             // Admin can view and create/assign tasks, but not change their
-            // status — that's Owner/Consultant only.
+            // status: that's Owner/Consultant only.
             'tasks' => TasksTab(enterpriseId: enterpriseId, readOnly: true, canCreateTasks: true),
             'recommendations' => RecommendationsTab(enterpriseId: enterpriseId, readOnly: false),
             'documents' => DocumentsTab(enterpriseId: enterpriseId, readOnly: false),

@@ -20,7 +20,7 @@ Future<void> main() async {
   }
 
   // Web needs an explicit FirebaseOptions (no google-services.json
-  // equivalent exists for browsers) — no Firebase Web app is registered
+  // equivalent exists for browsers): no Firebase Web app is registered
   // yet, and push notifications aren't in scope for the web/Admin-desktop
   // target, so skip init there rather than crash on boot.
   if (!kIsWeb) {

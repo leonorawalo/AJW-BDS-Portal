@@ -65,7 +65,7 @@ class AppColors {
     return personalPalette[hash % personalPalette.length];
   }
 
-  // --- Chart series (multi-line/bar data only — not brand/status colors) ---
+  // --- Chart series (multi-line/bar data only: not brand/status colors) ---
   // AJW's brand palette only has one identity hue (brandRed) plus the
   // status triad above, so it can't supply two CVD-safe, mutually
   // distinguishable series for a 2-line trend chart on its own. These are

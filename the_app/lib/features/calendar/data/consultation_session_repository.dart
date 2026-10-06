@@ -13,7 +13,7 @@ class GoogleNotConnectedException implements Exception {
 }
 
 /// Thrown when someone is busy at the chosen time and the booking wasn't
-/// forced — the server re-checks free/busy just before creating the event,
+/// forced: the server re-checks free/busy just before creating the event,
 /// so this can happen even after the dialog's own check showed all clear.
 class SessionClashException implements Exception {
   const SessionClashException(this.availability);
@@ -92,7 +92,7 @@ class ConsultationSessionRepository {
       });
 
   /// Deletes the Google event (attendees get a cancellation email) and
-  /// marks the row Cancelled — kept, not deleted, for the session history.
+  /// marks the row Cancelled: kept, not deleted, for the session history.
   Future<void> cancelSession(String sessionId) =>
       _invoke({'action': 'cancel', 'session_id': sessionId});
 

@@ -30,7 +30,7 @@ import '../../shared/models/user_profile.dart';
 ///
 /// [refresh] is exposed publicly (notifyListeners() itself is protected)
 /// so routerProvider can also trigger a re-check when the *profile*
-/// fetch resolves — not just the raw auth event — closing a race where
+/// fetch resolves, not just the raw auth event, closing a race where
 /// the two don't land in the same tick (see routerProvider below).
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -69,7 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(authRepo.authStateChanges);
 
   // The auth-stream event and the profile fetch completing don't always
-  // land in the same tick — without this, redirect could fire while the
+  // land in the same tick: without this, redirect could fire while the
   // fetch is still in flight and briefly act on the *previous* session's
   // cached profile. Re-triggering redirect explicitly once the fetch
   // actually resolves closes that race for good.
@@ -78,8 +78,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/login',
     refreshListenable: refreshNotifier,
-    // An unknown URL (a stale bookmark, a mangled link) goes to login —
-    // which the redirect then turns into the right home — instead of
+    // An unknown URL (a stale bookmark, a mangled link) goes to login:
+    // which the redirect then turns into the right home: instead of
     // go_router's error page.
     onException: (context, state, router) => router.go('/login'),
     redirect: (context, state) {
@@ -104,7 +104,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return state.matchedLocation == '/set-password' ? null : '/set-password';
       }
 
-      // Signed in — figure out the role home before deciding anything.
+      // Signed in: figure out the role home before deciding anything.
       final profileAsync = ref.read(currentUserProfileProvider);
 
       return profileAsync.when(
@@ -139,7 +139,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           // /workstream/... is a deliberate exception: Task Detail is
           // shared by Consultant AND Owner (and now Admin), reached from
           // three different role homes, so it can never start with any
-          // single homePath. RLS — not this route match — is the actual
+          // single homePath. RLS, not this route match, is the actual
           // security boundary for what's inside it.
           final isSharedWorkstreamRoute = state.matchedLocation.startsWith('/workstream');
           if (!isSharedWorkstreamRoute && !state.matchedLocation.startsWith(homePath)) {
@@ -237,7 +237,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner',
-        builder: (context, state) => OwnerWorkstreamScreen(section: state.uri.queryParameters['section']),
+        builder: (context, state) => OwnerWorkstreamScreen(
+          section: state.uri.queryParameters['section'],
+          enterpriseId: state.uri.queryParameters['enterprise'],
+        ),
       ),
       GoRoute(
         path: '/workstream/enterprises/:enterpriseId/tasks/:taskId',

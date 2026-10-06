@@ -27,7 +27,7 @@ class InviteRepository {
   final SupabaseClient _client;
 
   /// Emails an invite. Throws [InviteEmailFailedException] if the email
-  /// couldn't be sent — fall back to [createLink].
+  /// couldn't be sent: fall back to [createLink].
   Future<InviteResult> sendInvite(InviteRequest request) => _invoke(request.toJson('invite'));
 
   /// A set-password link for the Admin to share (copy / WhatsApp). Also

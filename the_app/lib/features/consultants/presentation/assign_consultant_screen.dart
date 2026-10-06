@@ -20,7 +20,7 @@ class AssignConsultantScreen extends ConsumerStatefulWidget {
   const AssignConsultantScreen({super.key, this.preselectedEnterpriseId});
 
   /// When launched from an enterprise's detail screen, that enterprise
-  /// is locked in rather than shown as an editable dropdown — assigning
+  /// is locked in rather than shown as an editable dropdown: assigning
   /// a consultant "to nothing in particular" isn't a real use case.
   final String? preselectedEnterpriseId;
 
@@ -32,7 +32,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
   String? _selectedEnterpriseId;
   String? _errorMessage;
 
-  // One independent selection/submitting-state pair per specialization —
+  // One independent selection/submitting-state pair per specialization:
   // the ToR "Trio" model means up to three assignments can happen in one
   // visit to this screen, each unrelated to the others.
   final Map<ConsultantSpecialization, String?> _selectedConsultantId = {
@@ -220,7 +220,7 @@ class _AssignConsultantScreenState extends ConsumerState<AssignConsultantScreen>
 }
 
 /// One specialization's slot: who's currently assigned (if anyone), and
-/// a picker scoped to just that specialization's consultants — so
+/// a picker scoped to just that specialization's consultants: so
 /// picking a Legal consultant never means scrolling past Accounting and
 /// Marketing names first.
 class _SpecializationAssignmentCard extends ConsumerWidget {

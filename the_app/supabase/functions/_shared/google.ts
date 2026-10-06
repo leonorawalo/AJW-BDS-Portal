@@ -1,6 +1,6 @@
 // Shared by the Edge Functions that call Google APIs on a user's behalf
 // (calendar-sessions, google-export). Refresh tokens live in
-// google_connections, which only the service role can read — they never
+// google_connections, which only the service role can read: they never
 // reach the app.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -10,7 +10,7 @@ export const serviceClient = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 );
 
-/// The user has no working Google connection — never connected, revoked
+/// The user has no working Google connection: never connected, revoked
 /// access, or (while the OAuth app is in "Testing") the 7-day refresh
 /// token lifetime ran out.
 export class NotConnectedError extends Error {}
@@ -50,7 +50,7 @@ const FOLDER_NAME = 'AJW BAGS Portal';
 const FOLDER_MARKER = 'ajwBagsPortalFolder';
 
 /// The user's token lacks a scope added after they connected (e.g.
-/// drive.file, gmail.send) — they need to reconnect once.
+/// drive.file, gmail.send): they need to reconnect once.
 export class ReconnectNeededError extends Error {}
 
 /// fetch against a Google API with the user's token. A 403 about scopes

@@ -17,7 +17,7 @@ import '../../portfolio/presentation/programme_clock_card.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
 
-/// Loan-readiness dashboard — computed live from ToR task completion
+/// Loan-readiness dashboard: computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
 /// handful of enterprise facts nothing else in the app captures
 /// (annual turnover, when the business started, loan purpose). Nobody
@@ -405,8 +405,8 @@ class _RedFlagsList extends StatelessWidget {
   }
 }
 
-/// Lists what's already satisfied vs still outstanding, and — for the
-/// outstanding, task-derived ones — which ToR task completing it would
+/// Lists what's already satisfied vs still outstanding, and: for the
+/// outstanding, task-derived ones: which ToR task completing it would
 /// satisfy, so "why is my score X" is never a mystery.
 class _DerivedFromTasksList extends StatelessWidget {
   const _DerivedFromTasksList({required this.inputs});

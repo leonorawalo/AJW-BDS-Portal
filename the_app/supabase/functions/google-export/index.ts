@@ -16,12 +16,12 @@
 // loan-readiness scoring isn't duplicated here. This function only holds
 // the Google token and talks to Google.
 //
-// Scope: drive.file — the app can create files and see only the files it
+// Scope: drive.file: the app can create files and see only the files it
 // created, never the rest of the user's Drive.
 //
 // Errors the app handles specially (412):
 //   {error: 'not_connected'}    no working Google connection
-//   {error: 'reconnect_needed'} connected before drive.file was added —
+//   {error: 'reconnect_needed'} connected before drive.file was added:
 //                                reconnect once to grant it
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -154,7 +154,7 @@ async function createSlides(
       },
     });
     requests.push({ insertText: { objectId: titleId, text: slide.title || ' ' } });
-    requests.push({ insertText: { objectId: bodyId, text: bullets.length > 0 ? bullets.join('\n') : '—' } });
+    requests.push({ insertText: { objectId: bodyId, text: bullets.length > 0 ? bullets.join('\n') : 'None yet' } });
     if (bullets.length > 0) {
       requests.push({
         createParagraphBullets: {

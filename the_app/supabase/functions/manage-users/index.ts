@@ -1,4 +1,4 @@
-// Supabase Edge Function: manage-users   (Phase 9b — Admin user management)
+// Supabase Edge Function: manage-users   (Phase 9b: Admin user management)
 //
 // Only an Administrator can call it. Deploy with JWT verification ON.
 //

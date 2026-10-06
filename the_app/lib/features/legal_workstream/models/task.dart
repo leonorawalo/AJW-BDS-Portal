@@ -69,9 +69,9 @@ class WorkstreamTask {
   final TaskStatus status;
   final DateTime? completedAt;
 
-  /// 'Legal' / 'Accounting' / 'Marketing' — derived server-side from the
+  /// 'Legal' / 'Accounting' / 'Marketing': derived server-side from the
   /// assigned consultant's profile (see set_task_specialization trigger).
-  /// Plain string, not the shared ConsultantSpecialization enum — this
+  /// Plain string, not the shared ConsultantSpecialization enum: this
   /// model doesn't otherwise depend on shared/models/user_profile.dart
   /// and a display label is all this needs.
   final String? specialization;

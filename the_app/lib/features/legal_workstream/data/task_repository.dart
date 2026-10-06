@@ -20,7 +20,7 @@ class TaskRepository {
   }
 
   /// Which score-relevant ToR tasks are completed on the enterprise,
-  /// across every discipline — including tasks the caller can't read.
+  /// across every discipline: including tasks the caller can't read.
   Future<Set<String>> fetchCompletedLoanReadinessTitles(String enterpriseId) async {
     final rows = await _client.rpc('completed_loan_readiness_tasks', params: {
       'p_enterprise_id': enterpriseId,

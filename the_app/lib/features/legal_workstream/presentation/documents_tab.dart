@@ -17,7 +17,7 @@ import '../../tutorial/presentation/tour_anchor.dart';
 class DocumentsTab extends ConsumerStatefulWidget {
   const DocumentsTab({super.key, required this.enterpriseId, required this.readOnly});
   final String enterpriseId;
-  // Owner CAN upload per SRS ("comment/upload") — readOnly here only
+  // Owner CAN upload per SRS ("comment/upload"): readOnly here only
   // affects whether this flag suppresses upload; currently the button
   // always shows regardless, matching that both roles may upload.
   final bool readOnly;

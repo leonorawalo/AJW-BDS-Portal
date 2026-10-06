@@ -13,7 +13,7 @@ final deviceTokenRepositoryProvider = Provider<DeviceTokenRepository>((ref) {
   return DeviceTokenRepository(ref.watch(supabaseClientProvider));
 });
 
-/// Messages that arrive while the app is open — a screen can watch this
+/// Messages that arrive while the app is open: a screen can watch this
 /// to surface them (e.g. app.dart shows a SnackBar). Empty on web: no
 /// Firebase Web app is registered yet, so FirebaseMessaging isn't
 /// available there.
@@ -26,9 +26,9 @@ final foregroundMessagesProvider = StreamProvider<RemoteMessage>((ref) {
 /// claims the token for the user on sign-in (taking it over from any
 /// previous user of the device), follows token refreshes, and releases it
 /// just BEFORE sign-out while the session can still delete it. Has no
-/// return value — it exists purely for its side effects, so it must be
+/// return value: it exists purely for its side effects, so it must be
 /// kept alive by being watched once near the root of the widget tree
-/// (app.dart). No-op on web — see [foregroundMessagesProvider].
+/// (app.dart). No-op on web: see [foregroundMessagesProvider].
 final notificationSyncProvider = Provider<void>((ref) {
   if (kIsWeb) return;
 

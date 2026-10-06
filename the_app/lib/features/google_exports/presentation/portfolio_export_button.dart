@@ -6,7 +6,7 @@ import '../builders/portfolio_sheet_builder.dart';
 import '../providers/google_export_providers.dart';
 import 'google_export_flow.dart';
 
-/// Admin enterprise list: "Export portfolio (Google Sheets)" — one row per
+/// Admin enterprise list: "Export portfolio (Google Sheets)": one row per
 /// enterprise with scores, consultants, task counts and activity.
 class PortfolioExportButton extends ConsumerWidget {
   const PortfolioExportButton({super.key});

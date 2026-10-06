@@ -1,7 +1,7 @@
 enum AvailabilityStatus { free, busy, notConnected, unknown }
 
 /// One person's free/busy for a proposed slot, from calendar-sessions'
-/// check_availability. Only busy/free is known — never event details.
+/// check_availability. Only busy/free is known: never event details.
 class ParticipantAvailability {
   const ParticipantAvailability({required this.userId, required this.name, required this.status});
 

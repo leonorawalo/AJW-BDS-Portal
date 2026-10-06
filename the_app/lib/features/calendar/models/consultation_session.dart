@@ -11,7 +11,7 @@ extension SessionStatusX on SessionStatus {
       };
 }
 
-/// A meeting booked on its organizer's Google Calendar — the organizer can
+/// A meeting booked on its organizer's Google Calendar: the organizer can
 /// be an Admin, Consultant or Owner (see supabase/functions/calendar-sessions).
 /// Who's on it comes separately from session_people(). Rows are only ever
 /// created/cancelled through that Edge Function, never inserted directly

@@ -21,7 +21,7 @@
 //        -> {ok: true}
 //
 // 412 {error: 'not_connected'} means the ORGANIZER has no working Google
-// connection (or it was revoked / expired — the stale row is deleted so
+// connection (or it was revoked / expired: the stale row is deleted so
 // the app shows "Connect" again).
 //
 // Session and participant rows are read/written with the caller's JWT, so
@@ -100,7 +100,7 @@ async function parseMeeting(
 }
 
 /// Free/busy for one person on their own primary calendar. Only whether
-/// the slot is taken is read — never event titles or details.
+/// the slot is taken is read: never event titles or details.
 async function statusFor(userId: string, startsAt: Date, endsAt: Date): Promise<Availability['status']> {
   let token: string;
   try {
@@ -121,7 +121,7 @@ async function statusFor(userId: string, startsAt: Date, endsAt: Date): Promise<
   });
   const body = await res.json().catch(() => ({}));
   // 403 here usually means the person connected before the
-  // calendar.freebusy scope was added — they need to reconnect.
+  // calendar.freebusy scope was added: they need to reconnect.
   if (!res.ok) {
     console.error('freeBusy failed', res.status, body.error?.message);
     return 'unknown';
@@ -259,7 +259,7 @@ async function cancel(userClient: SupabaseClient, userId: string, sessionId: str
       method: 'DELETE',
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    // 404/410: already deleted on the Google side — still cancel here.
+    // 404/410: already deleted on the Google side: still cancel here.
     if (!res.ok && res.status !== 404 && res.status !== 410) {
       const body = await res.json().catch(() => ({}));
       return json({ error: `Google Calendar: ${body.error?.message ?? res.statusText}` }, 502);

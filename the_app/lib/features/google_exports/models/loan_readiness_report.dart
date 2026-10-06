@@ -6,8 +6,8 @@ typedef ReportScore = ({String label, double score, String band});
 typedef ReportDriver = ({bool done, String label, String source});
 
 /// The loan-readiness report's content, built once from the enterprise's
-/// data (buildLoanReadinessReport) and rendered two ways — HTML for the
-/// Google Doc, and a PDF generated on the device — so both always say the
+/// data (buildLoanReadinessReport) and rendered two ways: HTML for the
+/// Google Doc, and a PDF generated on the device: so both always say the
 /// same thing.
 class LoanReadinessReport {
   const LoanReadinessReport({

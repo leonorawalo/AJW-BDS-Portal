@@ -26,7 +26,7 @@ extension UserRoleLabel on UserRole {
   }
 }
 
-/// The ToR's "Trio" model — only meaningful when role is Consultant.
+/// The ToR's "Trio" model: only meaningful when role is Consultant.
 /// The MVP builds full task support for Legal only; Accounting and
 /// Marketing exist here as real, selectable values so the distinction
 /// is captured now, even though their task templates aren't built yet.
@@ -96,7 +96,7 @@ class UserProfile {
 
   bool get isSuspended => status == 'suspended';
 
-  /// What the profile badge actually displays — "Consultant" alone if
+  /// What the profile badge actually displays: "Consultant" alone if
   /// no specialization is set (or role isn't Consultant), otherwise
   /// e.g. "Legal Consultant".
   String get roleDisplayLabel {

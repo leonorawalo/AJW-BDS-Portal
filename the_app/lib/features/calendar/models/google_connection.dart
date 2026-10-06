@@ -1,5 +1,5 @@
 /// The signed-in user's Google connection, as exposed by the
-/// get_my_google_connection() RPC — deliberately without the token,
+/// get_my_google_connection() RPC: deliberately without the token,
 /// which never leaves the Edge Functions.
 class GoogleConnection {
   const GoogleConnection({required this.connectedAt, this.googleEmail, this.scope});
@@ -26,7 +26,7 @@ class GoogleConnection {
   bool get canExport => _has(_driveFileScope);
   bool get canSendEmail => _has(_gmailSendScope);
 
-  /// Connected before availability checks / exports / email were added —
+  /// Connected before availability checks / exports / email were added:
   /// needs to reconnect once to grant the newer permissions.
   bool get needsReconnect => !canCheckAvailability || !canExport || !canSendEmail;
 }

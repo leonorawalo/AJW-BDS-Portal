@@ -172,7 +172,9 @@ class _Targets extends StatelessWidget {
                   Text('Deliverable targets', style: text.titleMedium),
                   const SizedBox(height: 2),
                   Text(
-                    'Share of the portfolio where the ToR task is complete, against the ToR target.'
+                    'Each ToR deliverable sets a target share of the portfolio, for example "90% of businesses '
+                    'registered". The bar fills as businesses complete that task; the dark mark on it is where '
+                    'the target sits, so the bar has met it once it reaches the mark.'
                     '${overdue > 0 ? ' $overdue ${overdue == 1 ? 'enterprise is' : 'enterprises are'} past a milestone.' : ''}',
                     style: text.bodySmall,
                   ),
@@ -182,52 +184,58 @@ class _Targets extends StatelessWidget {
             for (final t in targets)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.sm),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      flex: 5,
-                      child: Text.rich(
-                        TextSpan(children: [
-                          TextSpan(text: t.template.title, style: text.bodyMedium),
-                          if (showDiscipline) TextSpan(text: '  ·  ${t.discipline.label}', style: text.bodySmall),
-                        ]),
-                      ),
-                    ),
-                    const SizedBox(width: Space.md),
-                    Expanded(
-                      flex: 3,
-                      child: Stack(
-                        alignment: Alignment.centerLeft,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
-                            child: LinearProgressIndicator(
-                              value: (t.percent / 100).clamp(0, 1),
-                              minHeight: 8,
-                              backgroundColor: AppColors.surfaceSunken,
-                              valueColor: AlwaysStoppedAnimation(t.met ? AppColors.successGreen : AppColors.brandRed),
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(children: [
+                              TextSpan(text: t.template.title, style: text.bodyMedium),
+                              if (showDiscipline) TextSpan(text: '  ·  ${t.discipline.label}', style: text.bodySmall),
+                            ]),
                           ),
-                          // Target marker.
-                          FractionallySizedBox(
-                            widthFactor: (t.target / 100).clamp(0.0, 1.0),
-                            alignment: Alignment.centerLeft,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Container(width: 2, height: 14, color: AppColors.charcoal),
-                            ),
+                        ),
+                        const SizedBox(width: Space.md),
+                        Text(
+                          t.met ? 'Target met' : 'Target: ${t.target}%',
+                          style: text.labelMedium?.copyWith(
+                            color: t.met ? AppColors.successGreen : AppColors.charcoalSoft,
+                            fontWeight: t.met ? AppFonts.bodyStrong : null,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: Space.md),
-                    SizedBox(
-                      width: 84,
-                      child: Text(
-                        '${t.percent.round()}% / ${t.target}%',
-                        textAlign: TextAlign.right,
-                        style: text.labelMedium?.copyWith(color: t.met ? AppColors.successGreen : AppColors.charcoalSoft),
-                      ),
+                    const SizedBox(height: Space.xs),
+                    Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: (t.percent / 100).clamp(0, 1),
+                            minHeight: 8,
+                            backgroundColor: AppColors.surfaceSunken,
+                            valueColor: AlwaysStoppedAnimation(t.met ? AppColors.successGreen : AppColors.brandRed),
+                          ),
+                        ),
+                        // Where the target sits on the bar (not a control).
+                        FractionallySizedBox(
+                          widthFactor: (t.target / 100).clamp(0.0, 1.0),
+                          alignment: Alignment.centerLeft,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(width: 2, height: 14, color: AppColors.charcoal),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: Space.xs),
+                    Text(
+                      '${t.done} of ${t.outOf} ${t.outOf == 1 ? 'business' : 'businesses'} done (${t.percent.round()}%)',
+                      style: text.bodySmall,
                     ),
                   ],
                 ),

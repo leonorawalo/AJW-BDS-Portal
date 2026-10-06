@@ -8,7 +8,7 @@ final enterpriseRepositoryProvider = Provider<EnterpriseRepository>((ref) {
   return EnterpriseRepository(ref.watch(supabaseClientProvider));
 });
 
-/// Admin's full enterprise list. RLS scopes what actually comes back —
+/// Admin's full enterprise list. RLS scopes what actually comes back:
 /// an Owner hitting this same provider would only ever get their own
 /// enterprise, even though the query itself asks for everything.
 final enterprisesListProvider = FutureProvider.autoDispose<List<Enterprise>>((ref) {

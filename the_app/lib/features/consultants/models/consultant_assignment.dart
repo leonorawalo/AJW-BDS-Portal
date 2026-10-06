@@ -25,7 +25,7 @@ class ConsultantAssignment {
 
   factory ConsultantAssignment.fromMap(Map<String, dynamic> map) {
     // consultant/enterprise are only present when the repository joins
-    // them in (Admin's assignment list) — null otherwise.
+    // them in (Admin's assignment list): null otherwise.
     final consultant = map['consultant'] as Map<String, dynamic>?;
     final enterprise = map['enterprise'] as Map<String, dynamic>?;
 

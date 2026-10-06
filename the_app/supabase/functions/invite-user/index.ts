@@ -1,4 +1,4 @@
-// Supabase Edge Function: invite-user   (Phase 9a — Admin-driven onboarding)
+// Supabase Edge Function: invite-user   (Phase 9a: Admin-driven onboarding)
 //
 // Only an Administrator can call it. Deploy with JWT verification ON.
 //
@@ -12,7 +12,7 @@
 //   POST {action: 'link', ...same fields}
 //        -> {status: 'link', user_id, link}       a set-password link for the
 //                                                  Admin to share (copy /
-//                                                  WhatsApp) — the fallback
+//                                                  WhatsApp): the fallback
 //                                                  when email isn't possible,
 //                                                  and a "resend" that never
 //                                                  depends on email delivery
@@ -29,7 +29,7 @@
 // Supabase's default /verify redirect: the app uses the PKCE auth flow,
 // which can't pick up the session from Supabase's default invite redirect.
 // The app exchanges the token itself (verifyOTP). The Invite email template
-// must use the same format — see context.txt.
+// must use the same format: see context.txt.
 //
 // Secrets: APP_URL (https://portal.ajwafrica.org). SUPABASE_*
 // are provided automatically.
@@ -79,7 +79,7 @@ type Input = {
 /// likely went through and only its response was lost.
 const RETRY_DEDUPE_MS = 2 * 60 * 1000;
 
-/// "an Administrator", "a Legal Consultant", "an Enterprise Owner" — for the
+/// "an Administrator", "a Legal Consultant", "an Enterprise Owner": for the
 /// invite email's "… invited you as …" line.
 function rolePhrase(roleName: string, specialization: string | null | undefined): string {
   if (roleName === 'Consultant' && specialization) return `a ${specialization} Consultant`;

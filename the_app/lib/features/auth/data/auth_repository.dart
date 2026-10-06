@@ -19,7 +19,7 @@ class AuthRepository {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
-  /// Sign-in only — no Calendar scope, and no Google token is kept.
+  /// Sign-in only: no Calendar scope, and no Google token is kept.
   /// Calendar access is a separate, per-consultant connection made through
   /// the google-oauth Edge Function (Sessions tab).
   ///
@@ -119,7 +119,7 @@ class AuthRepository {
     await _client.auth.signOut();
   }
 
-  /// Fetches the row from public.users (not auth.users) — this is where
+  /// Fetches the row from public.users (not auth.users): this is where
   /// role_id / status / names / specialization live, and what the
   /// router needs to decide which home screen to redirect to.
   Future<Map<String, dynamic>?> fetchUserProfile(String userId) async {

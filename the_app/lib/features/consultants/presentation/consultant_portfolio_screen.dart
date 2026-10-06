@@ -13,7 +13,7 @@ import '../../portfolio/presentation/portfolio_kpis_section.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
 
-/// Reuses enterprisesListProvider — the *same* query Admin's screen uses.
+/// Reuses enterprisesListProvider: the *same* query Admin's screen uses.
 /// What comes back differs per role purely because of RLS
 /// ("enterprises_select_assigned_consultant"), not because of any
 /// client-side filtering here. A Consultant querying "all enterprises"

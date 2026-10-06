@@ -52,7 +52,7 @@ class _InviteUserDialogState extends ConsumerState<_InviteUserDialog> {
     );
   }
 
-  /// "an Administrator", "a Legal Consultant" — the same wording the invite
+  /// "an Administrator", "a Legal Consultant": the same wording the invite
   /// email uses.
   static String _asWhat(InviteRequest r) {
     if (r.roleName == 'Consultant' && r.specialization != null) return 'a ${r.specialization} Consultant';

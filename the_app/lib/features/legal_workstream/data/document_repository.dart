@@ -10,7 +10,7 @@ class DocumentRepository {
   final SupabaseClient _client;
 
   /// All documents for an enterprise, regardless of whether they're
-  /// attached to a specific task or not — used by the enterprise-level
+  /// attached to a specific task or not: used by the enterprise-level
   /// Documents tab.
   Future<List<WorkstreamDocument>> fetchDocuments(String enterpriseId) async {
     final rows = await _client
@@ -23,7 +23,7 @@ class DocumentRepository {
         .toList();
   }
 
-  /// Documents attached to one specific task — used inside Task Detail.
+  /// Documents attached to one specific task: used inside Task Detail.
   Future<List<WorkstreamDocument>> fetchDocumentsForTask(String taskId) async {
     final rows = await _client
         .from('documents')

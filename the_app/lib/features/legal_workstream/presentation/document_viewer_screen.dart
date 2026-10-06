@@ -39,7 +39,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
       } else if (widget.document.isImage) {
         _imageBytes = await repo.downloadBytes(widget.document.storagePath);
       } else {
-        // Rare fallback — genuinely uncommon file type for this app's
+        // Rare fallback: genuinely uncommon file type for this app's
         // documents (registration certs, IDs, PDFs, photos), so a
         // browser tab is an acceptable exception rather than building
         // a viewer for every possible file format.

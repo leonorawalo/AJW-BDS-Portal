@@ -6,7 +6,7 @@ import '../../legal_workstream/models/recommendation.dart';
 import '../../legal_workstream/models/task.dart';
 
 /// Everything an enterprise export draws on, loaded through the app's
-/// normal providers — so it holds exactly what the signed-in user may see
+/// normal providers: so it holds exactly what the signed-in user may see
 /// (RLS): a consultant's tasks are only their discipline's, and sessions
 /// only those they organised or were invited to. The scores still cover
 /// every discipline, via the completion-only RPC the dashboard uses.
