@@ -1,4 +1,4 @@
-# DO NOT BREAK — AJW BAGS Portal invariants
+# DO NOT BREAK: AJW BAGS Portal invariants
 
 Things that must stay in place, or must match each other across systems,
 for as long as the portal runs on this architecture
@@ -202,6 +202,10 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   `mark_seen()` (the app shell calls it when a page opens).
 - Non-admins can't change role/status/specialization/email (a trigger
   guards it). Don't remove it.
+- An enterprise's owner login (`owner_user_id`) can be set once and never
+  changed or cleared, and must be an Enterprise Owner account (trigger
+  `enterprises_owner_link_rules`, migration 20261006100000). One owner
+  may own several enterprises.
 
 ---------------------------------------------------------------------
 ## 5. Deploying and building
@@ -212,6 +216,10 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   first and stops if it fails. Fix the cause, don't remove the check.
 - `web/index.html` holds the instant loading screen (`#ajw-splash`), removed
   on Flutter's `flutter-first-frame` event. Keep both if you edit the page.
+- NO service worker: `web/flutter_bootstrap.js` (a Flutter template) loads
+  the app without one, and a script in `web/index.html` unregisters any old
+  worker and reloads once. With the worker, browsers kept showing an old
+  version after deploys (6 Oct 2026). Don't put `serviceWorkerSettings` back.
 - Cache headers (`firebase.json`): every `.js/.json/.html` file, `/` and
   `.env` are `no-cache`. They have no content hash in their names, and that
   includes the deferred chunks `main.dart.js_N.part.js`. Only images, fonts
@@ -230,12 +238,20 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   refuse to run without it (never debug-signed). NEVER lose it: back the
   folder up outside the repo and outside OneDrive. Losing it = installed
   apps can't take updates (users must uninstall and reinstall).
-- Release APKs: bump `version:` in pubspec first, then
-  `flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm`.
-  Upload to Storage `downloads` as `ajw-bags-portal.apk` (arm64, most
-  phones) and `ajw-bags-portal-32bit.apk` (armeabi-v7a);
-  `web/download.html` links both. The Supabase free plan caps a file at
-  50 MB, which is why the APK is split.
+- Release APKs (full steps in docs/HANDOVER.md section 7):
+  1. bump `version:` in pubspec AND `lib/core/app_version.dart` (same
+     name + build; the deploy check fails if they differ);
+  2. `flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm`;
+  3. upload to Storage `downloads` as `ajw-bags-portal.apk` (arm64, most
+     phones) and `ajw-bags-portal-32bit.apk` (armeabi-v7a), content type
+     `application/vnd.android.package-archive` (the bucket refuses others;
+     the CLI can't overwrite, so rm then cp);
+  4. update `web/download.html` (version line, `?v=` on both links) and
+     `web/android-latest.json` (version, build);
+  5. deploy the website. Phones on 1.2.1+ then show "A new version is
+     available" (app_update feature). Never raise android-latest.json
+     before the APK is uploaded, or phones are sent to an old file.
+  The Supabase free plan caps a file at 50 MB, which is why the APK is split.
 - Package name stays `com.ajwafrica.the_app` (Firebase push is registered
   to it).
 

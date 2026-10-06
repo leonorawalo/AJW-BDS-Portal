@@ -1,4 +1,4 @@
-# Google OAuth verification — AJW BAGS Portal
+# Google OAuth verification: AJW BAGS Portal
 
 Why: while the OAuth consent screen is in Testing (or published but
 unverified), only listed test users can connect (or everyone sees an
@@ -26,10 +26,10 @@ has verified in Search Console. `*.supabase.co` can't be verified by AJW, so:
 | Scope | Classification | Used for |
 |---|---|---|
 | `openid`, `userinfo.email`, `userinfo.profile` | Non-sensitive | Identify which Google account the user connected |
-| `https://www.googleapis.com/auth/calendar.events` | **Sensitive** — needs justification | Create / cancel consultation meetings (with Google Meet links) on the organizer's own calendar |
+| `https://www.googleapis.com/auth/calendar.events` | **Sensitive**: needs justification | Create / cancel consultation meetings (with Google Meet links) on the organizer's own calendar |
 | `https://www.googleapis.com/auth/calendar.freebusy` | Non-sensitive | Check participants' availability before booking (busy/free only) |
 | `https://www.googleapis.com/auth/drive.file` | Non-sensitive | Create exported Docs / Sheets / Slides in the user's own Drive; the app can only see files it created |
-| `https://www.googleapis.com/auth/gmail.send` | **Sensitive** — needs justification | "Write email": send a message the user wrote in the portal from their own Gmail (send only; no reading) |
+| `https://www.googleapis.com/auth/gmail.send` | **Sensitive**: needs justification | "Write email": send a message the user wrote in the portal from their own Gmail (send only; no reading) |
 
 ## Justification text for `calendar.events` (paste into the verification form)
 
