@@ -3,12 +3,18 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/widgets/config_error_app.dart';
 
 Future<void> main() async {
+  // Web: readable addresses (portal.ajwafrica.org/admin/users) instead of
+  // /#/admin/users. Old /#/ links, including invite and reset emails, are
+  // turned into these by a script in web/index.html before the app starts.
+  // No effect on Android.
+  usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
   final ({String url, String anonKey}) supabaseConfig;

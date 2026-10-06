@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script>
+    // Old-style links (/#/set-password?..., /#/admin/users) become clean
+    // addresses (/set-password?..., /admin/users) before the app starts,
+    // so invite and reset emails keep working. The emails keep the #/ form
+    // on purpose: what follows # is never sent to any server, which is the
+    // safe place for a one-time token. See DO_NOT_BREAK.md section 3.
+    (function () {
+      var h = window.location.hash;
+      if (h.indexOf('#/') === 0) {
+        window.history.replaceState(null, '', h.slice(1));
+      }
+    })();
+  </script>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.

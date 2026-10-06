@@ -54,6 +54,15 @@
         ]
       },
       {
+        "regex": "^/[^.]*$",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
         "source": "**/.env",
         "headers": [
           {

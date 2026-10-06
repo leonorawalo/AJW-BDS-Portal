@@ -113,6 +113,11 @@ This list is enforced in two places. Change all three together:
   `android/app/src/main/AndroidManifest.xml` (scheme `ajwbags`, host `login-callback`).
 - "Allow new users to sign up" = OFF (people only join by Admin invite).
 - Email OTP expiration = 86400 (24 h), so invite links last a day.
+- Web addresses are clean paths (`/admin/users`, `usePathUrlStrategy` in
+  `lib/main.dart`). Emails and `invite-user` still send `/#/set-password?...`
+  ON PURPOSE (a token after `#` never reaches any server). The first script
+  in `web/index.html` turns `#/...` into the path before the app starts:
+  remove it and every invite and reset link breaks.
 - Invite email template link MUST be exactly:
   `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=invite`
 - The template's "who invited you" line uses metadata set by the
@@ -225,7 +230,10 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   the app without one, and a script in `web/index.html` unregisters any old
   worker and reloads once. With the worker, browsers kept showing an old
   version after deploys (6 Oct 2026). Don't put `serviceWorkerSettings` back.
-- Cache headers (`firebase.json`): every `.js/.json/.html` file, `/` and
+- Cache headers (`firebase.json`): page addresses without a dot
+  (`/admin/users`, served as index.html by the rewrite) are `no-cache` via
+  the `^/[^.]*$` rule; without it a browser can cache an old index.html.
+  Also every `.js/.json/.html` file, `/` and
   `.env` are `no-cache`. They have no content hash in their names, and that
   includes the deferred chunks `main.dart.js_N.part.js`. Only images, fonts
   and the local `/canvaskit/` copy are cached for a day. Never give
