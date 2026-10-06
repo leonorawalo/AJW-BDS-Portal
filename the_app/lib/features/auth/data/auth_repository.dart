@@ -46,19 +46,37 @@ class AuthRepository {
   /// type 'recovery' is the "Forgot password" email: after the exchange the
   /// account is flagged needs_password, so the router keeps the person on
   /// the set-password screen until they've chosen a new one.
-  Future<void> verifyInviteToken({required String tokenHash, required String type}) async {
-    await _client.auth.verifyOTP(
-      tokenHash: tokenHash,
-      type: switch (type) {
-        'magiclink' => OtpType.magiclink,
-        'recovery' => OtpType.recovery,
-        _ => OtpType.invite,
-      },
-    );
-    if (type == 'recovery') {
-      await _client.auth.updateUser(UserAttributes(data: {'needs_password': true}));
-    }
+  ///
+  /// Each token is exchanged at most once per app run, however many times
+  /// this is called: a token is single-use, and the set-password page can
+  /// be built twice while the app starts. A second exchange used to be
+  /// refused as "already used" just after the first had worked.
+  ///
+  /// The exchange always runs, even when someone is already signed in on
+  /// this device: verifyOTP replaces that session with the link's account,
+  /// so a reset never applies to whoever happened to be signed in.
+  Future<void> verifyInviteToken({required String tokenHash, required String type}) {
+    return _exchanges.putIfAbsent(tokenHash, () async {
+      await _client.auth.verifyOTP(
+        tokenHash: tokenHash,
+        type: switch (type) {
+          'magiclink' => OtpType.magiclink,
+          'recovery' => OtpType.recovery,
+          _ => OtpType.invite,
+        },
+      );
+      if (type == 'recovery') {
+        await _client.auth.updateUser(UserAttributes(data: {'needs_password': true}));
+      }
+      _exchanged.add(tokenHash);
+    });
   }
+
+  static final _exchanges = <String, Future<void>>{};
+  static final _exchanged = <String>{};
+
+  /// True once [tokenHash] has been exchanged successfully in this app run.
+  bool tokenExchanged(String tokenHash) => _exchanged.contains(tokenHash);
 
   /// Invited users carry needs_password in their metadata until they've
   /// chosen a password; the router keeps them on /set-password until then.

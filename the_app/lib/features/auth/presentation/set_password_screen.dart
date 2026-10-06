@@ -41,12 +41,11 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
   @override
   void initState() {
     super.initState();
+    // Always exchange the link's token, even if someone is signed in on
+    // this device: the reset (or invite) must apply to the link's account.
+    // The repository makes sure a token is exchanged only once.
     final token = widget.tokenHash;
-    // Skip if a session already exists (e.g. the page was reloaded after
-    // the token was used: tokens are single-use).
-    if (token != null && ref.read(authRepositoryProvider).currentUser == null) {
-      _verify(token);
-    }
+    if (token != null) _verify(token);
   }
 
   @override
@@ -60,12 +59,21 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
     setState(() => _verifying = true);
     try {
       await ref.read(authRepositoryProvider).verifyInviteToken(tokenHash: token, type: widget.type ?? 'invite');
-    } on AuthException {
+      // Drop the used token from the address, so a reload doesn't try it
+      // again (the needs_password flag keeps the form available).
+      if (mounted) context.go('/set-password?type=${widget.type ?? 'invite'}');
+    } on AuthException catch (e) {
+      final used = e.code == 'otp_expired' ||
+          e.message.toLowerCase().contains('expired') ||
+          e.message.toLowerCase().contains('invalid');
       if (mounted) {
-        setState(() => _error = _isRecovery
-            ? 'This reset link has expired or was already used. Request a new one from the sign-in page.'
-            : 'This invite link has expired or was already used. '
-                'Ask your AJW administrator to send a new one.');
+        setState(() => _error = !used
+            ? e.message
+            : _isRecovery
+                ? 'This reset link has expired or was already used. Only the newest reset email works: '
+                    'request a new link below.'
+                : 'This invite link has expired or was already used. '
+                    'Ask your AJW administrator to send a new one.');
       }
     } catch (_) {
       if (mounted) setState(() => _error = 'Could not open the invite. Check your connection and try again.');
@@ -74,8 +82,25 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
     }
   }
 
+  /// The form is only offered for the account a link (or an invite) is
+  /// for: after this screen's token exchange worked, or, with no token in
+  /// the address (a reload, or the router holding an invited user here),
+  /// when the signed-in account is flagged as needing a password. Never
+  /// for whoever simply happens to be signed in.
+  bool get _canSetPassword {
+    final auth = ref.read(authRepositoryProvider);
+    if (auth.currentUser == null) return false;
+    final token = widget.tokenHash;
+    return token != null ? auth.tokenExchanged(token) : auth.needsPassword;
+  }
+
+  Future<void> _requestNewLink() async {
+    await ref.read(authRepositoryProvider).signOut();
+    if (mounted) context.go('/forgot-password');
+  }
+
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_canSetPassword || !_formKey.currentState!.validate()) return;
     setState(() {
       _saving = true;
       _error = null;
@@ -98,7 +123,8 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final signedIn = ref.watch(authRepositoryProvider).currentUser != null;
+    ref.watch(authStateChangesProvider);
+    final canSetPassword = _canSetPassword;
 
     return AuthLayout(
       child: Column(
@@ -117,7 +143,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
           ],
           if (_verifying)
             const AjwLoadingView()
-          else if (signedIn)
+          else if (canSetPassword)
             Form(
               key: _formKey,
               child: Column(
@@ -149,10 +175,14 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
             )
           else if (_error == null)
             Text(
-              'Open the invite link from your email to continue.',
+              _isRecovery
+                  ? 'Open the newest reset link from your email to continue.'
+                  : 'Open the invite link from your email to continue.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            )
+          else if (_isRecovery)
+            OutlinedButton(onPressed: _requestNewLink, child: const Text('Request a new reset link')),
         ],
       ),
     );

@@ -128,7 +128,12 @@ This list is enforced in two places. Change all three together:
 - Reset Password ("Forgot password") template link MUST be exactly:
   `{{ .SiteURL }}/#/set-password?token_hash={{ .TokenHash }}&amp;type=recovery`
   (the app exchanges the token, then makes the person choose a new
-  password before anything else).
+  password before anything else). Each link works once, and a new reset
+  request cancels the previous email's link. The app always exchanges the
+  link's token, even if someone else is signed in on the device, and only
+  offers the password form to the link's account (fix of 6 Oct 2026:
+  before, the wrong session got the form and Supabase asked for a current
+  password). Don't reintroduce a "skip if signed in" shortcut.
 - Password policy (Authentication → Sign In / Providers → Email, or
   Policies): minimum length 8; requirements "Lowercase, uppercase
   letters, digits and symbols". Must match `PasswordRules` in

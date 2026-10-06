@@ -291,7 +291,7 @@ class _BrandPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'APPRENTICE JOB | WORK AFRICA',
+                        'APPRENTICE JOB WORK AFRICA',
                         style: white.labelMedium?.copyWith(color: Colors.white, letterSpacing: 2.4),
                       ),
                       const Spacer(),
