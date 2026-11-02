@@ -5,7 +5,9 @@ import '../../auth/providers/auth_providers.dart';
 import '../../enterprises/providers/enterprise_providers.dart';
 import '../../visits/providers/visit_providers.dart';
 import '../data/portfolio_repository.dart';
+import '../data/success_story_repository.dart';
 import '../models/portfolio_kpis.dart';
+import '../models/success_story.dart';
 
 final programmeDataRepositoryProvider = Provider<PortfolioRepository>((ref) {
   return PortfolioRepository(ref.watch(supabaseClientProvider));
@@ -40,4 +42,13 @@ final portfolioKpisProvider = FutureProvider.autoDispose<PortfolioKpis>((ref) as
     disciplines: disciplines,
     now: now,
   );
+});
+
+final successStoryRepositoryProvider = Provider<SuccessStoryRepository>((ref) {
+  return SuccessStoryRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Stories for one report month (keyed by the month's first day).
+final successStoriesProvider = FutureProvider.autoDispose.family<List<SuccessStory>, DateTime>((ref, month) {
+  return ref.watch(successStoryRepositoryProvider).fetchForMonth(month);
 });

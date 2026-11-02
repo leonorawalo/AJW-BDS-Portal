@@ -45,12 +45,21 @@ the old address is hard-coded in `lib/` or `web/`).
 | `web/about.html`, `web/privacy.html`, `web/terms.html`, `web/legal.css` | Linked from Google's consent screen (Branding) in BOTH Google projects. Google checks they stay live. |
 | `web/oauth/google-callback.html` | The redirect relay Google sends users back to after Connect. |
 | `web/download.html` | "Get the app" page linked from the invite email (the email must not link the .apk directly: spam signal). Its button points at the APK in Storage `downloads`. |
+| `web/data-protection.html` | The Data Protection Notice the consent screen links to (`PrivacyNotice.fullNoticeUrl`). |
+| `web/cookies.html`, `web/refund.html` | Cookie and Refund policies, linked from the sign-in screen, every page footer and Settings → Legal. |
+| `web/unsubscribe.html` + `web/unsubscribe.js` | The one-click unsubscribe link in optional emails (calls `email-unsubscribe`). |
+| `web/cookie-consent.js` | The cookie banner on every page (its `POLICY_VERSION` = the cookie policy's version, kept in step by `scripts/build_legal.js`). |
+| `web/boot.js`, `web/splash.js`, `web/oauth/google-callback.js` | The scripts that used to be inline in `index.html` and the Connect relay. The Content-Security-Policy blocks inline scripts, so they must stay files. |
+| `legal/` (`business.json`, `*.md`) | The ONE editable source of the legal pages (privacy, terms, cookies, refund, data protection, about, unsubscribe) and of AJW's business details. `node scripts/build_legal.js` writes the `web/*.html` pages, `lib/core/legal/legal_documents.dart` and `supabase/functions/_shared/business.ts`. Never edit those generated files by hand. The Privacy Policy's Google section (permissions table + Limited Use) must stay word for word while Google's verification is in force. |
+| `web/brand/ajw-logo.png` | The logo every generated Google Doc fetches by address when it is created (`DocumentBrand.logoUrl`). Rendered from `web/brand/ajw-mark.svg`. Moved or deleted = Docs lose their logo. |
 | `.env` (listed under `flutter: assets:` in `pubspec.yaml`) | App config (Supabase URL + anon key). Removing it from assets = white screen. |
 | `supabase/config.toml` | Holds each Edge Function's "Verify JWT" setting. |
 
 `firebase.json` must NOT ignore dotfiles (the app needs `assets/.env` served).
 
-This list is enforced in two places. Change all three together:
+This list is enforced in two places. Change all three together (and the
+predeploy also runs `node scripts/build_legal.js --check`, which fails if
+a page is older than its `legal/` source):
 - `.gitignore` ends with `!` lines so these files can never be ignored
   (except `.env`, which stays out of git on purpose).
 - `scripts/check_do_not_break.js` runs before every hosting deploy
@@ -76,6 +85,17 @@ This list is enforced in two places. Change all three together:
   (non-sensitive); calendar.events, gmail.send (sensitive).
   Adding a scope later = add it in the console + users reconnect +
   Google re-review.
+- Built but NOT switched on (8 Oct 2026), because they need new scopes
+  and Google is reviewing the current ones (section 7):
+  - Meeting notes (`meeting-notes` function) needs
+    `meetings.space.readonly` (sensitive) and the Google Meet REST API
+    enabled; Gemini notes also need a Workspace plan with Gemini.
+  - Emails inbox (`gmail-inbox` function) needs `gmail.readonly`, a
+    RESTRICTED scope: its own verification plus a yearly third-party
+    security assessment before a public launch.
+  Both show a friendly "not available" message until then. To switch on:
+  add the scope to `SCOPES` in `google-oauth`, list it under Data access,
+  users reconnect, Google re-reviews.
 - Enabled APIs: Calendar, Drive, Docs, Sheets, Slides, Gmail.
 - Authorised domain: `ajwafrica.org` (no supabase.co here). Branding
   links (home, privacy, terms) are on `https://portal.ajwafrica.org`, in
@@ -161,14 +181,22 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
 - Names must be exact, and deploy via the CLI only (the dashboard invents
   random names like "swift-processor"): send-push, google-oauth,
   calendar-sessions, google-export, invite-user, manage-users,
-  gmail-send, drive-files.
-- Verify JWT: OFF for `send-push` and `google-oauth`, ON for the rest
-  (kept in `supabase/config.toml`).
+  gmail-send, drive-files, meeting-notes, gmail-inbox, email-unsubscribe.
+- Verify JWT: OFF for `send-push`, `google-oauth` and `email-unsubscribe`,
+  ON for the rest (kept in `supabase/config.toml`).
+- Every function the app calls goes through `_shared/http.ts`: CORS only
+  for `https://portal.ajwafrica.org`, `https://ajwafrica-bags-portal.web.app`
+  and localhost. A NEW web address for the portal must be added there,
+  or every Google, email and invite button stops working on it. Per-user
+  rate limits live there too (`rate_limits` table).
 
 ### Push notifications
 - 4 Database Webhooks (users, consultant_assignments, tasks insert,
   tasks update) → `.../functions/v1/send-push`, header
   `x-webhook-secret` == Edge secret `WEBHOOK_SECRET`.
+- Meeting pushes are NOT a webhook: `calendar-sessions` posts the new
+  session to `send-push` itself (same header and secret) once the
+  participants are saved. Renaming `WEBHOOK_SECRET` breaks both.
 - Firebase service-account key in use: `2c6526fc66…` (stored only in the
   FIREBASE_* secrets). To rotate: generate new key → update secrets →
   delete the old key.
@@ -197,7 +225,37 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   text (a unit test checks this). Tasks are added only through
   `ensure_tor_tasks()` (migration 20261003100000), never by a hand-made
   checklist button.
-- The audit log is written only by database triggers, never by the app.
+- The audit log is written only by database triggers, never by the app,
+  with one exception: `log_document_access()` records document views and
+  downloads (a trigger can't see a read). It checks the caller may see
+  the document and always records the caller as the actor.
+- `assessments` must keep row level security ON. It was found OFF on the
+  live database on 8 Oct 2026 (fixed in migration 20261008150000).
+- Chat (migration 20261008140000): every chat table and the private
+  `chat-attachments` bucket check `can_access_conversation()`. An
+  enterprise chat's members are whoever `can_schedule_for_enterprise()`
+  allows right now (no member list to sync); direct chats use
+  `chat_members`. Attachment paths start with the conversation id.
+  `chat_messages` must stay in the `supabase_realtime` publication or
+  messages stop arriving live.
+- Privacy (migrations 20261008150000, 20261016100000): consent is stored
+  per document version in `user_consents` (append-only: Terms of Service,
+  Privacy Policy, 18 or over, optional programme emails). The versions
+  are the `version:` lines in `legal/terms-of-service.md` and
+  `legal/privacy-policy.md`; raising one asks everyone again at next
+  sign-in. `data_consents` is still written for phones on older APKs.
+  `email_preferences` changes only through `user_consents` (trigger);
+  any server sending an OPTIONAL email must call
+  `optional_email_permission(user)` first and put the token in an
+  `/unsubscribe.html?token=` link. Deletion requests are carried out by
+  `manage-users` `erase` → `erase_user_personal_data()`. Data request deadlines (access 7 days,
+  correction/deletion 14) are set by a trigger, never by the app.
+  `apply_retention()` never touches the audit log.
+- Storage: `documents` is private with a 20 MB per-file limit; the app
+  checks file types (`DocumentRepository.allowedTypes`). The bucket does
+  NOT restrict types yet, because phones on APK 1.2.1 upload without a
+  content type; restrict it once every phone runs a newer APK.
+- Documents open through signed links that last 5 minutes.
 - Workshop registration lists are programme files: `documents` rows with
   NO enterprise and a `workshop_id`, stored in Storage `documents` under
   `<workshop id>/...` (migration 20261005120000). The first folder must
@@ -225,7 +283,18 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   update by itself. The deploy runs `scripts/check_do_not_break.js`
   first and stops if it fails. Fix the cause, don't remove the check.
 - `web/index.html` holds the instant loading screen (`#ajw-splash`), removed
-  on Flutter's `flutter-first-frame` event. Keep both if you edit the page.
+  on Flutter's `flutter-first-frame` event by `web/splash.js`. Keep both if
+  you edit the page.
+- Security headers (`firebase.json`, rule `"source": "**"`): a
+  Content-Security-Policy allowing scripts only from the site and
+  www.gstatic.com (CanvasKit, with `'wasm-unsafe-eval'`), connections only
+  to the site, `cgnmnqjyvlgyndhmicjl.supabase.co` (https + wss) and
+  gstatic; no inline scripts; no framing. Plus HSTS, nosniff,
+  X-Frame-Options DENY, Referrer-Policy, Permissions-Policy (camera,
+  microphone, location off on the web). Adding an external script,
+  font, image host or API = add it to the policy in the same change, or
+  it is silently blocked. The deploy check fails if a header is missing
+  or a page has an inline `<script>`.
 - NO service worker: `web/flutter_bootstrap.js` (a Flutter template) loads
   the app without one, and a script in `web/index.html` unregisters any old
   worker and reloads once. With the worker, browsers kept showing an old
@@ -267,6 +336,19 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   The Supabase free plan caps a file at 50 MB, which is why the APK is split.
 - Package name stays `com.ajwafrica.the_app` (Firebase push is registered
   to it).
+
+### Sign-in protections (8 Oct 2026, `lib/core/widgets/security_gates.dart`)
+- Wrapped around the whole app in `lib/app.dart` (`builder:`). Order:
+  privacy consent, then two-step verification, then sign-out after 30
+  idle minutes (`InactivityLogout.timeout`).
+- Two-step verification (authenticator app, TOTP) is required for the
+  roles in `mfaRequiredRoles` (Admin, Owner). It needs TOTP enabled in
+  Supabase → Authentication → Multi-Factor (on by default). Lost phone:
+  another Admin uses Users → "Reset two-step verification" (the
+  `manage-users` function), or Supabase dashboard → Authentication →
+  the user → delete the factor.
+- An invitee with `needs_password` passes the gates until they have
+  chosen a password, so invite and reset links keep working.
 
 ---------------------------------------------------------------------
 ## 6. Never commit
@@ -323,3 +405,16 @@ FIREBASE_PRIVATE_KEY · WEBHOOK_SECRET
   Don't swap in a low-res raster again.
 - Personal avatar colours (`AppColors.personalPalette`) belong to users,
   not to AJW. Keep them muted, and keep white text on each at >= 4.5:1.
+- Dashboard colours: `DashboardPalette` (`lib/core/theme/dashboard_palette.dart`)
+  picks them per role from `AppColors`: AJW for Admin and Owner, deep teal
+  for Legal, warm amber for Accounting, a multi-colour palette for
+  Marketing. White banner text must stay >= 4.5:1 on every gradient stop.
+- Generated documents share one template (`DocumentBrand`,
+  `lib/features/google_exports/builders/document_brand.dart`): logo
+  header, AJW colours on headings, and a footer with the document type,
+  enterprise and generation date. PDFs also print "Page X of Y"; Google's
+  Docs API can't insert a page-number field, so in a Doc it's Insert →
+  Page numbers by hand.
+- The bank is never named in code: `Lender.bankName` in
+  `lib/core/lender.dart` is the one place to name one (empty = "the
+  bank").

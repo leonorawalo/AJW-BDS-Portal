@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/branding/ajw_logo.dart';
-import '../../../core/site_links.dart';
+import '../../../core/legal/legal_documents.dart';
+import '../../../core/web/cookie_settings.dart';
 import '../../../core/branding/brand_stripes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -291,12 +292,12 @@ class _BrandPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'APPRENTICE JOB WORK AFRICA',
+                        'AJW AFRICA FOUNDATION',
                         style: white.labelMedium?.copyWith(color: Colors.white, letterSpacing: 2.4),
                       ),
                       const Spacer(),
                       Text(
-                        'BAGS\nPortal',
+                        'B.A.G.S.\nPortal',
                         style: white.displayLarge?.copyWith(color: Colors.white, fontSize: 64, height: 1.02),
                       ),
                       const SizedBox(height: Space.lg),
@@ -364,23 +365,34 @@ class _PhoneHeader extends StatelessWidget {
   }
 }
 
+/// The public legal pages, readable without signing in (and the web
+/// cookie settings). Same list as the website's footer.
 class _LegalLinks extends StatelessWidget {
   const _LegalLinks();
 
   @override
   Widget build(BuildContext context) {
-    Widget link(String label, String path) => TextButton(
+    Widget link(String label, VoidCallback onPressed) => TextButton(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.charcoalSoft,
         textStyle: Theme.of(context).textTheme.labelMedium,
         minimumSize: const Size(0, 36),
       ),
-      onPressed: () => launchUrl(Uri.parse('${SiteLinks.site}/$path'), mode: LaunchMode.externalApplication),
+      onPressed: onPressed,
       child: Text(label),
     );
+    Widget page(String label, LegalDocument doc) =>
+        link(label, () => launchUrl(Uri.parse(doc.url), mode: LaunchMode.externalApplication));
     return Wrap(
       alignment: WrapAlignment.center,
-      children: [link('About', 'about.html'), link('Privacy', 'privacy.html'), link('Terms', 'terms.html')],
+      children: [
+        page('About and contact', LegalDocuments.aboutAndContact),
+        page('Privacy', LegalDocuments.privacyPolicy),
+        page('Terms', LegalDocuments.termsOfService),
+        page('Cookies', LegalDocuments.cookiePolicy),
+        page('Refunds', LegalDocuments.refundPolicy),
+        if (cookieSettingsAvailable) link('Cookie settings', openCookieSettings),
+      ],
     );
   }
 }

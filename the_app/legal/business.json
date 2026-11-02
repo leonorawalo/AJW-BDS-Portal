@@ -1,0 +1,13 @@
+{
+  "_comment": "AJW Africa's business details: the ONE place they are kept. Shown in the web footer, the legal pages, the app's About and contact section and email footers. After editing, run: node scripts/build_legal.js (the deploy check fails if you forget). Values in [BRACKETS] are placeholders AJW must replace.",
+  "registeredName": "[AJW REGISTERED NAME]",
+  "tradingName": "AJW Africa",
+  "programmeName": "Business Advancement and Growth Services (BAGS) programme",
+  "registrationNumber": "[REGISTRATION NUMBER]",
+  "physicalAddress": "[PHYSICAL ADDRESS]",
+  "email": "ajw.bags.portal@gmail.com",
+  "phone": "[PHONE NUMBER]",
+  "dataProtectionContact": "[DATA PROTECTION OFFICER CONTACT]",
+  "odpcRegistration": "[ODPC REGISTRATION NUMBER]",
+  "website": "https://portal.ajwafrica.org"
+}

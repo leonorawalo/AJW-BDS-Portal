@@ -86,7 +86,7 @@ Every module answers one question someone in the programme has. They're grouped 
 
 - **Dashboard**: "How close is this business to a bank loan?" It shows:
     - the **programme clock** ("Month 4 of 12"), which turns red when a milestone is overdue;
-    - two scores out of 100 and the **KCB checklist** (out of 10);
+    - two scores out of 100 and the **bank lending checklist** (out of 10);
     - **red flags** worth discussing;
     - **What's driving these scores**: each line names the task that turns it green.
 
@@ -119,7 +119,7 @@ In the top bar inside an enterprise:
 - **Monthly report**: the BDS Status Report, Activity Report and next month's Workplan the ToR asks for by the 3rd, as one Google Doc.
 - **Workshops**: as for Administrators.
 
-**A word on the scores.** Business Health and Credit Readiness are this portal's own guide, built from KCB's published small-business loan criteria. The KSh 500,000 turnover line is one of them. They are not in the ToR, and AJW should confirm them before anyone relies on them.
+**A word on the scores.** Business Health and Credit Readiness are this portal's own guide, built from published bank criteria for small-business loans. The KSh 500,000 turnover line is one of them. They are not in the ToR, and AJW should confirm them before anyone relies on them.
 
 ## Scenarios
 
@@ -233,7 +233,7 @@ Most everyday edge cases are handled, but there are real gaps worth knowing befo
 | An owner with two businesses | They only see one | Let owners switch between their businesses |
 | Going concern is a switch an Admin flips | Nothing checks it against the tasks | Suggest it when the going-concern tasks are done |
 | Marketing tasks | Don't affect any score | Decide with AJW whether they should |
-| The score model and the KSh 500,000 line | Not from the ToR; from KCB's public criteria | AJW confirms or changes the numbers |
+| The score model and the KSh 500,000 line | Not from the ToR; from published bank criteria | AJW confirms or changes the numbers |
 | The Android app | Only changes when a new APK is built and installed; today it lacks the tips, the new workshop flow and the loan-purpose list | Build 1.2.1 |
 | iPhone | No app; the website works in Safari | Fine for now |
 | Database backups | The free Supabase plan keeps none | AJW decides on a paid plan or regular manual backups |

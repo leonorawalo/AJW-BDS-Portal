@@ -143,7 +143,7 @@ class _RuleRow extends StatelessWidget {
               met ? Icons.check_circle : Icons.radio_button_unchecked,
               key: ValueKey(met),
               size: 18,
-              color: met ? AppColors.successGreen : AppColors.lightGray,
+              color: met ? AppColors.successGreen : AppColors.notDoneMark,
             ),
           ),
           const SizedBox(width: Space.sm),

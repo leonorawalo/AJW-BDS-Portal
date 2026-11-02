@@ -20,6 +20,7 @@
 // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are provided automatically.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
@@ -51,16 +52,10 @@ const STATE_TTL_MS = 15 * 60 * 1000;
 
 const admin = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -123,7 +118,7 @@ async function start(userId: string, loginHint: string | null): Promise<Response
     .delete()
     .lt('created_at', new Date(Date.now() - STATE_TTL_MS).toISOString());
   const { error } = await admin.from('google_oauth_states').insert({ state, user_id: userId });
-  if (error) return json({ error: error.message }, 500);
+  if (error) return serverError(error);
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.search = new URLSearchParams({
@@ -212,14 +207,15 @@ async function disconnect(userId: string): Promise<Response> {
   return json({ ok: true });
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
 
   if (req.method === 'GET') return callback(new URL(req.url).searchParams);
 
   if (req.method === 'POST') {
     const user = await caller(req);
     if (!user) return json({ error: 'Not signed in' }, 401);
+    const limited = await rateLimited(`google-oauth:${user.id}`, 30, 3600);
+    if (limited) return limited;
     const { action } = await req.json().catch(() => ({}));
     if (action === 'start') return start(user.id, user.loginHint);
     if (action === 'disconnect') return disconnect(user.id);

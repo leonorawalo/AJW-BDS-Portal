@@ -7,6 +7,7 @@ import '../models/invite_request.dart';
 import '../models/invite_result.dart';
 import '../providers/user_management_providers.dart';
 import 'invite_link_dialog.dart';
+import '../../../core/user_message.dart';
 
 /// Emails an invite; if email isn't possible, offers a shareable link
 /// instead (copy / WhatsApp). Returns true when an account was invited or
@@ -46,7 +47,7 @@ Future<bool> runInvite(BuildContext context, WidgetRef ref, InviteRequest reques
     return shareInviteLink(context, ref, request);
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not invite: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not invite: ${userMessage(e)}')));
     }
     return false;
   }
@@ -72,7 +73,7 @@ Future<bool> shareInviteLink(BuildContext context, WidgetRef ref, InviteRequest 
     return true;
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create link: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create link: ${userMessage(e)}')));
     }
     return false;
   }

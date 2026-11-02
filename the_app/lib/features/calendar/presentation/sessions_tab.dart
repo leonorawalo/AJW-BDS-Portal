@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/consultation_session.dart';
+import '../models/meeting_notes.dart';
 import '../models/session_person.dart';
 import '../providers/calendar_providers.dart';
 import 'google_calendar_connection_card.dart';
@@ -14,6 +15,7 @@ import '../../email/presentation/compose_email_dialog.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 /// Meetings on one enterprise. Admins, Consultants and Owners can all
 /// connect their own Google Calendar and schedule meetings (who they can
@@ -32,26 +34,40 @@ class SessionsTab extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: isConnected
-          ? TourAnchor(id: TourAnchors.sessionsAdd, child: FloatingActionButton.extended(
-              icon: const Icon(Icons.video_call),
-              label: const Text('Schedule'),
-              onPressed: () async {
-                final created = await showScheduleSessionDialog(context, enterpriseId);
-                if (created) {
-                  ref.invalidate(consultationSessionsProvider(enterpriseId));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meeting scheduled. Participants have been invited.')),
-                    );
-                  }
-                }
-              },
-            ))
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'start-meeting-now',
+                  icon: const Icon(Icons.bolt),
+                  label: const Text('Start meeting now'),
+                  onPressed: () => _startNow(context, ref),
+                ),
+                const SizedBox(height: 12),
+                TourAnchor(id: TourAnchors.sessionsAdd, child: FloatingActionButton.extended(
+                  heroTag: 'schedule-meeting',
+                  icon: const Icon(Icons.video_call),
+                  label: const Text('Schedule meeting'),
+                  onPressed: () async {
+                    final created = await showScheduleSessionDialog(context, enterpriseId);
+                    if (created) {
+                      ref.invalidate(consultationSessionsProvider(enterpriseId));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Meeting scheduled. Participants have been invited.')),
+                        );
+                      }
+                    }
+                  },
+                )),
+              ],
+            )
           : null,
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(consultationSessionsProvider(enterpriseId)),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
           children: [
             const TourAnchor(id: TourAnchors.sessionsGoogle, child: GoogleCalendarConnectionCard()),
             const SizedBox(height: 16),
@@ -64,6 +80,26 @@ class SessionsTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _startNow(BuildContext context, WidgetRef ref) async {
+    final session = await showStartMeetingNowDialog(context, enterpriseId);
+    if (session == null) return;
+    ref.invalidate(consultationSessionsProvider(enterpriseId));
+    final link = session.meetLink ?? session.calendarHtmlLink;
+    Future<void> join() async {
+      if (link != null) await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+    }
+    // A browser may block the automatic tab (it opens after a server
+    // call, not straight from the click), so the message offers it too.
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Meeting started. Participants have been invited.'),
+        duration: const Duration(seconds: 10),
+        action: link == null ? null : SnackBarAction(label: 'Join', onPressed: join),
+      ));
+    }
+    await join();
   }
 
   List<Widget> _buildSections(
@@ -138,7 +174,7 @@ class _SessionCard extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not cancel: $e')),
+          SnackBar(content: Text('Could not cancel: ${userMessage(e)}')),
         );
       }
     }
@@ -222,9 +258,107 @@ class _SessionCard extends ConsumerWidget {
                     ),
                 ],
               ),
+            if (session.isUpcoming && session.organizerId == myId && session.meetLink != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.auto_awesome, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Want notes? In the meeting, click "Take notes with Gemini". '
+                      'They appear here and in the Files tab after the call.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (session.hasEnded && session.meetLink != null) _MeetingNotesSection(session: session),
           ],
         ),
       ),
     );
+  }
+}
+
+/// Notes and transcript of a finished meeting. Asks the server once when
+/// shown while they're still pending; Google can take a while after the
+/// call to write them.
+class _MeetingNotesSection extends ConsumerStatefulWidget {
+  const _MeetingNotesSection({required this.session});
+  final ConsultationSession session;
+
+  @override
+  ConsumerState<_MeetingNotesSection> createState() => _MeetingNotesSectionState();
+}
+
+class _MeetingNotesSectionState extends ConsumerState<_MeetingNotesSection> {
+  /// Set by "Check again", so a meeting already marked unavailable is
+  /// looked up again (e.g. after the organizer reconnects Google).
+  bool _asked = false;
+
+  ConsultationSession get session => widget.session;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final saved = session.notes;
+    final MeetingNotes notes;
+    var checking = false;
+    if (saved.status == MeetingNotesStatus.pending || _asked) {
+      final live = ref.watch(meetingNotesProvider(session.id));
+      checking = live.isLoading;
+      notes = live.value ?? saved;
+    } else {
+      notes = saved;
+    }
+
+    Widget line(IconData icon, String message, {Widget? action}) => Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(child: Text(message, style: text.bodySmall)),
+              ?action,
+            ],
+          ),
+        );
+
+    final checkAgain = TextButton(
+      onPressed: () {
+        setState(() => _asked = true);
+        ref.invalidate(meetingNotesProvider(session.id));
+      },
+      child: const Text('Check again'),
+    );
+    if (checking) return line(Icons.hourglass_empty, 'Looking for meeting notes…');
+    return switch (notes.status) {
+      MeetingNotesStatus.ready => Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Wrap(
+            spacing: 8,
+            children: [
+              if (notes.notesUrl != null)
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.description_outlined, size: 18),
+                  label: const Text('Meeting notes'),
+                  onPressed: () => launchUrl(Uri.parse(notes.notesUrl!), mode: LaunchMode.externalApplication),
+                ),
+              if (notes.transcriptUrl != null)
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.subject, size: 18),
+                  label: const Text('Transcript'),
+                  onPressed: () => launchUrl(Uri.parse(notes.transcriptUrl!), mode: LaunchMode.externalApplication),
+                ),
+            ],
+          ),
+        ),
+      MeetingNotesStatus.pending => line(Icons.hourglass_empty, 'Meeting notes are not ready yet.', action: checkAgain),
+      MeetingNotesStatus.none => line(Icons.notes, 'No notes were taken in this meeting.'),
+      MeetingNotesStatus.unavailable =>
+        line(Icons.info_outline, 'Meeting notes not available for this account.', action: checkAgain),
+    };
   }
 }

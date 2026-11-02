@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/progress_dialog.dart';
+import '../builders/document_brand.dart';
 import '../builders/enterprise_data_sheet_builder.dart';
 import '../builders/export_formatting.dart';
 import '../builders/loan_readiness_report_builder.dart';
 import '../builders/progress_deck_builder.dart';
 import '../models/enterprise_export_data.dart';
+import '../models/loan_readiness_report.dart';
 import '../providers/google_export_providers.dart';
 import 'google_export_flow.dart';
 import 'pdf_export.dart' deferred as pdf_export;
+import '../../../core/user_message.dart';
 
 enum _ExportKind { pdf, doc, sheet, slides }
 
@@ -92,7 +95,7 @@ class ExportMenuButton extends ConsumerWidget {
       await pdf_export.sharePdf(bytes, filename);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create PDF: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create PDF: ${userMessage(e)}')));
       }
     }
   }
@@ -124,6 +127,11 @@ class ExportMenuButton extends ConsumerWidget {
           _ => repo.exportDoc(
               title: '$name – Loan-readiness report ($date)',
               html: renderLoanReadinessReportHtml(buildLoanReadinessReport(data)),
+              footer: DocumentBrand.footerText(
+                documentType: LoanReadinessReport.documentType,
+                enterpriseName: name,
+                generatedAt: data.exportedAt,
+              ),
             ),
         };
       },

@@ -16,7 +16,9 @@ import '../branding/ajw_logo.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import 'attention_dot.dart';
+import 'skip_to_content.dart';
 import 'user_profile_badge.dart';
+import '../../features/chat/providers/chat_providers.dart';
 
 /// Laptop-first navigation shell (C5), in the style of Google Cloud /
 /// Gemini: a side menu with the role's own pages at the top and, inside an
@@ -66,7 +68,7 @@ class AppShell extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
     final collapsed = ref.watch(sideNavCollapsedProvider);
     final role = ref.watch(currentUserProfileProvider).value?.role;
-    final spots = ref.watch(attentionProvider).value ?? AttentionSpots.none;
+    final spots = (ref.watch(attentionProvider).value ?? AttentionSpots.none).plus(ref.watch(chatAttentionProvider));
     // Phone (or collapsed menu): the hamburger carries a dot when anything
     // in the menu has one.
     final e = enterprise;
@@ -86,7 +88,7 @@ class AppShell extends ConsumerWidget {
         child: TourHost(
         place: e != null ? 'section.${e.currentSection}' : globalKey,
         inEnterprise: e != null,
-        child: Scaffold(
+        child: SkipToContent(builder: (context, main) => Scaffold(
         appBar: AppBar(
           leading: Builder(
             builder: (innerContext) => TourAnchor(
@@ -142,12 +144,12 @@ class AppShell extends ConsumerWidget {
                       ),
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: body),
+                    Expanded(child: main(body)),
                   ],
                 )
-              : body,
+              : main(body),
           ),
-        ),
+        )),
       ),
       ),
     );
@@ -203,10 +205,19 @@ List<_NavEntry> _globalEntries(BuildContext context, UserRole? role) => <_NavEnt
         _NavEntry('documents', 'Documents', Icons.folder_outlined, () => context.go('/admin/documents')),
         _NavEntry('users', 'Users', Icons.manage_accounts_outlined, () => context.go('/admin/users')),
         _NavEntry('audit', 'Audit log', Icons.history, () => context.go('/admin/audit')),
+        _NavEntry('messages', 'Messages', Icons.forum_outlined, () => context.go('/admin/messages')),
+        _NavEntry('data-requests', 'Data requests', Icons.policy_outlined, () => context.go('/admin/data-requests')),
+        _NavEntry('privacy', 'Settings and privacy', Icons.settings_outlined, () => context.go('/admin/my-data')),
       ],
       if (role == UserRole.consultant) ...[
         _NavEntry('portfolio', 'My portfolio', Icons.work_outline, () => context.go('/consultant')),
         _NavEntry('workshops', 'Workshops', Icons.groups_outlined, () => context.go('/consultant/workshops')),
+        _NavEntry('messages', 'Messages', Icons.forum_outlined, () => context.go('/consultant/messages')),
+        _NavEntry('privacy', 'Settings and privacy', Icons.settings_outlined, () => context.go('/consultant/my-data')),
+      ],
+      if (role == UserRole.enterpriseOwner) ...[
+        _NavEntry('messages', 'Messages', Icons.forum_outlined, () => context.go('/owner/messages')),
+        _NavEntry('privacy', 'Settings and privacy', Icons.settings_outlined, () => context.go('/owner/my-data')),
       ],
     ];
 
@@ -278,7 +289,7 @@ class _SideMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final spots = ref.watch(attentionProvider).value ?? AttentionSpots.none;
+    final spots = (ref.watch(attentionProvider).value ?? AttentionSpots.none).plus(ref.watch(chatAttentionProvider));
     void go(VoidCallback action) {
       if (inDrawer) Navigator.of(context).pop();
       action();

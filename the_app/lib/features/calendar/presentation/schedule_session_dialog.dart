@@ -2,27 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/consultation_session_repository.dart';
+import '../models/consultation_session.dart';
 import '../models/participant_availability.dart';
 import '../models/session_invitee.dart';
 import '../providers/calendar_providers.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/user_message.dart';
 
 /// Books a meeting on the caller's own Google Calendar and invites the
 /// chosen participants. Who can be picked comes from
 /// session_invitee_candidates() (the invite rules live in the database).
 /// Returns true when a session was created.
 Future<bool> showScheduleSessionDialog(BuildContext context, String enterpriseId) async {
-  final created = await showDialog<bool>(
+  final created = await showDialog<ConsultationSession>(
     context: context,
-    builder: (_) => _ScheduleSessionDialog(enterpriseId: enterpriseId),
+    builder: (_) => _ScheduleSessionDialog(enterpriseId: enterpriseId, startNow: false),
   );
-  return created ?? false;
+  return created != null;
 }
 
+/// "Start meeting now": the same booking, starting this minute, with no
+/// date or time to pick and no clash check (people are joining now or
+/// not at all). Returns the session, whose Meet link the caller opens.
+Future<ConsultationSession?> showStartMeetingNowDialog(BuildContext context, String enterpriseId) =>
+    showDialog<ConsultationSession>(
+      context: context,
+      builder: (_) => _ScheduleSessionDialog(enterpriseId: enterpriseId, startNow: true),
+    );
+
 class _ScheduleSessionDialog extends ConsumerStatefulWidget {
-  const _ScheduleSessionDialog({required this.enterpriseId});
+  const _ScheduleSessionDialog({required this.enterpriseId, required this.startNow});
   final String enterpriseId;
+  final bool startNow;
 
   @override
   ConsumerState<_ScheduleSessionDialog> createState() => _ScheduleSessionDialogState();
@@ -52,7 +64,12 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     super.dispose();
   }
 
-  DateTime? get _startsAt => _date == null || _time == null
+  /// Fixed when the dialog opens, so the length stays what was picked.
+  late final DateTime _now = DateTime.now();
+
+  DateTime? get _startsAt => widget.startNow
+      ? _now
+      : _date == null || _time == null
       ? null
       : DateTime(_date!.year, _date!.month, _date!.day, _time!.hour, _time!.minute);
 
@@ -83,6 +100,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
   /// Runs whenever the time or the participants change. Advisory only:
   /// the server checks again when booking.
   Future<void> _checkAvailability() async {
+    if (widget.startNow) return;
     final startsAt = _startsAt;
     final request = ++_availabilityRequest;
     if (startsAt == null || _participantIds.isEmpty) {
@@ -135,12 +153,12 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
       setState(() => _error = 'Pick at least one participant.');
       return;
     }
-    if (startsAt.isBefore(DateTime.now())) {
+    if (!widget.startNow && startsAt.isBefore(DateTime.now())) {
       setState(() => _error = 'Pick a time in the future.');
       return;
     }
 
-    var force = false;
+    var force = widget.startNow;
     final known = _availability;
     if (known != null && known.any((a) => a.status == AvailabilityStatus.busy)) {
       if (!await _confirmBookAnyway(known)) return;
@@ -153,25 +171,28 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     });
     try {
       final repo = ref.read(consultationSessionRepositoryProvider);
-      Future<void> book(bool force) => repo.scheduleSession(
+      Future<ConsultationSession> book(bool force) => repo.scheduleSession(
         enterpriseId: widget.enterpriseId,
         participantIds: _participantIds.toList(),
         title: title,
-        startsAt: startsAt,
-        endsAt: _endsAt,
+        // Starting now: the time the button was pressed, not when the
+        // dialog opened.
+        startsAt: widget.startNow ? DateTime.now() : startsAt,
+        endsAt: widget.startNow ? DateTime.now().add(Duration(minutes: _durationMinutes)) : _endsAt,
         description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         force: force,
       );
+      ConsultationSession session;
       try {
-        await book(force);
+        session = await book(force);
       } on SessionClashException catch (clash) {
         // Someone's calendar changed since the dialog last checked.
         if (!mounted) return;
         setState(() => _availability = clash.availability);
         if (!await _confirmBookAnyway(clash.availability)) return;
-        await book(true);
+        session = await book(true);
       }
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) Navigator.pop(context, session);
     } on GoogleNotConnectedException {
       ref.invalidate(myGoogleConnectionProvider);
       setState(
@@ -180,7 +201,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
             'Connect it from the Sessions tab and try again.',
       );
     } catch (e) {
-      setState(() => _error = 'Could not schedule: $e');
+      setState(() => _error = 'Could not schedule: ${userMessage(e)}');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -192,7 +213,7 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
     final candidatesAsync = ref.watch(sessionInviteeCandidatesProvider(widget.enterpriseId));
 
     return AlertDialog(
-      title: const Text('Schedule meeting'),
+      title: Text(widget.startNow ? 'Start meeting now' : 'Schedule meeting'),
       content: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 360, maxWidth: 480),
         child: SingleChildScrollView(
@@ -219,6 +240,13 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
                 ),
               ),
               const SizedBox(height: Space.lg),
+              if (widget.startNow)
+                Text(
+                  'A Google Meet link is created straight away. Participants get an email invitation '
+                  'and a notification, and the meeting opens for you.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else
               Row(
                 children: [
                   Expanded(
@@ -269,10 +297,12 @@ class _ScheduleSessionDialogState extends ConsumerState<_ScheduleSessionDialog> 
         ),
       ),
       actions: [
-        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context, false), child: const Text('Cancel')),
+        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: const Text('Cancel')),
         FilledButton(
           onPressed: _isSaving ? null : _submit,
-          child: _isSaving ? const AjwLoader(dotSize: 6) : const Text('Schedule'),
+          child: _isSaving
+              ? const AjwLoader(dotSize: 6)
+              : Text(widget.startNow ? 'Start now' : 'Schedule'),
         ),
       ],
     );

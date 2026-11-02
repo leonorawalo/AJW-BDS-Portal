@@ -20,6 +20,16 @@ const SECTION_1_FILES = [
   'web/legal.css',
   'web/oauth/google-callback.html',
   'web/download.html',
+  'web/data-protection.html',
+  'web/cookies.html',
+  'web/refund.html',
+  'web/unsubscribe.html',
+  'web/unsubscribe.js',
+  'web/cookie-consent.js',
+  'web/boot.js',
+  'web/splash.js',
+  'web/oauth/google-callback.js',
+  'web/brand/ajw-logo.png',
   '.env',
   'supabase/config.toml',
 ];
@@ -33,6 +43,16 @@ const BUILT_FILES = [
   'build/web/legal.css',
   'build/web/oauth/google-callback.html',
   'build/web/download.html',
+  'build/web/data-protection.html',
+  'build/web/cookies.html',
+  'build/web/refund.html',
+  'build/web/unsubscribe.html',
+  'build/web/unsubscribe.js',
+  'build/web/cookie-consent.js',
+  'build/web/boot.js',
+  'build/web/splash.js',
+  'build/web/oauth/google-callback.js',
+  'build/web/brand/ajw-logo.png',
   'build/web/assets/.env',
 ];
 
@@ -125,6 +145,38 @@ if (!versionLine || !constName || !constBuild) {
     if (latest.build > Number(versionLine[2])) {
       problems.push(`web/android-latest.json says build ${latest.build}, newer than the code (${versionLine[2]})`);
     }
+  }
+}
+
+// Security headers (DO_NOT_BREAK.md section 5, docs/security/SECURITY.md).
+// The Content-Security-Policy forbids inline scripts, so every page's
+// scripts must be files.
+const headerKeys = new Set();
+for (const rule of (firebase.hosting && firebase.hosting.headers) || []) {
+  for (const h of rule.headers || []) headerKeys.add(h.key.toLowerCase());
+}
+for (const key of [
+  'content-security-policy',
+  'strict-transport-security',
+  'x-content-type-options',
+  'x-frame-options',
+  'referrer-policy',
+  'permissions-policy',
+]) {
+  if (!headerKeys.has(key)) problems.push(`firebase.json: security header ${key} is missing`);
+}
+for (const file of walk(path.join(root, 'web')).filter((f) => f.endsWith('.html'))) {
+  if (/<script(?![^>]*\bsrc=)[^>]*>/i.test(fs.readFileSync(file, 'utf8'))) {
+    problems.push(`Inline <script> in ${path.relative(root, file)}: the Content-Security-Policy blocks it (move it to a .js file)`);
+  }
+}
+
+// Nothing that should stay private may be uploaded with the site.
+for (const file of walk(path.join(root, 'build/web'))) {
+  const name = path.basename(file);
+  if (/\.map$|^client_secret|key\.properties$|\.jks$|\.keystore$|service-account|\.sql$/i.test(name) ||
+      file.split(path.sep).includes('.git')) {
+    problems.push(`Private or debug file in the web build: ${path.relative(root, file)}`);
   }
 }
 

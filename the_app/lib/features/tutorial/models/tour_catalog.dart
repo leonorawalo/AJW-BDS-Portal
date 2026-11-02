@@ -1,5 +1,6 @@
 import '../../../shared/models/user_profile.dart';
 import 'tour.dart';
+import '../../../core/lender.dart';
 
 /// Every guided tour's text, per role and place. Static data (like the ToR
 /// checklists), not a table: changing a bubble is a code change.
@@ -370,7 +371,7 @@ final Map<String, List<TourStep>> _tours = {
     _clock,
     TourStep(
       title: 'Loan readiness',
-      body: 'Business Health, Credit Readiness and the KCB checklist are worked out '
+      body: 'Business Health, Credit Readiness and the ${Lender.checklistInSentence} are worked out '
           'from completed ToR tasks. Nobody fills them in by hand.',
       anchors: [_A.scores],
     ),
@@ -386,7 +387,7 @@ final Map<String, List<TourStep>> _tours = {
     _clock,
     TourStep(
       title: 'Loan readiness',
-      body: 'Business Health, Credit Readiness and the KCB checklist rise as ToR '
+      body: 'Business Health, Credit Readiness and the ${Lender.checklistInSentence} rise as ToR '
           'tasks are completed. Nobody fills them in by hand.',
       anchors: [_A.scores],
     ),

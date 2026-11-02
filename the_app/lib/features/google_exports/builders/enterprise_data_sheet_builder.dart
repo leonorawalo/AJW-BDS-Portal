@@ -5,6 +5,7 @@ import '../../legal_workstream/models/task.dart';
 import '../models/enterprise_export_data.dart';
 import '../models/sheet_tab.dart';
 import 'export_formatting.dart';
+import '../../../core/lender.dart';
 
 /// The enterprise data workbook: loan readiness, tasks, recommendations
 /// and sessions, one tab each. Tasks and sessions contain only what the
@@ -16,7 +17,7 @@ List<SheetTab> buildEnterpriseDataSheet(EnterpriseExportData d) {
     ['Measure', 'Value'],
     ['Business Health (/100)', d.businessHealth],
     ['Credit Readiness (/100)', d.creditReadiness],
-    for (final (met, label) in LoanReadiness.kcbRequirements(i)) ['KCB: $label', met ? 'Met' : 'Not yet'],
+    for (final (met, label) in LoanReadiness.bankRequirements(i)) ['${Lender.inHeading}: $label', met ? 'Met' : 'Not yet'],
     for (final (done, label, _) in LoanReadiness.drivers(i)) [label, done ? 'Done' : 'Outstanding'],
     ['Annual turnover (KSh)', i.annualTurnover],
     ['Years in operation', i.yearsInOperation],

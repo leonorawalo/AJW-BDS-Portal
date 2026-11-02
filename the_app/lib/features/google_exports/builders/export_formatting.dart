@@ -9,6 +9,12 @@ String exportDate(DateTime? d) => d == null
 String exportDateTime(DateTime d) =>
     '${exportDate(d)} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
+const _shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/// "8 Oct 2026": for footers, where a reader shouldn't have to decode
+/// 2026-10-08.
+String exportLongDate(DateTime d) => '${d.day} ${_shortMonths[d.month - 1]} ${d.year}';
+
 String exportMoney(double? v) {
   if (v == null) return 'Not recorded';
   final digits = v.round().toString();

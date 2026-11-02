@@ -13,6 +13,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/file_filter_bar.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../data/document_repository.dart';
 
 class DocumentsTab extends ConsumerStatefulWidget {
   const DocumentsTab({super.key, required this.enterpriseId, required this.readOnly});
@@ -146,6 +147,11 @@ class _DocumentsTabState extends ConsumerState<DocumentsTab> {
     final file = files.first;
     final bytes = await file.readAsBytes();
     if (!context.mounted) return;
+    final problem = DocumentRepository.checkUpload(file.name, bytes.length);
+    if (problem != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(problem)));
+      return;
+    }
 
     String category = documentCategories.first;
     final confirmed = await showDialog<bool>(

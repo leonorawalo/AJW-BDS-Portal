@@ -15,6 +15,8 @@ import 'tasks_tab.dart';
 import '../../visits/presentation/visits_tab.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../email/presentation/inbox_tab.dart';
+import '../../chat/presentation/enterprise_chat_tab.dart';
 
 /// A consultant's workspace for one assigned enterprise. Sections come from
 /// the side menu (AppShell) and live in the URL (?section=…).
@@ -40,6 +42,8 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
     ShellSection('sessions', 'Sessions', Icons.event_outlined),
+    ShellSection('emails', 'Emails', Icons.mail_outline),
+    ShellSection('chat', 'Chat', Icons.forum_outlined),
   ];
 
   @override
@@ -68,6 +72,8 @@ class ConsultantWorkstreamScreen extends ConsumerWidget {
         'files' => FilesTab(enterpriseId: enterpriseId),
         'visits' => VisitsTab(enterpriseId: enterpriseId),
         'sessions' => SessionsTab(enterpriseId: enterpriseId),
+        'emails' => InboxTab(enterpriseId: enterpriseId),
+        'chat' => EnterpriseChatTab(enterpriseId: enterpriseId),
         _ => AssessmentDashboardTab(enterpriseId: enterpriseId, readOnly: false),
       },
     );

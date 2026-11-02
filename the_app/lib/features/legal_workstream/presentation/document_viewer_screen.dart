@@ -32,6 +32,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
 
   Future<void> _load() async {
     final repo = ref.read(documentRepositoryProvider);
+    repo.logAccess(widget.document.id, download: !(widget.document.isPdf || widget.document.isImage));
     try {
       if (widget.document.isPdf) {
         final bytes = await repo.downloadBytes(widget.document.storagePath);
@@ -75,7 +76,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
     }
     if (_imageBytes != null) {
       return InteractiveViewer(
-        child: Center(child: Image.memory(_imageBytes!)),
+        child: Center(child: Image.memory(_imageBytes!, semanticLabel: widget.document.fileName)),
       );
     }
     if (_signedUrl != null) {

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../data/consultation_session_repository.dart';
 import '../data/google_connection_repository.dart';
+import '../data/meeting_notes_repository.dart';
 import '../models/consultation_session.dart';
 import '../models/google_connection.dart';
+import '../models/meeting_notes.dart';
 import '../models/session_invitee.dart';
 import '../models/session_person.dart';
 
@@ -35,4 +37,14 @@ final sessionPeopleProvider =
 final sessionInviteeCandidatesProvider =
     FutureProvider.autoDispose.family<List<SessionInvitee>, String>((ref, enterpriseId) {
   return ref.watch(consultationSessionRepositoryProvider).fetchInviteeCandidates(enterpriseId);
+});
+
+final meetingNotesRepositoryProvider = Provider<MeetingNotesRepository>((ref) {
+  return MeetingNotesRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Looks up one finished meeting's notes on the server (once per screen
+/// visit; "Check again" invalidates it).
+final meetingNotesProvider = FutureProvider.autoDispose.family<MeetingNotes, String>((ref, sessionId) {
+  return ref.watch(meetingNotesRepositoryProvider).check(sessionId);
 });

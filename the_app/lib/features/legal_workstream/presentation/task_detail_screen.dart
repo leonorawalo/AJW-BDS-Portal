@@ -13,6 +13,8 @@ import '../../../core/widgets/status_chip.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
 import '../../tutorial/presentation/tour_host.dart';
+import '../data/document_repository.dart';
+import '../../../core/user_message.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({
@@ -71,7 +73,7 @@ class TaskDetailScreen extends ConsumerWidget {
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Could not update status: $e')),
+                                SnackBar(content: Text('Could not update status: ${userMessage(e)}')),
                               );
                             }
                           }
@@ -142,6 +144,11 @@ class _TaskDocuments extends ConsumerWidget {
     final file = files.first;
     final bytes = await file.readAsBytes();
     if (!context.mounted) return;
+    final problem = DocumentRepository.checkUpload(file.name, bytes.length);
+    if (problem != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(problem)));
+      return;
+    }
 
     String? category = documentCategories.first;
     final confirmed = await showDialog<bool>(
@@ -226,6 +233,7 @@ class _TaskCommentsState extends ConsumerState<_TaskComments> {
               ),
             ),
             IconButton(
+              tooltip: 'Send comment',
               icon: const Icon(Icons.send),
               onPressed: () async {
                 if (_controller.text.trim().isEmpty) return;

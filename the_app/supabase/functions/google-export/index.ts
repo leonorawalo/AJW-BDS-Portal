@@ -4,7 +4,7 @@
 // Drive, inside an "AJW BAGS Portal" folder, and returns its link.
 // Deploy with JWT verification ON.
 //
-//   POST {kind: 'doc', title, html}
+//   POST {kind: 'doc', title, html, footer?}  (footer: one line on every page)
 //   POST {kind: 'sheet', title, tabs: [{name, rows: (string|number|null)[][]}]}
 //        (the first row of each tab is treated as a header)
 //   POST {kind: 'slides', title, subtitle?, slides: [{title, bullets: string[]}]}
@@ -26,19 +26,14 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { accessTokenFor, ensureFolder, google, NotConnectedError, ReconnectNeededError } from '../_shared/google.ts';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 
 const MAX_BODY_BYTES = 2_000_000;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -74,6 +69,48 @@ async function createDoc(token: string, folderId: string, title: string, html: s
     { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body },
   );
   return { id: file.id as string, url: file.webViewLink as string };
+}
+
+/// Puts the branded footer line (document type, enterprise, generation
+/// date) on every page of a new Doc. Google's Docs API can't insert a
+/// page-number field, so "Page X of Y" exists only in the PDF exports;
+/// in a Doc, Insert > Page numbers adds it by hand. A failure here leaves
+/// the Doc without a footer rather than failing the export.
+async function addDocFooter(token: string, documentId: string, text: string) {
+  try {
+    const url = `https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`;
+    const created = await google(token, url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests: [{ createFooter: { type: 'DEFAULT' } }] }),
+    });
+    const replies = created.replies as { createFooter?: { footerId: string } }[];
+    const footerId = replies?.[0]?.createFooter?.footerId;
+    if (!footerId) return;
+    const range = { segmentId: footerId, startIndex: 0, endIndex: text.length };
+    await google(token, url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          { insertText: { location: { segmentId: footerId, index: 0 }, text } },
+          {
+            updateTextStyle: {
+              range,
+              textStyle: {
+                fontSize: { magnitude: 8, unit: 'PT' },
+                foregroundColor: { color: { rgbColor: { red: 0.43, green: 0.42, blue: 0.40 } } },
+              },
+              fields: 'fontSize,foregroundColor',
+            },
+          },
+          { updateParagraphStyle: { range, paragraphStyle: { alignment: 'CENTER' }, fields: 'alignment' } },
+        ],
+      }),
+    });
+  } catch (e) {
+    console.error('Adding the Doc footer failed', e);
+  }
 }
 
 type Cell = string | number | null;
@@ -175,8 +212,7 @@ async function createSlides(
   return { id, url: `https://docs.google.com/presentation/d/${id}/edit` };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const authHeader = req.headers.get('Authorization');
@@ -188,6 +224,8 @@ Deno.serve(async (req) => {
     authHeader.replace('Bearer ', ''),
   );
   if (userError || !userData.user) return json({ error: 'Not signed in' }, 401);
+  const limited = await rateLimited(`google-export:${userData.user.id}`, 40, 3600);
+  if (limited) return limited;
 
   const raw = await req.text();
   if (raw.length > MAX_BODY_BYTES) return json({ error: 'Export is too large' }, 413);
@@ -202,7 +240,11 @@ Deno.serve(async (req) => {
 
     if (input.kind === 'doc') {
       if (typeof input.html !== 'string') return json({ error: 'html is required' }, 400);
-      return json(await createDoc(token, folderId, title, input.html));
+      const doc = await createDoc(token, folderId, title, input.html);
+      if (typeof input.footer === 'string' && input.footer.trim()) {
+        await addDocFooter(token, doc.id, input.footer.trim().slice(0, 300));
+      }
+      return json(doc);
     }
     if (input.kind === 'sheet') {
       if (!Array.isArray(input.tabs) || input.tabs.length === 0) return json({ error: 'tabs are required' }, 400);
@@ -216,7 +258,6 @@ Deno.serve(async (req) => {
   } catch (e) {
     if (e instanceof NotConnectedError) return json({ error: 'not_connected' }, 412);
     if (e instanceof ReconnectNeededError) return json({ error: 'reconnect_needed' }, 412);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return serverError(e);
   }
 });

@@ -19,6 +19,11 @@ class AttentionSpots {
 
   bool get isEmpty => _spots.isEmpty;
 
+  /// These spots plus [extra] (enterprise id or null, section), e.g.
+  /// unread chats, which come from the chat tables, not my_attention().
+  AttentionSpots plus(Iterable<(String?, String)> extra) =>
+      extra.isEmpty ? this : AttentionSpots({..._spots, for (final (e, s) in extra) _key(e, s)});
+
   /// A role-level page, e.g. 'users'.
   bool page(String key) => _spots.contains(_key(null, key));
 

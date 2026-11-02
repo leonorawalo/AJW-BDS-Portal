@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../theme/dashboard_palette.dart';
+import 'drifting_shapes.dart';
 import 'user_avatar.dart';
 
-/// Top of each role's home page: "Good afternoon, Gloria", today's date and
-/// a one-line summary, next to the person's own avatar. The person first,
-/// AJW around them.
+/// Top of each role's home page: a colourful banner with "Good afternoon,
+/// Gloria", today's date and a one-line summary, next to the person's own
+/// avatar. Its colours follow the person's dashboard (see
+/// [DashboardPalette]): AJW for Admin and Owner, the discipline's colours
+/// for consultants.
 class GreetingHeader extends ConsumerWidget {
   const GreetingHeader({super.key, this.summary, this.trailing});
 
@@ -37,33 +40,81 @@ class GreetingHeader extends ConsumerWidget {
     final phone = MediaQuery.sizeOf(context).width < 600;
     final date = '${_weekdays[now.weekday - 1]}, ${now.day} ${_months[now.month - 1]}';
 
+    final palette = DashboardPalette.forProfile(profile);
+    final onBanner = Colors.white;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: Space.xl),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (profile != null && !phone) ...[
-            UserAvatar(id: profile.id, firstName: profile.firstName, lastName: profile.lastName, radius: 28),
-            const SizedBox(width: Space.lg),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile == null ? greetingFor(now) : '${greetingFor(now)}, ${profile.firstName}',
-                  style: phone ? text.headlineMedium : text.headlineLarge,
-                ),
-                const SizedBox(height: Space.xs),
-                Text(
-                  [date, if (summary != null) summary].join('  ·  '),
-                  style: text.bodyMedium?.copyWith(color: AppColors.charcoalSoft),
-                ),
-              ],
-            ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(Radii.xl),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: palette.gradient,
           ),
-          ?trailing,
-        ],
+          boxShadow: [
+            BoxShadow(color: palette.gradient.last.withValues(alpha: 0.25), blurRadius: 18, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(Radii.xl),
+          child: Stack(
+            children: [
+              Positioned.fill(child: DriftingShapes(colors: palette.shapeColors)),
+              Padding(
+                padding: EdgeInsets.all(phone ? Space.lg : Space.xl),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (profile != null && !phone) ...[
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 2),
+                        ),
+                        child: UserAvatar(
+                          id: profile.id,
+                          firstName: profile.firstName,
+                          lastName: profile.lastName,
+                          radius: 28,
+                        ),
+                      ),
+                      const SizedBox(width: Space.lg),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            profile == null ? greetingFor(now) : '${greetingFor(now)}, ${profile.firstName}',
+                            style: (phone ? text.headlineMedium : text.headlineLarge)?.copyWith(color: onBanner),
+                          ),
+                          const SizedBox(height: Space.xs),
+                          Text(
+                            [date, if (summary != null) summary].join('  ·  '),
+                            style: text.bodyMedium?.copyWith(color: onBanner),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (trailing != null)
+                      Theme(
+                        // Buttons placed on the banner read in white.
+                        data: Theme.of(context).copyWith(
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          ),
+                          iconTheme: const IconThemeData(color: Colors.white),
+                        ),
+                        child: trailing!,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

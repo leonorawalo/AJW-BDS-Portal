@@ -7,22 +7,24 @@
   <meta name="description" content="Download the AJW BAGS Portal Android app, or use the portal in your browser.">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="legal.css">
+  <script src="cookie-consent.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to main content</a>
   <!-- Linked from the invite email instead of the .apk itself: a direct
        .apk link in an email is a strong spam signal. See DO_NOT_BREAK.md. -->
   <header>
     <div class="bar">
       <img src="brand/ajw-mark.svg" alt="AJW Africa logo">
       <a class="name" href="about.html">AJW BAGS Portal</a>
-      <nav>
+      <nav aria-label="Site">
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
         <a href="/">Sign in</a>
       </nav>
     </div>
   </header>
-  <main>
+  <main id="main">
     <div class="card">
       <h1>Get the BAGS Portal</h1>
       <p class="muted">Use it on your Android phone, or in any web browser.</p>
@@ -60,5 +62,17 @@
       </p>
     </div>
   </main>
+  <!-- legal-footer:start (written by scripts/build_legal.js) -->
+  <footer>
+    <p>
+      © AJW Africa · <a href="about.html">About and contact</a> · <a href="privacy.html">Privacy Policy</a> ·
+      <a href="terms.html">Terms of Service</a> · <a href="cookies.html">Cookie Policy</a> ·
+      <a href="refund.html">Refund Policy</a> · <a href="data-protection.html">Data Protection Notice</a> ·
+      <a href="#" data-cookie-settings>Cookie settings</a>
+    </p>
+    <p>[AJW REGISTERED NAME] · Registration [REGISTRATION NUMBER] · [PHYSICAL ADDRESS] ·
+      <a href="mailto:ajw.bags.portal@gmail.com">ajw.bags.portal@gmail.com</a> · [PHONE NUMBER]</p>
+  </footer>
+  <!-- legal-footer:end -->
 </body>
 </html>

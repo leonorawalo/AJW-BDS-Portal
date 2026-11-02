@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/user_profile.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../google_exports/builders/document_brand.dart';
 import '../../google_exports/presentation/google_export_flow.dart';
 import '../../google_exports/providers/google_export_providers.dart';
 import '../../visits/providers/visit_providers.dart';
 import '../models/monthly_report.dart';
 import '../providers/portfolio_providers.dart';
+import 'success_stories_dialog.dart';
 
 /// "Monthly report": the ToR's BDS Status Report, Activity Report and next
 /// month's Workplan as one Google Doc, from portal data. The ToR wants them
@@ -48,6 +50,7 @@ class MonthlyReportButton extends ConsumerWidget {
       ),
     );
     if (month == null || !context.mounted) return;
+    if (await showSuccessStoriesDialog(context, month) != true || !context.mounted) return;
 
     await runGoogleExport(
       context,
@@ -74,6 +77,9 @@ class MonthlyReportButton extends ConsumerWidget {
         }
         completed = completed.where((t) => ids.contains(t.enterpriseId)).toList();
         due = due.where((t) => ids.contains(t.enterpriseId)).toList();
+        final stories = (await ref.read(successStoryRepositoryProvider).fetchForMonth(month))
+            .where((s) => ids.contains(s.enterpriseId))
+            .toList();
 
         final report = MonthlyReport(
           author: me,
@@ -82,8 +88,16 @@ class MonthlyReportButton extends ConsumerWidget {
           visits: visits,
           completed: completed,
           dueNextMonth: due,
+          successStories: stories,
         );
-        return ref.read(googleExportRepositoryProvider).exportDoc(title: report.title, html: report.toHtml());
+        return ref.read(googleExportRepositoryProvider).exportDoc(
+              title: report.title,
+              html: report.toHtml(),
+              footer: DocumentBrand.footerText(
+                documentType: '${MonthlyReport.documentType}, ${monthLabel(month)}',
+                generatedAt: DateTime.now(),
+              ),
+            );
       },
     );
   }

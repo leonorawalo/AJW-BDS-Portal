@@ -155,8 +155,8 @@ const List<TaskTemplate> standardLegalChecklist = [
 ];
 
 /// Accounting, Finance, Operations and Procurement ToR. The last four
-/// items are the lender evidence behind "bankable by month 6" (KCB's
-/// MSME requirements), which the loan-readiness score reads.
+/// items are the lender evidence behind "bankable by month 6" (the bank's
+/// requirements for micro, small and medium enterprise loans), which the loan-readiness score reads.
 const List<TaskTemplate> standardAccountingChecklist = [
   TaskTemplate(key: 'A-BANK', phase: _gc, priority: _high,
       title: 'Open a business bank account',
@@ -219,7 +219,7 @@ const List<TaskTemplate> standardAccountingChecklist = [
       description: "Confirm the business's and owner's Credit Reference Bureau standing before applying for financing."),
   TaskTemplate(key: 'A-LR-AUDIT', phase: _bank, priority: _low, // score
       title: 'Obtain 3 years of audited accounts',
-      description: "Only for loans above KSh 5 million (KCB's secured SME lending). Mark not applicable otherwise."),
+      description: "Only for loans above KSh 5 million (secured lending to small and medium enterprises). Mark not applicable otherwise."),
 ];
 
 /// Marketing BDS Consultant ToR: business plans, marketing, public

@@ -1,9 +1,11 @@
 import '../../../shared/models/user_profile.dart';
 import '../../enterprises/models/enterprise.dart';
+import '../../google_exports/builders/document_brand.dart';
 import '../../google_exports/builders/export_formatting.dart';
 import '../../visits/models/enterprise_visit.dart';
 import 'portfolio_kpis.dart';
 import 'programme_clock.dart';
+import 'success_story.dart';
 
 /// A task completed in the report month, or due next month.
 class ReportTask {
@@ -32,6 +34,7 @@ class MonthlyReport {
     required this.visits,
     required this.completed,
     required this.dueNextMonth,
+    this.successStories = const [],
   });
 
   final String author;
@@ -48,6 +51,12 @@ class MonthlyReport {
 
   /// Open tasks due next month: the workplan.
   final List<ReportTask> dueNextMonth;
+
+  /// Written in the report flow (success_stories_dialog.dart).
+  final List<SuccessStory> successStories;
+
+  /// Names the document in its footer.
+  static const documentType = 'Monthly Programme Report';
 
   String get title => 'BDS monthly report: $author, ${monthLabel(month)}';
 
@@ -148,7 +157,21 @@ class MonthlyReport {
     }
 
     b.writeln('<h2>4. Success stories</h2>');
-    b.writeln('<p>(Add this month\'s success stories here.)</p>');
-    return b.toString();
+    if (successStories.isEmpty) {
+      b.writeln('<p>No success stories were recorded for ${monthLabel(month)}.</p>');
+    }
+    for (final story in successStories) {
+      b.writeln('<h3>${name(story.enterpriseId)}</h3>');
+      for (final (heading, _, value) in story.parts) {
+        if (value.trim().isEmpty) continue;
+        if (heading == 'In their words') {
+          b.writeln('<p><b>${esc(heading)}</b></p>'
+              '<blockquote><i>&ldquo;${esc(value.trim())}&rdquo;</i></blockquote>');
+        } else {
+          b.writeln('<p><b>${esc(heading)}.</b> ${esc(value.trim())}</p>');
+        }
+      }
+    }
+    return brandedDocHtml(title: title, bodyHtml: b.toString());
   }
 }

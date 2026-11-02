@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/status_chip.dart';
 import '../../../core/widgets/progress_dialog.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/invite_request.dart';
@@ -17,6 +16,7 @@ import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 /// Admin: every account, with role, specialization and status
 /// (invited / active / suspended), plus resend invite, change
@@ -119,7 +119,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   }
 }
 
-enum _Action { email, resendInvite, shareLink, changeSpecialization, suspend, reactivate }
+enum _Action { email, resendInvite, shareLink, changeSpecialization, resetTwoStep, suspend, reactivate }
 
 class _UserTile extends ConsumerWidget {
   const _UserTile({required this.user});
@@ -166,6 +166,8 @@ class _UserTile extends ConsumerWidget {
         case _Action.suspend:
           if (!await _confirmSuspend(context) || !context.mounted) return;
           await withProgress(context, 'Suspending…', repo.suspend(user.id));
+        case _Action.resetTwoStep:
+          await withProgress(context, 'Resetting two-step verification…', repo.resetTwoStep(user.id));
         case _Action.reactivate:
           await withProgress(context, 'Reactivating…', repo.reactivate(user.id));
       }
@@ -174,7 +176,7 @@ class _UserTile extends ConsumerWidget {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'.replaceFirst('Exception: ', ''))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
       }
     }
   }
@@ -253,10 +255,11 @@ class _UserTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isMe = user.id == ref.read(authRepositoryProvider).currentUser?.id;
-    final (Color color, String label) = switch (user.state) {
-      AccountState.active => (AppColors.successGreen, 'Active'),
-      AccountState.invited => (AppColors.pendingAmber, 'Invited'),
-      AccountState.suspended => (AppColors.errorRed, 'Suspended'),
+    // StatusChip's text colours meet 4.5:1 on their tints (WCAG 2.1 AA).
+    final (StatusTone tone, String label) = switch (user.state) {
+      AccountState.active => (StatusTone.success, 'Active'),
+      AccountState.invited => (StatusTone.warning, 'Invited'),
+      AccountState.suspended => (StatusTone.danger, 'Suspended'),
     };
     final roleLine = [
       user.roleName == 'Enterprise Owner' ? 'Owner' : user.roleName,
@@ -280,6 +283,8 @@ class _UserTile extends ConsumerWidget {
               ? 'Change specialization'
               : 'Change specialization (end their assignments first)'),
         ),
+      if (!isMe && user.state == AccountState.active)
+        const PopupMenuItem(value: _Action.resetTwoStep, child: Text('Reset two-step verification')),
       if (!isMe && user.state != AccountState.suspended)
         const PopupMenuItem(value: _Action.suspend, child: Text('Suspend')),
       if (user.state == AccountState.suspended)
@@ -301,14 +306,7 @@ class _UserTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(label, style: TextStyle(color: color, fontWeight: AppFonts.bodyStrong, fontSize: 12)),
-            ),
+            StatusChip(label, tone: tone),
             if (actions.isNotEmpty)
               TourAnchor(id: TourAnchors.usersFirst, child: PopupMenuButton<_Action>(
                 tooltip: 'Actions',

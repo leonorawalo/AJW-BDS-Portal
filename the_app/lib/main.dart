@@ -7,6 +7,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/legal/font_licenses.dart';
 import 'core/widgets/config_error_app.dart';
 
 Future<void> main() async {
@@ -16,6 +17,7 @@ Future<void> main() async {
   // No effect on Android.
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicenses();
 
   final ({String url, String anonKey}) supabaseConfig;
   try {

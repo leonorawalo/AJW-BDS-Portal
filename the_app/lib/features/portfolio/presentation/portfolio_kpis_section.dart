@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/dashboard_palette.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../shared/models/user_profile.dart';
 import '../models/portfolio_kpis.dart';
@@ -22,20 +24,22 @@ class PortfolioKpisSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final kpisAsync = ref.watch(portfolioKpisProvider);
+    final palette = DashboardPalette.forProfile(ref.watch(currentUserProfileProvider).value);
     return kpisAsync.when(
       loading: () => const Padding(padding: EdgeInsets.all(Space.xl), child: Center(child: AjwLoader())),
       error: (_, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.md),
         child: Text("Couldn't load the programme measures.", style: Theme.of(context).textTheme.bodySmall),
       ),
-      data: (k) => _Body(kpis: k, showTargets: showTargets, trailing: trailing),
+      data: (k) => _Body(kpis: k, palette: palette, showTargets: showTargets, trailing: trailing),
     );
   }
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.kpis, required this.showTargets, this.trailing});
+  const _Body({required this.kpis, required this.palette, required this.showTargets, this.trailing});
   final PortfolioKpis kpis;
+  final DashboardPalette palette;
   final bool showTargets;
   final Widget? trailing;
 
@@ -49,12 +53,14 @@ class _Body extends StatelessWidget {
 
     final cards = [
       _Metric(
+        icon: Icons.storefront_rounded,
         label: 'Portfolio',
         value: '${k.portfolioSize}',
         detail: 'ToR minimum ${PortfolioKpis.minimumPortfolio} clients',
         good: k.portfolioSize >= PortfolioKpis.minimumPortfolio,
       ),
       _Metric(
+        icon: Icons.rocket_launch_rounded,
         label: 'Going concern within 3 months',
         value: gcPct == null ? '–' : '${gcPct.round()}%',
         detail: due == 0
@@ -63,12 +69,14 @@ class _Body extends StatelessWidget {
         good: gcPct != null && gcPct >= PortfolioKpis.goingConcernTargetPercent,
       ),
       _Metric(
+        icon: Icons.favorite_rounded,
         label: 'Going concern survival',
         value: survivalPct == null ? '–' : '${survivalPct.round()}%',
         detail: '${k.survivingGoingConcerns} of ${k.goingConcerns} still trading · target ${PortfolioKpis.goingConcernTargetPercent}%',
         good: survivalPct != null && survivalPct >= PortfolioKpis.goingConcernTargetPercent,
       ),
       _Metric(
+        icon: Icons.directions_walk_rounded,
         label: 'Visits this month',
         value: '${k.visitsThisMonth} of ${k.visitsExpected}',
         detail: k.lateLogsThisMonth == 0
@@ -97,13 +105,21 @@ class _Body extends StatelessWidget {
             return Wrap(
               spacing: gap,
               runSpacing: gap,
-              children: [for (final card in cards) SizedBox(width: width, child: card)],
+              children: [
+                for (var i = 0; i < cards.length; i++)
+                  SizedBox(width: width, child: cards[i].withAccent(palette.accentAt(i))),
+              ],
             );
           },
         ),
         if (showTargets && k.targets.isNotEmpty) ...[
           const SizedBox(height: Space.xl),
-          _Targets(targets: k.targets, showDiscipline: k.disciplines.length > 1, overdue: k.overdueMilestones),
+          _Targets(
+            targets: k.targets,
+            showDiscipline: k.disciplines.length > 1,
+            overdue: k.overdueMilestones,
+            barColor: palette.accentAt(0),
+          ),
         ],
       ],
     );
@@ -111,37 +127,76 @@ class _Body extends StatelessWidget {
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value, required this.detail, required this.good, this.warn = false});
+  const _Metric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.detail,
+    required this.good,
+    this.warn = false,
+    this.accent = AppColors.charcoal,
+  });
+  final IconData icon;
   final String label;
   final String value;
   final String detail;
   final bool good;
   final bool warn;
 
+  /// From the dashboard's palette; >= 4.5:1 on white, so the value can
+  /// be written in it.
+  final Color accent;
+
+  _Metric withAccent(Color c) =>
+      _Metric(icon: icon, label: label, value: value, detail: detail, good: good, warn: warn, accent: c);
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Radii.lg),
+        boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.16), blurRadius: 14, offset: const Offset(0, 6))],
+      ),
+      child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [accent.withValues(alpha: 0.10), Colors.white],
+            ),
+            border: Border(top: BorderSide(color: accent, width: 4)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Text(label, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft))),
-                if (good)
-                  const Icon(Icons.check_circle, size: 18, color: AppColors.successGreen)
-                else if (warn)
-                  const Icon(Icons.schedule, size: 18, color: AppColors.errorRed),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(Radii.sm)),
+                      child: Icon(icon, size: 18, color: Colors.white),
+                    ),
+                    const SizedBox(width: Space.sm),
+                    Expanded(child: Text(label, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft))),
+                    if (good)
+                      const Icon(Icons.check_circle, size: 18, color: AppColors.successGreen)
+                    else if (warn)
+                      const Icon(Icons.schedule, size: 18, color: AppColors.errorRed),
+                  ],
+                ),
+                const SizedBox(height: Space.sm),
+                Text(value, style: text.headlineMedium?.copyWith(color: accent)),
+                const SizedBox(height: Space.xs),
+                Text(detail, style: text.bodySmall?.copyWith(color: warn ? AppColors.errorRed : null)),
               ],
             ),
-            const SizedBox(height: Space.sm),
-            Text(value, style: text.headlineMedium),
-            const SizedBox(height: Space.xs),
-            Text(detail, style: text.bodySmall?.copyWith(color: warn ? AppColors.errorRed : null)),
-          ],
+          ),
         ),
       ),
     );
@@ -149,8 +204,9 @@ class _Metric extends StatelessWidget {
 }
 
 class _Targets extends StatelessWidget {
-  const _Targets({required this.targets, required this.showDiscipline, required this.overdue});
+  const _Targets({required this.targets, required this.showDiscipline, required this.overdue, required this.barColor});
   final List<TargetProgress> targets;
+  final Color barColor;
   final bool showDiscipline;
   final int overdue;
 
@@ -218,7 +274,7 @@ class _Targets extends StatelessWidget {
                             value: (t.percent / 100).clamp(0, 1),
                             minHeight: 8,
                             backgroundColor: AppColors.surfaceSunken,
-                            valueColor: AlwaysStoppedAnimation(t.met ? AppColors.successGreen : AppColors.brandRed),
+                            valueColor: AlwaysStoppedAnimation(t.met ? AppColors.successGreen : barColor),
                           ),
                         ),
                         // Where the target sits on the bar (not a control).

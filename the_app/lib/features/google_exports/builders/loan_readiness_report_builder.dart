@@ -2,7 +2,9 @@ import '../../enterprises/models/enterprise.dart';
 import '../../legal_workstream/models/loan_readiness.dart';
 import '../models/enterprise_export_data.dart';
 import '../models/loan_readiness_report.dart';
+import 'document_brand.dart';
 import 'export_formatting.dart';
+import '../../../core/lender.dart';
 
 /// The report's content: the single definition shared by the Google Doc
 /// (renderLoanReadinessReportHtml) and the PDF (loan_readiness_report_pdf.dart).
@@ -27,7 +29,7 @@ LoanReadinessReport buildLoanReadinessReport(EnterpriseExportData d) {
       (label: 'Business Health', score: d.businessHealth, band: LoanReadiness.band(d.businessHealth)),
       (label: 'Credit Readiness', score: d.creditReadiness, band: LoanReadiness.band(d.creditReadiness)),
     ],
-    kcbRequirements: LoanReadiness.kcbRequirements(i),
+    bankRequirements: LoanReadiness.bankRequirements(i),
     redFlags: LoanReadiness.redFlags(i),
     drivers: [
       for (final (done, label, source) in LoanReadiness.drivers(i)) (done: done, label: label, source: source),
@@ -42,10 +44,9 @@ LoanReadinessReport buildLoanReadinessReport(EnterpriseExportData d) {
 
 /// The report as HTML. google-export uploads it with conversion to a
 /// Google Doc, which turns headings, lists and tables into native Docs
-/// formatting.
+/// formatting. Wrapped in the shared branded template (document_brand.dart).
 String renderLoanReadinessReportHtml(LoanReadinessReport r) {
   final b = StringBuffer()
-    ..write('<html><head><meta charset="utf-8"></head><body>')
     ..write('<h1>Loan-readiness report: ${esc(r.enterpriseName)}</h1>')
     ..write('<p><i>Exported ${esc(exportDateTime(r.exportedAt))} by ${esc(r.exportedBy)} '
         'from the AJW BAGS Portal. ${LoanReadinessReport.disclaimer}</i></p>')
@@ -58,9 +59,9 @@ String renderLoanReadinessReportHtml(LoanReadinessReport r) {
   }
   b
     ..write('</table>')
-    ..write('<h2>KCB MSME requirements: ${r.kcbMetCount} of ${r.kcbRequirements.length} met</h2>')
+    ..write('<h2>${Lender.requirements}: ${r.bankMetCount} of ${r.bankRequirements.length} met</h2>')
     ..write('<table border="1" cellpadding="4"><tr><th>Requirement</th><th>Status</th></tr>');
-  for (final (met, label) in r.kcbRequirements) {
+  for (final (met, label) in r.bankRequirements) {
     b.write('<tr><td>${esc(label)}</td><td>${met ? 'Met' : 'Not yet'}</td></tr>');
   }
   b
@@ -86,9 +87,8 @@ String renderLoanReadinessReportHtml(LoanReadinessReport r) {
   b
     ..write('</table>')
     ..write('<h2>Financial facts</h2>')
-    ..write(_factsTable(r.financialFacts))
-    ..write('</body></html>');
-  return b.toString();
+    ..write(_factsTable(r.financialFacts));
+  return brandedDocHtml(title: '${LoanReadinessReport.documentType} – ${r.enterpriseName}', bodyHtml: b.toString());
 }
 
 String _factsTable(List<(String, String)> rows) {

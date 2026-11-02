@@ -14,6 +14,7 @@ import '../models/enterprise_visit.dart';
 import '../providers/visit_providers.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 const _months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -196,7 +197,7 @@ class _ConsultantProgress extends StatelessWidget {
             child: Icon(
               i < count ? Icons.check_circle : Icons.radio_button_unchecked,
               size: 20,
-              color: i < count ? AppColors.successGreen : AppColors.lightGray,
+              color: i < count ? AppColors.successGreen : AppColors.notDoneMark,
             ),
           ),
         const SizedBox(width: Space.sm),
@@ -374,7 +375,7 @@ class _LogVisitDialogState extends ConsumerState<_LogVisitDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save the visit: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save the visit: ${userMessage(e)}')));
       }
     }
   }

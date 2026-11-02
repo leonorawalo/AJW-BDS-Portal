@@ -6,8 +6,8 @@ class PortfolioRow {
     required this.goingConcern,
     required this.businessHealth,
     required this.creditReadiness,
-    required this.kcbMet,
-    required this.kcbTotal,
+    required this.bankMet,
+    required this.bankTotal,
     required this.consultantsByDiscipline,
     required this.openTasks,
     required this.completedTasks,
@@ -20,8 +20,8 @@ class PortfolioRow {
   final String goingConcern;
   final double businessHealth;
   final double creditReadiness;
-  final int kcbMet;
-  final int kcbTotal;
+  final int bankMet;
+  final int bankTotal;
 
   /// 'Legal' / 'Accounting' / 'Marketing' -> active consultant's name.
   final Map<String, String> consultantsByDiscipline;

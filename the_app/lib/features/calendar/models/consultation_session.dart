@@ -1,3 +1,5 @@
+import 'meeting_notes.dart';
+
 enum SessionStatus { scheduled, cancelled }
 
 extension SessionStatusX on SessionStatus {
@@ -28,6 +30,7 @@ class ConsultationSession {
     this.description,
     this.meetLink,
     this.calendarHtmlLink,
+    this.notes = const MeetingNotes(status: MeetingNotesStatus.pending),
   });
 
   factory ConsultationSession.fromMap(Map<String, dynamic> map) {
@@ -42,6 +45,11 @@ class ConsultationSession {
       status: SessionStatusX.fromDb(map['status'] as String),
       meetLink: map['meet_link'] as String?,
       calendarHtmlLink: map['calendar_html_link'] as String?,
+      notes: MeetingNotes(
+        status: meetingNotesStatusFromDb(map['notes_status'] as String?),
+        notesUrl: map['notes_doc_url'] as String?,
+        transcriptUrl: map['transcript_doc_url'] as String?,
+      ),
     );
   }
 
@@ -55,6 +63,11 @@ class ConsultationSession {
   final SessionStatus status;
   final String? meetLink;
   final String? calendarHtmlLink;
+
+  /// Gemini notes / transcript, once the meeting is over.
+  final MeetingNotes notes;
+
+  bool get hasEnded => status == SessionStatus.scheduled && !endsAt.isAfter(DateTime.now());
 
   bool get isUpcoming => status == SessionStatus.scheduled && endsAt.isAfter(DateTime.now());
 }

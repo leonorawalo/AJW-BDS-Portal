@@ -17,6 +17,8 @@
 //        -> the inserted consultation_sessions row
 //        -> 409 {error: 'clash', availability} when someone is busy and
 //           force isn't true (the app then offers "Book anyway")
+//        "Start meeting now" is the same call with starts_at = now and
+//        force = true. Participants also get a push (via send-push).
 //   POST {action: 'cancel', session_id}   (organizer or Admin)
 //        -> {ok: true}
 //
@@ -30,27 +32,23 @@
 // participants' email addresses.
 //
 // Required secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (shared with
-// google-oauth). SUPABASE_URL / SUPABASE_ANON_KEY /
+// google-oauth), WEBHOOK_SECRET (to hand meeting pushes to send-push).
+// SUPABASE_URL / SUPABASE_ANON_KEY /
 // SUPABASE_SERVICE_ROLE_KEY are provided automatically.
 
 import { createClient, SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { accessTokenFor, NotConnectedError, serviceClient as admin } from '../_shared/google.ts';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 const FREEBUSY_API = 'https://www.googleapis.com/calendar/v3/freeBusy';
 const TIME_ZONE = 'Africa/Nairobi';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -89,7 +87,7 @@ async function parseMeeting(
   const { data: candidates, error } = await userClient.rpc('session_invitee_candidates', {
     p_enterprise_id: enterpriseId,
   });
-  if (error) return { ok: false, response: json({ error: error.message }, 500) };
+  if (error) return { ok: false, response: serverError(error) };
   const names = new Map<string, string>(
     (candidates as { user_id: string; full_name: string }[]).map((c) => [c.user_id, c.full_name]),
   );
@@ -235,7 +233,26 @@ async function create(userClient: SupabaseClient, userId: string, input: Record<
     await userClient.from('consultation_sessions').update({ status: 'Cancelled' }).eq('id', row.id);
     return json({ error: participantsError.message }, 403);
   }
+  await notifyParticipants(row);
   return json(row);
+}
+
+/// Push notification to everyone invited (Google also emails them). Hands
+/// the row to send-push, which owns the device tokens and FCM: a failure
+/// here is logged, never a reason to fail the booking.
+async function notifyParticipants(session: Record<string, unknown>) {
+  const secret = Deno.env.get('WEBHOOK_SECRET');
+  if (!secret) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-webhook-secret': secret },
+      body: JSON.stringify({ type: 'INSERT', table: 'consultation_sessions', schema: 'public', record: session }),
+    });
+    if (!res.ok) console.error('Meeting push failed', res.status, await res.text());
+  } catch (e) {
+    console.error('Meeting push failed', e);
+  }
 }
 
 async function cancel(userClient: SupabaseClient, userId: string, sessionId: string) {
@@ -274,8 +291,7 @@ async function cancel(userClient: SupabaseClient, userId: string, sessionId: str
   return json({ ok: true });
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const authHeader = req.headers.get('Authorization');
@@ -288,6 +304,8 @@ Deno.serve(async (req) => {
   );
   if (userError || !userData.user) return json({ error: 'Not signed in' }, 401);
   const userId = userData.user.id;
+  const limited = await rateLimited(`calendar-sessions:${userId}`, 120, 3600);
+  if (limited) return limited;
 
   try {
     const input = await req.json();
@@ -297,7 +315,6 @@ Deno.serve(async (req) => {
     return json({ error: `Unknown action: ${input.action}` }, 400);
   } catch (e) {
     if (e instanceof NotConnectedError) return json({ error: 'not_connected' }, 412);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return serverError(e);
   }
 });

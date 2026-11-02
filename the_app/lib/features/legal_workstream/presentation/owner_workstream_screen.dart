@@ -16,6 +16,8 @@ import '../../../core/widgets/ajw_loader.dart';
 import '../../visits/presentation/visits_tab.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../email/presentation/inbox_tab.dart';
+import '../../chat/presentation/enterprise_chat_tab.dart';
 
 /// The Owner's home: their enterprise's workspace. Sections come from the
 /// side menu (AppShell) and live in the URL (/owner?section=...). An owner
@@ -35,6 +37,8 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
     ShellSection('sessions', 'Sessions', Icons.event_outlined),
+    ShellSection('emails', 'Emails', Icons.mail_outline),
+    ShellSection('chat', 'Chat', Icons.forum_outlined),
   ];
 
   @override
@@ -87,6 +91,8 @@ class OwnerWorkstreamScreen extends ConsumerWidget {
             'files' => FilesTab(enterpriseId: enterprise.id),
             'visits' => VisitsTab(enterpriseId: enterprise.id),
             'sessions' => SessionsTab(enterpriseId: enterprise.id),
+            'emails' => InboxTab(enterpriseId: enterprise.id),
+            'chat' => EnterpriseChatTab(enterpriseId: enterprise.id),
             _ => AssessmentDashboardTab(enterpriseId: enterprise.id, readOnly: true, showGreeting: true),
           },
         );

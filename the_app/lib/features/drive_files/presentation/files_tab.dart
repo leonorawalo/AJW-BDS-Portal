@@ -19,6 +19,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/file_filter_bar.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 /// B2: the enterprise's working Google files. Anyone on the enterprise
 /// (Admin, Owner, consultants) can create a Doc / Sheet / Slides; it's
@@ -117,7 +118,7 @@ class FilesTab extends ConsumerWidget {
       if (context.mounted) await offerGoogleConnect(context, ref, reconnect: true);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create the file: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create the file: ${userMessage(e)}')));
       }
     }
   }
@@ -183,7 +184,7 @@ class _FileCard extends ConsumerWidget {
           if (context.mounted) await offerGoogleConnect(context, ref, reconnect: true);
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'.replaceFirst('Exception: ', ''))));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(userMessage(e))));
           }
         }
       case _FileAction.remove:

@@ -17,50 +17,20 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { accessTokenFor, NotConnectedError, serviceClient } from '../_shared/google.ts';
+import { base64Url, buildMessage } from '../_shared/gmail.ts';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 
 const MAX_RECIPIENTS = 20;
 const MAX_BODY_CHARS = 20_000;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
-function base64(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
-
-const utf8 = (s: string) => new TextEncoder().encode(s);
-const base64Url = (s: string) => base64(utf8(s)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-/// A plain-text RFC 2822 message. Subject is RFC 2047 encoded and the body
-/// base64 so any language / emoji survives. No From header: Gmail sets it
-/// to the sender's own address.
-function buildMessage(to: string[], subject: string, body: string): string {
-  const encodedBody = base64(utf8(body)).replace(/.{76}/g, '$&\r\n');
-  return [
-    `To: ${to.join(', ')}`,
-    `Subject: =?UTF-8?B?${base64(utf8(subject))}?=`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: base64',
-    '',
-    encodedBody,
-  ].join('\r\n');
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const authHeader = req.headers.get('Authorization');
@@ -70,6 +40,8 @@ Deno.serve(async (req) => {
   });
   const { data: userData, error: userError } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
   if (userError || !userData.user) return json({ error: 'Not signed in' }, 401);
+  const limited = await rateLimited(`gmail-send:${userData.user.id}`, 30, 3600);
+  if (limited) return limited;
 
   let input: { enterprise_id?: string; to?: string[]; subject?: string; body?: string };
   try {
@@ -91,7 +63,7 @@ Deno.serve(async (req) => {
     const { data: contacts, error } = await userClient.rpc('enterprise_email_contacts', {
       p_enterprise_id: input.enterprise_id,
     });
-    if (error) return json({ error: error.message }, 500);
+    if (error) return serverError(error);
     for (const c of (contacts ?? []) as { email: string | null }[]) if (c.email) allowed.add(c.email.toLowerCase());
   }
   const { data: isAdmin } = await userClient.rpc('is_admin');
@@ -121,7 +93,6 @@ Deno.serve(async (req) => {
     return json({ id: result.id });
   } catch (e) {
     if (e instanceof NotConnectedError) return json({ error: 'not_connected' }, 412);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return serverError(e);
   }
 });

@@ -70,8 +70,9 @@ class ConsultationSessionRepository {
 
   /// Creates the Google Calendar event (Meet link, participants invited by
   /// email) and the matching rows in one Edge Function call. [force] books
-  /// even if someone is busy ("Book anyway").
-  Future<void> scheduleSession({
+  /// even if someone is busy ("Book anyway"). Returns the saved session
+  /// (with its Meet link).
+  Future<ConsultationSession> scheduleSession({
     required String enterpriseId,
     required List<String> participantIds,
     required String title,
@@ -89,7 +90,7 @@ class ConsultationSessionRepository {
         'starts_at': startsAt.toUtc().toIso8601String(),
         'ends_at': endsAt.toUtc().toIso8601String(),
         'force': force,
-      });
+      }).then((row) => ConsultationSession.fromMap(Map<String, dynamic>.from(row as Map)));
 
   /// Deletes the Google event (attendees get a cancellation email) and
   /// marks the row Cancelled: kept, not deleted, for the session history.

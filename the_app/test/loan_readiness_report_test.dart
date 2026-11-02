@@ -44,16 +44,16 @@ void main() {
 
     expect(report.scores.first.score, LoanReadiness.businessHealthScore(d.inputs));
     expect(report.scores.last.score, LoanReadiness.creditReadinessScore(d.inputs));
-    expect(report.kcbRequirements, LoanReadiness.kcbRequirements(d.inputs));
+    expect(report.bankRequirements, LoanReadiness.bankRequirements(d.inputs));
     expect(report.redFlags, LoanReadiness.redFlags(d.inputs));
-    expect(report.kcbMetCount, LoanReadiness.kcbRequirementsMet(d.inputs).length);
+    expect(report.bankMetCount, LoanReadiness.bankRequirementsMet(d.inputs).length);
   });
 
   test('HTML report escapes user-entered text', () {
     final html = renderLoanReadinessReportHtml(buildLoanReadinessReport(data(completed: {})));
     expect(html, contains('Blue Farm &lt;Ltd&gt;'));
     expect(html, isNot(contains('<Ltd>')));
-    expect(html, contains('KCB MSME requirements'));
+    expect(html, contains('Bank lending requirements'));
   });
 
   test('PDF renders (with logo and non-Latin-1 text) to a valid PDF', () async {
@@ -70,8 +70,8 @@ void main() {
         goingConcern: 'Not Yet',
         businessHealth: 55,
         creditReadiness: 25,
-        kcbMet: 4,
-        kcbTotal: 10,
+        bankMet: 4,
+        bankTotal: 10,
         consultantsByDiscipline: const {'Legal': 'Milagros Nagoria'},
         openTasks: 3,
         completedTasks: 12,

@@ -16,7 +16,7 @@ class LoanReadinessReport {
     required this.exportedAt,
     required this.enterpriseFacts,
     required this.scores,
-    required this.kcbRequirements,
+    required this.bankRequirements,
     required this.redFlags,
     required this.drivers,
     required this.financialFacts,
@@ -31,14 +31,17 @@ class LoanReadinessReport {
   final List<ReportScore> scores;
 
   /// (met, requirement)
-  final List<(bool, String)> kcbRequirements;
+  final List<(bool, String)> bankRequirements;
   final List<String> redFlags;
   final List<ReportDriver> drivers;
 
   /// (label, value) rows: turnover, years in operation, loan purpose.
   final List<(String, String)> financialFacts;
 
-  int get kcbMetCount => kcbRequirements.where((r) => r.$1).length;
+  int get bankMetCount => bankRequirements.where((r) => r.$1).length;
+
+  /// Names the document in its footer and title.
+  static const documentType = 'Loan-Readiness Report';
 
   static const disclaimer = 'Scores are computed from completed ToR tasks and are not '
       'a prediction of loan approval.';

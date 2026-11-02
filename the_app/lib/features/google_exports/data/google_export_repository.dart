@@ -19,8 +19,9 @@ class GoogleExportRepository {
 
   final SupabaseClient _client;
 
-  Future<ExportedFile> exportDoc({required String title, required String html}) =>
-      _invoke({'kind': 'doc', 'title': title, 'html': html});
+  /// [footer] goes in the Doc's page footer (DocumentBrand.footerText).
+  Future<ExportedFile> exportDoc({required String title, required String html, String? footer}) =>
+      _invoke({'kind': 'doc', 'title': title, 'html': html, 'footer': ?footer});
 
   Future<ExportedFile> exportSheet({required String title, required List<SheetTab> tabs}) =>
       _invoke({'kind': 'sheet', 'title': title, 'tabs': [for (final t in tabs) t.toJson()]});

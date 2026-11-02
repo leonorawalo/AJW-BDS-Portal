@@ -1,0 +1,224 @@
+# AJW Africa BDS Platform — Feature Update Prompt
+
+You are working on the **AJW Africa Business Development Services (BDS) Platform**, a Flutter app (Android + Web targets) backed by Supabase (Postgres database, Authentication, Storage, Row Level Security (RLS), Realtime and Edge Functions). Google integrations (Google Meet, Google Calendar, Google Drive, Google Docs, Gmail) already exist in the app.
+
+User roles: **admin**, **owner** (the enterprise/business owner), and three **consultant** types: **accountant**, **marketing**, **legal**.
+
+## How to work
+
+1. **Read the codebase first.** Before changing anything, map the project structure, the Supabase schema (tables, RLS policies, storage buckets, Edge Functions), the existing Google integrations and how tasks, meetings, documents, reports and audit logs are currently implemented. Write a short summary of what you found and your implementation plan, then proceed.
+2. Keep existing behaviour working. Do not rename or delete tables or columns without a migration and a clear reason.
+3. All database changes go in **new Supabase migration files**, never manual edits.
+4. Never put secret keys (service role key, Google client secrets) in the Flutter app. They belong only in Edge Functions / environment secrets.
+5. Work in the order below. After each item, run the app (`flutter analyze` and a build), fix errors, and give a short report: what changed, files touched, anything I must do manually (keys, Google Cloud Console settings, assets).
+6. Wherever you are blocked by something only I can provide (logo file, brand colour codes, Google Workspace plan, etc.), use a clearly marked placeholder and list it in your report rather than stopping.
+7. **Wording rule for all user-facing text:** never use an acronym or abbreviation without spelling it out first; on first use, write the full term followed by the abbreviation in brackets.
+
+---
+
+## 1. Group tasks by consultant (admin and owner view)
+
+- The Tasks page for admin and owner currently has two sections: **"First 3 months — Going concern"** and **"First 6 months — Bankable"**. Inside each, tasks are mixed together.
+- Inside **both** sections, group tasks into three **expandable/collapsible tabs**: **Accountant**, **Marketing**, **Legal**.
+- Each tab header shows the consultant type, an icon, and progress (e.g. "Marketing · 4 of 7 done").
+- Consultant views are unchanged (they already see only their own tasks).
+
+## 2. Instant meeting option (Google Meet)
+
+- Meetings currently require a manually set time. Add a **"Start meeting now"** button alongside the existing "Schedule meeting" option.
+- It should create the Google Meet link immediately (via the Google Meet REST Application Programming Interface (API) `spaces.create`, or a Google Calendar event starting now with `conferenceData` — use whichever fits the existing integration), save the meeting record in Supabase as normal, notify invited participants, and open the meeting link.
+
+## 3. Meeting notes (Gemini "Take notes for me")
+
+- Google Meet's Gemini note taker saves notes as a Google Doc in the organizer's Google Drive. The Meet REST API exposes them via `conferenceRecords.smartNotes` (list/get, with `docsDestination` and `state` = `FILE_GENERATED` when ready). Transcripts are available via `conferenceRecords.transcripts`.
+- Implement: after a meeting ends, an Edge Function (scheduled or triggered) checks the conference record for smart notes and transcripts; when ready, it saves the Google Doc link to the meeting record and adds it to that enterprise's **Documents** tab (or the Google Files tab — whichever module already holds Google Docs), visible to the meeting's participants only.
+- If the Meet space configuration API supports automatic smart-notes generation for the account, enable it on created meetings; otherwise show a hint telling the host to click "Take notes with Gemini".
+- **Note:** this only works when the organizer's account is on a Google Workspace plan that includes Gemini. Make the feature fail gracefully (no crash, show "Meeting notes not available for this account") and tell me which Google scopes/APIs need enabling.
+
+## 4. More lively dashboards (consultants especially)
+
+- Current dashboards are plain grey/white/eggshell. Make them vibrant and welcoming while staying readable and accessible (good contrast, works on phone and web).
+- **Marketing dashboard:** may use any lively multi-colour palette (does not need AJW colours). Add colourful stat cards, gradients, and subtle looping animated decorative shapes in the corners/background (lightweight, non-distracting, respects reduced-motion settings).
+- **Legal and Accounting dashboards:** no multi-colour palette; use one accent colour each (suggested: deep teal for Legal, warm amber for Accounting) with gradient headers, icons, card shadows and subtle motion.
+- Admin and owner dashboards: lift them too, using AJW brand colours.
+- Put colours in a central theme file so they are easy to adjust.
+
+## 5. Branded template and footer for all generated documents/PDFs
+
+- All generated documents (Google Docs and Portable Document Format (PDF) files) must use one consistent template: AJW logo in the header, AJW brand colours for headings and accents. Use placeholders `assets/branding/ajw_logo.png` and named colour constants if I have not provided them yet.
+- **Mandatory footer on every page:** page number ("Page X of Y"), the document type and enterprise name (e.g. "Program Report – [Enterprise Name]"), and the generation date.
+- **Success Story section** (Program module report on the admin dashboard): replace the single free-text box with a guided structure — each field with helper/hint text:
+  1. **Before** — the business and the challenge it faced
+  2. **What we did** — the specific support given and when
+  3. **Results** — measurable change (revenue, jobs created, customers, compliance achieved, loan readiness)
+  4. **Human impact** — who benefited and how many people
+  5. **In their words** — a short quote from the business owner
+  6. **What's next** — the next milestone
+  The generated report should render these as a well-formatted story.
+
+## 6. Audit logs — check and back up
+
+- Find how audit logs are currently stored and tell me: is it an app table in the database (permanent unless deleted) or only Supabase's platform logs (short retention — 1 day on Free, 7 days on Pro)?
+- If there is no proper audit-log table, create one (`audit_logs`: actor, role, action, entity type, entity id, enterprise id, timestamp, metadata) written by database triggers or server-side code, readable only by admins, and append-only (no update/delete for app users).
+- Add a scheduled backup/export of audit logs (e.g. weekly Edge Function export to Supabase Storage or Google Drive).
+
+## 7. Replace "KCB" with "bank"
+
+- Replace every mention of KCB / Kenya Commercial Bank across the portal (User Interface (UI) text, documents, templates, seed data, enums) with generic "bank" wording.
+- Store the target bank's display name as a single configurable setting so a specific bank can be named later in one place.
+
+## 8. Project emails inside the app (Gmail inbox module)
+
+- Currently the app only sends emails and has a filter link that opens Gmail. Add an **in-app inbox module** showing emails related to an enterprise: messages to/from that enterprise's owner, admins and assigned consultants (build the Gmail search query automatically from those addresses — no manual filters).
+- Use the Gmail API (read-only scope) through an Edge Function. Show list + message view, link to open in Gmail, and allow reply using the existing send feature.
+- Flag in your report that the Gmail read scope is a restricted scope: it works for listed test users in development, but public launch needs Google's app verification.
+
+## 9. In-app chat
+
+- Build a chat module using **Supabase Realtime** (no new third-party service).
+- Conversations per enterprise (group chat for everyone on that enterprise) and direct messages between two users.
+- Only the people involved in a conversation can read or send messages — enforce this with RLS, not just in the UI.
+- Features: real-time delivery, timestamps, read/unread indicator, unread badge in navigation, file/image attachments stored in a private bucket.
+
+## 10. Data protection (Kenya Data Protection Act, 2019) and security hardening
+
+The app stores sensitive personal and business data (identity details, licences, certificates). Harden it in line with Kenya's Data Protection Act, 2019 (DPA):
+
+- **RLS audit:** review every table and storage bucket; every one must have RLS enabled with least-privilege policies. Report any table that was exposed.
+- **Private storage:** licences, certificates and other uploads in private buckets only; access via short-lived signed URLs (minutes), never public links.
+- **Authentication:** Multi-Factor Authentication (MFA) for admin and owner accounts, strong password rules, automatic logout after inactivity.
+- **Consent and privacy notice:** consent screen at sign-up explaining what data is collected and why, linking to a privacy notice page (placeholder text is fine).
+- **Data subject rights:** "Download my data" (export) and "Request deletion/correction" features, with requests tracked for admins against the 7-day (access) and 14-day (correction) response deadlines.
+- **Logging:** log every view, upload, download and deletion of sensitive documents to the audit log.
+- **Data minimisation and retention:** flag fields we collect but do not need; add configurable retention periods for old data.
+- **Secrets and input validation:** confirm no secrets in the Flutter code or repository; validate file types and sizes on upload.
+- Produce a short security report listing what you checked, what you fixed and anything remaining.
+
+## 11. Final check
+
+- Run `flutter analyze`, build for Android and Web, and test each role (admin, owner, accountant, marketing, legal) for: correct task grouping, instant meeting, chat isolation between enterprises, document access restrictions, and PDF footer/template.
+- Give me a final summary: what is done, what needs my input (assets, keys, Google Cloud Console steps, Workspace plan), and any risks.
+
+# AJW Africa BDS Platform — Legal, Privacy and Accessibility Compliance Prompt
+
+You are working on the **AJW Africa Business Development Services (BDS) Platform**, a Flutter app (Android + Web targets) backed by Supabase (Postgres database, Authentication, Storage, Row Level Security (RLS), Realtime and Edge Functions), with Google integrations (Meet, Calendar, Drive, Docs, Gmail).
+
+User roles: **admin**, **owner** (enterprise/business owner), and **consultants** (accountant, marketing, legal).
+
+The platform operates in Kenya, so the governing privacy law is **Kenya's Data Protection Act, 2019 (DPA)**, enforced by the **Office of the Data Protection Commissioner (ODPC)**. Use it as the baseline for every privacy item below.
+
+## How to work
+
+1. **Audit first, then build.** Before changing anything, review the codebase and produce a short compliance audit: for each item below, state what already exists, what is missing, and what you plan to do. Some items (privacy notice, data deletion, consent) may already be partly built from an earlier update — extend those rather than duplicating them.
+2. Database changes go in **new Supabase migration files** only.
+3. Never put secret keys in the Flutter app.
+4. Legal pages are **drafts for a lawyer to review**. Use clearly marked placeholders like `[AJW REGISTERED NAME]`, `[PHYSICAL ADDRESS]`, `[CONTACT EMAIL]`, `[DATA PROTECTION OFFICER CONTACT]`, `[EFFECTIVE DATE]` for anything you cannot know, and list every placeholder in your final report.
+5. Store legal page content in one editable place (e.g. a `legal/` folder of Markdown files or a Supabase table) so text can be updated without code changes, with a version number and "Last updated" date on each.
+6. After each group of items, run `flutter analyze` and a build, fix errors, and report what changed and which files were touched.
+7. **Wording rule for all user-facing text:** never use an acronym or abbreviation without spelling it out first; on first use, write the full term followed by the abbreviation in brackets.
+
+---
+
+## 0. Security documentation (do this first)
+
+Create five security reference documents in a `docs/security/` folder. They are the rules every future change to this app (by me or by an Artificial Intelligence (AI) coding assistant) must follow. **This step does not change how the app works.** Write each document from what the code actually does, then add the rules it should follow. The only code changes allowed in this step are fixes where the current app contradicts these documents (see "Fixing contradictions" below).
+
+1. **`SECURITY.md`** — the security rules for anyone (including AI assistants) writing code in this project:
+   - How to handle user input: validate and sanitise everything on the server side (Edge Functions, database constraints, RLS), never trust the client; parameterised queries only; file upload type and size limits.
+   - Secrets: passwords, Application Programming Interface (API) keys, the Supabase service role key and Google client secrets must never be in the Flutter code, the repository or logs. Where secrets live (environment variables / Supabase secrets), what is safe in the client (the Supabase anon key only, protected by RLS), and what to do if a secret leaks (rotate immediately).
+   - Rules for dependencies, error messages (no stack traces or internal details shown to users), logging (no passwords, tokens or document contents in logs) and code review.
+   - A short "Rules for AI assistants" section to follow on every task.
+
+2. **`AUTH.md`** — how authentication and authorisation work:
+   - How users sign up and log in (Supabase Authentication methods in use, Google sign-in if used), password rules, Multi-Factor Authentication (MFA) requirements per role.
+   - Session handling: how long users stay signed in, token refresh, inactivity timeout, logout behaviour, what happens on password change.
+   - Roles (admin, owner, accountant, marketing, legal) and a **permission matrix**: for every table, storage bucket, screen and Edge Function, what each role can view, create, edit and delete — and how each rule is enforced (RLS policy name, function check).
+   - How Google OAuth (Open Authorisation) tokens are stored and refreshed, and which scopes are requested and why.
+
+3. **`DATA_SECURITY.md`** — what sensitive data the app holds and how it is protected:
+   - A data inventory: every type of personal and sensitive data (identity details, contact details, licences, certificates, financial records, meeting notes, emails, chat messages), where it is stored (table / bucket / Google), who can access it, and its sensitivity level.
+   - Protection rules: encryption in transit and at rest, private buckets with short-lived signed links, access logging.
+   - Retention and deletion: how long each data type is kept, when and how it is deleted or anonymised, and how data deletion requests are carried out.
+   - Third parties that receive data (Supabase, Google, others found in the SDK audit), where their servers are, and the cross-border transfer basis under the Kenya Data Protection Act.
+   - Breach response: who does what, and the 72-hour notification to the ODPC.
+
+4. **`THREAT_MODEL.md`** — where the app could be attacked and what could go wrong:
+   - Assets worth protecting, entry points (login, sign-up, file uploads, Edge Functions, Google integrations, chat, email inbox, web build), and trust boundaries.
+   - Threats for each, using STRIDE (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege), for example: one enterprise seeing another's documents, a consultant accessing admin functions, stolen Google tokens, malicious file uploads, leaked keys, account takeover, cross-site scripting on the web build.
+   - For each threat: likelihood, impact, current protection, and any gap with a planned fix.
+
+5. **`SECURITY_CHECKLIST.md`** — a pre-launch checklist that turns the four documents above into checks that can be run and ticked off, e.g. "RLS enabled on every table", "no secrets found by a repository search", "consultant account cannot open another enterprise's document via its direct link", "signed links expire", "MFA enforced for admins", "session times out after inactivity", "deletion request removes data from all tables and buckets". Each check says how to verify it (a test, a query, a manual step) and where its result is recorded. Run it once now and record the results.
+
+**Make future work follow these documents:** create or update `CLAUDE.md` (and `AGENTS.md` if the project uses Codex) in the project root with a short section telling any AI assistant to read `docs/security/` before making changes and to update the relevant document whenever a change affects security, authentication or data handling.
+
+**Fixing contradictions:** while writing the documents, list every place where the current app breaks a rule in them (e.g. a table without RLS, a secret in the code, a public bucket, a missing permission check, sensitive data in logs). Fix each one without changing the app's features or user-facing behaviour. If a fix *would* change behaviour, do not apply it; list it in the report for my decision. Then continue with the sections below, which must also follow these documents.
+
+---
+
+## 0b. Security hardening and full audit
+
+After the documents in Section 0 exist, check and harden every item below. Same rule as Section 0: fix anything that is insecure without changing features; anything that would change behaviour goes in the report for my decision. For every item, record what you checked, what you found and what you fixed, and add a matching check to `SECURITY_CHECKLIST.md`.
+
+1. **API keys and environment variables** — search the code, config files, `pubspec.yaml`, web `index.html`, Android files and build scripts for keys and secrets. Only the Supabase URL and anon key may be in the client. Everything else (service role key, Google client secrets, email credentials) moves to Supabase secrets / Edge Function environment variables. Make sure `.env` files are in `.gitignore`, add a `.env.example` with placeholder values only, and confirm no secret is printed in logs.
+2. **Git history** — scan the full Git history for leaked secrets (e.g. with `gitleaks` or `trufflehog`). If any real secret was ever committed, **rotate it** (create a new key and revoke the old one) — deleting it from history alone is not enough. List every leak found and which keys I must rotate in the Supabase and Google dashboards.
+3. **Authentication** — confirm every screen except login, sign-up, password reset and the public legal pages requires a signed-in user. Use Supabase Authentication only; passwords are hashed by Supabase (bcrypt), so confirm the app never stores, logs or sends passwords anywhere itself.
+4. **Admin routes and access control** — protect admin and owner screens in the app's router, **and** enforce the same rules on the server side: RLS policies, Edge Function role checks and storage policies. Hiding a button is not protection. Test that each role cannot reach data or actions outside its permissions, including through direct links and direct API calls with that role's token.
+5. **Database** — RLS enabled on every table with least-privilege policies; no table or view readable by anonymous users unless intended; review database functions marked `SECURITY DEFINER`; storage buckets private; run the Supabase security advisor (database linter) and fix its warnings.
+6. **Forms and Cross-Site Scripting (XSS)** — validate every form on the client for usability and on the server (database constraints, Edge Function checks) for security. Never render user-supplied content as raw HyperText Markup Language (HTML) on the web build; escape chat messages, success stories, document names and email content shown in the app; validate uploaded file types by content, not just extension.
+7. **API endpoints (Edge Functions)** — every function verifies the caller's token and role before doing anything, validates its input, returns generic error messages, and never exposes the service role key in a response.
+8. **Rate limiting** — check Supabase Authentication rate limits (login, sign-up, password reset, one-time codes) are set sensibly; add rate limiting to Edge Functions that send emails, create meetings or call Google, so they cannot be spammed.
+9. **Cross-Origin Resource Sharing (CORS)** — Edge Functions must allow only the app's real web domain(s) (and localhost in development), not `*`. Check the allowed redirect URLs in Supabase Authentication and the Google Cloud Console are limited to our domains.
+10. **Security headers (Web build)** — configure on the web host: Content-Security-Policy, Strict-Transport-Security, X-Content-Type-Options, X-Frame-Options (or frame-ancestors), Referrer-Policy and Permissions-Policy. Test that the app still works with them on.
+11. **Debug mode** — production builds must be release builds (`flutter build --release`), with no debug banners, debug logging, test accounts, sample data or development endpoints. Android release builds should have `debuggable` off and use code shrinking/obfuscation.
+12. **Dependencies** — run `flutter pub outdated`, update packages to current stable versions where safe (check for breaking changes and test after), and remove unused packages, files, assets and dead code.
+13. **Exposed files** — check the deployed web build does not serve `.env` files, source maps, `.git` folders, backups, or test/config files; check nothing sensitive is in public storage buckets.
+14. **Full audit report** — finish with a security audit report in `docs/security/AUDIT_REPORT.md`: every issue found, severity (critical / high / medium / low), whether it is fixed, how the fix was verified, and anything left for me to do manually (rotating keys, dashboard settings, hosting headers). Be explicit about anything you could not verify rather than assuming it is safe.
+
+---
+
+## A. Legal pages
+
+1. **Privacy Policy** — what personal data is collected (account details, enterprise details, uploaded licences/certificates, meeting notes, emails, chat messages), why, the lawful basis, who it is shared with (Supabase, Google and any other processor you find), where it is stored (note that servers may be outside Kenya and that transfers rely on appropriate safeguards), how long it is kept, how it is protected, users' rights under the DPA (to be informed, access, correction, deletion, objection, data portability), how to exercise them, response timelines, how to complain to the ODPC, and contact details.
+2. **Terms of Service** — who may use the platform, account responsibilities, acceptable use, intellectual property, uploaded content ownership, confidentiality between enterprises, limitation of liability, suspension/termination, governing law (Kenya), and how changes are communicated.
+3. **Refund Policy** — first check whether the app takes any payments or fees. If it does, write a clear refund policy. If it does not, create a short page stating the program services are not charged through the platform (placeholder wording for AJW to confirm), and flag this in your report.
+4. **Cookie Policy** — for the **Web build**: list every cookie and browser-storage item (localStorage, sessionStorage, IndexedDB) the app and its libraries actually set, grouped as strictly necessary / functional / analytics, with purpose and duration. Base the list on what the code really does, not guesses.
+
+Make all four pages reachable without logging in (footer of the login/landing screen and web footer) and from a **Settings → Legal** section inside the app.
+
+## B. Consent
+
+5. **Cookie consent banner (Web only)** — shown on first visit, with equally prominent **"Accept all"**, **"Reject non-essential"** and **"Customise"** buttons. Non-essential cookies/analytics must not load until the user accepts. Store the choice, allow changing it later from the footer, and re-ask when the cookie policy version changes.
+6. **Form consents** — review every form. At sign-up, require an **unticked** checkbox agreeing to the Terms of Service and Privacy Policy (with links). Any optional use (e.g. marketing emails) gets its own separate, unticked, optional checkbox. Record consent in the database: user, what was consented to, policy version, timestamp. No pre-ticked boxes anywhere.
+7. **Age consent** — the platform serves businesses, so require users to confirm they are **18 or older** at sign-up. Under the DPA, processing a child's data needs parent/guardian consent; if anywhere in the app collects data about people under 18 (e.g. beneficiaries in success stories), add a guardian-consent confirmation field for that data and flag it in your report.
+
+## C. Data handling
+
+8. **Collect only necessary data** — list every field collected in every form and table. For each, state whether the program needs it. Remove or make optional anything unnecessary, and report what you changed.
+9. **Audit third-party Software Development Kits (SDKs)** — list every package in `pubspec.yaml` and every external service/script the app calls. For each: what it does, what data it receives, whether it tracks users, and whether it is still needed. Remove unused packages and anything that tracks users without consent. Make sure every remaining processor is named in the Privacy Policy.
+10. **Data deletion request option** — in Settings, add **"Request deletion of my data"** (and "Download my data" if not already built). Requests go to an admin queue with status (received, in progress, completed, refused with reason) and a due-date indicator. On approval, delete or anonymise the user's personal data across tables and storage buckets, keeping only what must legally be retained (e.g. audit logs, with personal details anonymised), and email the user a confirmation.
+
+## D. Honesty and fair design
+
+11. **Remove dark patterns** — find and fix: pre-ticked boxes, confusing double negatives, hidden or tiny "decline"/"cancel" options, forced sign-ups to view basic information, hard-to-find account deletion, nagging repeated prompts, and misleading button wording. Declining should be as easy as accepting.
+12. **Remove hidden fees** — check for any costs, charges or paid features not clearly disclosed before the user commits. All costs (if any) must be shown upfront.
+13. **Remove fake reviews and testimonials** — find any placeholder, sample or invented testimonials, reviews, ratings, client logos or success stories in the UI or seed data. Remove them or clearly label them as sample data that never shows in production.
+14. **Remove unsupported claims** — find marketing or UI text making claims we cannot prove (e.g. "guaranteed loan approval", "100% secure", "trusted by thousands", specific statistics with no source). Rewrite them into accurate wording and list each change.
+
+## E. Accessibility (aim for Web Content Accessibility Guidelines (WCAG) 2.1 level AA)
+
+15. **Alternative (alt) text** — every meaningful image, icon button and logo gets a descriptive label (Flutter `Semantics` labels / `semanticLabel`); decorative images and animated corner shapes are excluded from screen readers.
+16. **Colour contrast** — check all text and icon colours against their backgrounds, including the new colourful dashboards: at least **4.5:1** for normal text and **3:1** for large text and important UI elements. Adjust theme colours that fail and report before/after values.
+17. **Keyboard navigation (Web)** — every action works with keyboard only: logical Tab order, visible focus indicator, Enter/Space activate buttons, Escape closes dialogs, no keyboard traps, and a "skip to main content" option on web.
+18. Also respect the system "reduce motion" setting for animations and make sure text scales correctly with the device font size.
+
+## F. Business details, emails and licensing
+
+19. **Business details** — add an "About / Contact" section showing AJW Africa's registered name, registration number, physical address, email, phone and data protection contact (placeholders until confirmed). Show them in the web footer, legal pages and email footers.
+20. **Unsubscribe link in emails** — every non-essential email (newsletters, updates, reminders) gets a working one-click unsubscribe link and a preference setting in the app. Store the preference and check it before sending. Essential account/security emails may still be sent but must include business details.
+21. **License fonts and images** — list every font, image, icon set, illustration and animation asset in the project with its source and licence. Replace anything without a clear licence that allows commercial use with a properly licensed alternative (e.g. Google Fonts, open-licence icon sets). Add a `LICENSES_AND_CREDITS.md` file and an in-app "Credits" entry under Settings → Legal if any licence requires attribution.
+
+## G. Final report
+
+- Run `flutter analyze`, build for Android and Web, and test sign-up consent, the cookie banner, deletion requests, unsubscribe and keyboard navigation.
+- Re-run `docs/security/SECURITY_CHECKLIST.md` after all sections are done, update the documents to reflect the new features (consents, deletion requests, unsubscribe preferences), and include the checklist results.
+- Deliver a final compliance report: the list of contradictions found and fixed (and any left for my decision), then each item with status (done / partly done / needs AJW input), every placeholder that needs real information, every legal page that needs a lawyer's review, and any remaining risks.

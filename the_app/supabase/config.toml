@@ -441,3 +441,14 @@ verify_jwt = true
 
 [functions.drive-files]
 verify_jwt = true
+
+[functions.meeting-notes]
+verify_jwt = true
+
+[functions.gmail-inbox]
+verify_jwt = true
+
+# One-click unsubscribe from optional emails: the person clicking the
+# link is usually not signed in. Only accepts a random per-person token.
+[functions.email-unsubscribe]
+verify_jwt = false

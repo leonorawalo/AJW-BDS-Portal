@@ -64,7 +64,7 @@ class PortfolioRepository {
             enterprise: e,
             completedTaskTitles: {for (final t in completed) t['title'] as String},
           );
-          final kcb = LoanReadiness.kcbRequirements(inputs);
+          final bank = LoanReadiness.bankRequirements(inputs);
           final eSessions = sessionsBy[e.id] ?? const [];
           final upcoming = eSessions
               .where((s) => s['status'] == 'Scheduled')
@@ -79,8 +79,8 @@ class PortfolioRepository {
             goingConcern: e.goingConcernStatus.dbValue,
             businessHealth: LoanReadiness.businessHealthScore(inputs),
             creditReadiness: LoanReadiness.creditReadinessScore(inputs),
-            kcbMet: kcb.where((r) => r.$1).length,
-            kcbTotal: kcb.length,
+            bankMet: bank.where((r) => r.$1).length,
+            bankTotal: bank.length,
             consultantsByDiscipline: {
               for (final a in assignmentsBy[e.id] ?? const <Map<String, dynamic>>[])
                 if (a['specialization'] != null && a['consultant'] != null)

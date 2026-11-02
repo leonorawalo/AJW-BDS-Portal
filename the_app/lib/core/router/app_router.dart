@@ -22,6 +22,8 @@ import '../../features/legal_workstream/presentation/programme_documents_screen.
 import '../../features/user_management/presentation/users_screen.dart';
 import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../shared/models/user_profile.dart';
+import '../../features/chat/presentation/messages_screen.dart';
+import '../../features/privacy/presentation/my_data_screen.dart';
 
 /// go_router's `redirect` is synchronous, but Supabase auth events arrive
 /// as a stream. This bridges the two: every auth event calls
@@ -191,6 +193,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AssignConsultantScreen(),
           ),
           GoRoute(path: 'users', builder: (context, state) => const UsersScreen()),
+          GoRoute(
+            path: 'messages',
+            builder: (context, state) =>
+                MessagesScreen(basePath: '/admin/messages', conversationId: state.uri.queryParameters['c']),
+          ),
+          GoRoute(path: 'my-data', builder: (context, state) => const MyDataScreen()),
+          GoRoute(path: 'data-requests', builder: (context, state) => const DataRequestsAdminScreen()),
           GoRoute(path: 'programme', builder: (context, state) => const ProgrammeScreen()),
           GoRoute(path: 'documents', builder: (context, state) => const ProgrammeDocumentsScreen()),
           GoRoute(
@@ -215,6 +224,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/consultant',
         builder: (context, state) => const ConsultantPortfolioScreen(),
         routes: [
+          GoRoute(
+            path: 'messages',
+            builder: (context, state) =>
+                MessagesScreen(basePath: '/consultant/messages', conversationId: state.uri.queryParameters['c']),
+          ),
+          GoRoute(path: 'my-data', builder: (context, state) => const MyDataScreen()),
           GoRoute(
             path: 'workshops',
             builder: (context, state) => const WorkshopsScreen(),
@@ -241,6 +256,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           section: state.uri.queryParameters['section'],
           enterpriseId: state.uri.queryParameters['enterprise'],
         ),
+        routes: [
+          GoRoute(
+            path: 'messages',
+            builder: (context, state) =>
+                MessagesScreen(basePath: '/owner/messages', conversationId: state.uri.queryParameters['c']),
+          ),
+          GoRoute(path: 'my-data', builder: (context, state) => const MyDataScreen()),
+        ],
       ),
       GoRoute(
         path: '/workstream/enterprises/:enterpriseId/tasks/:taskId',

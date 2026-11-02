@@ -7,6 +7,7 @@ import '../../calendar/data/consultation_session_repository.dart' show GoogleNot
 import '../../calendar/providers/calendar_providers.dart';
 import '../data/google_export_repository.dart';
 import '../models/exported_file.dart';
+import '../../../core/user_message.dart';
 
 /// The shared flow behind every Google export button: make sure the user
 /// has a Google connection with drive.file (offer Connect/Reconnect if
@@ -38,7 +39,7 @@ Future<void> runGoogleExport(
     if (context.mounted) await offerGoogleConnect(context, ref, reconnect: true);
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: ${userMessage(e)}')));
     }
   }
 }
@@ -90,7 +91,7 @@ Future<void> offerGoogleConnect(BuildContext context, WidgetRef ref, {required b
             } catch (e) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Could not start Google sign-in: $e')),
+                  SnackBar(content: Text('Could not start Google sign-in: ${userMessage(e)}')),
                 );
               }
             }

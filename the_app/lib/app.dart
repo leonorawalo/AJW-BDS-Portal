@@ -5,6 +5,7 @@ import 'core/router/app_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/notifications/providers/notification_providers.dart';
+import 'core/widgets/security_gates.dart';
 
 final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -44,6 +45,7 @@ class AjwBagsApp extends ConsumerWidget {
       // so Module 1 isn't blocked on the theme system.
       theme: ajwLightTheme,
       routerConfig: router,
+      builder: (context, child) => SecurityGates(child: child ?? const SizedBox.shrink()),
     );
   }
 }

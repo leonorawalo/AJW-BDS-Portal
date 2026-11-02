@@ -51,6 +51,13 @@ p, li { font-size: 15px; }
 .muted { color: var(--muted); font-size: 14px; }
 a { color: var(--brand); }
 table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 14px; }
+/* Phones: long words and wide tables scroll inside the card, never the page. */
+.card { overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 640px) {
+  table { display: block; overflow-x: auto; }
+  .card { padding: 16px; }
+}
+code { overflow-wrap: anywhere; }
 th, td { text-align: left; vertical-align: top; border: 1px solid var(--line); padding: 8px; }
 th { background: var(--surface); }
 .button {
@@ -76,3 +83,14 @@ footer {
   font-size: 13px;
 }
 footer a { color: var(--muted); }
+footer p { margin: 0 0 8px; }
+/* Keyboard users: a visible focus ring everywhere, and a link that
+   jumps past the header (WCAG 2.1 AA: 2.4.1, 2.4.7). */
+a:focus-visible, button:focus-visible { outline: 3px solid #1a5fb4; outline-offset: 2px; }
+.skip-link {
+  position: absolute; left: 16px; top: -48px; z-index: 10001;
+  background: #fff; color: var(--text); padding: 8px 14px; border-radius: 8px;
+  border: 2px solid var(--text);
+}
+.skip-link:focus { top: 12px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }

@@ -231,7 +231,9 @@ final ThemeData ajwLightTheme = ThemeData(
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: AppColors.brandRed,
+      // The deeper red: AJW red text is only 4.4:1 on the canvas page
+      // background (WCAG 2.1 AA needs 4.5:1); this is 6.6:1.
+      foregroundColor: AppColors.brandRedDeep,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm)),
       textStyle: _t(AppFonts.body, 14, AppFonts.bodyStrong),
     ),

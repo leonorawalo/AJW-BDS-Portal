@@ -36,7 +36,12 @@ class AppColors {
   // --- Semantic ---
   static const errorRed = Color(0xFFB42318);
   static const successGreen = Color(0xFF2E7D32);
-  static const pendingAmber = Color(0xFFF9A825);
+  // Was #F9A825 (1.97:1 on white): too pale for the score ring and icons.
+  static const pendingAmber = Color(0xFF9A5B00); // 5.4:1 on white
+
+  /// "Not done yet" ticks and dots. Light grey (2.1:1) was too faint for
+  /// a mark that carries meaning; this is >= 3:1 on white and canvas.
+  static const notDoneMark = Color(0xFF8C8782);
 
   // Kept for existing call sites.
   static const surfaceLight = canvas;
@@ -64,6 +69,29 @@ class AppColors {
     }
     return personalPalette[hash % personalPalette.length];
   }
+
+  // --- Consultant disciplines (task groups and consultant dashboards) ---
+  // One accent each for Legal and Accounting (no multi-colour palettes
+  // there); Marketing gets the lively palette below. Text in these
+  // colours is >= 4.5:1 on white and on its own tint.
+  static const legalTeal = Color(0xFF0F6E6A);
+  static const legalTealDeep = Color(0xFF094B48);
+  static const legalTealTint = Color(0xFFE3F2F0);
+  static const accountingAmber = Color(0xFF9A5B00);
+  static const accountingAmberBright = Color(0xFFE59A1C);
+  static const accountingAmberTint = Color(0xFFFFF3DD);
+  static const marketingViolet = Color(0xFF6A3FC1);
+  static const marketingVioletTint = Color(0xFFF0EAFB);
+
+  /// Marketing dashboard: a deliberately lively palette (it doesn't have
+  /// to follow AJW colours). White text on each is >= 4.5:1.
+  static const marketingPalette = <Color>[
+    Color(0xFF6A3FC1), // violet
+    Color(0xFFC2185B), // magenta
+    Color(0xFF00796B), // teal
+    Color(0xFFBF360C), // tangerine
+    Color(0xFF1565C0), // blue
+  ];
 
   // --- Chart series (multi-line/bar data only: not brand/status colors) ---
   // AJW's brand palette only has one identity hue (brandRed) plus the

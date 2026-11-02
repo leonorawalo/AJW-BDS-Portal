@@ -16,13 +16,15 @@ import '../../../core/widgets/status_chip.dart';
 import '../../portfolio/presentation/programme_clock_card.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/lender.dart';
+import '../../../core/user_message.dart';
 
 /// Loan-readiness dashboard: computed live from ToR task completion
 /// (standardLegalChecklist / standardAccountingChecklist) plus the
 /// handful of enterprise facts nothing else in the app captures
 /// (annual turnover, when the business started, loan purpose). Nobody
 /// fills in a separate assessment form: Business Health, Credit
-/// Readiness, the KCB checklist, and red flags all update automatically
+/// Readiness, the bank lending checklist, and red flags all update automatically
 /// as the consultant completes real ToR tasks.
 class AssessmentDashboardTab extends ConsumerWidget {
   const AssessmentDashboardTab({
@@ -64,10 +66,10 @@ class AssessmentDashboardTab extends ConsumerWidget {
     final inputs = LoanReadinessInputs.from(enterprise: enterprise, completedTaskTitles: completedTaskTitles);
     final businessHealth = LoanReadiness.businessHealthScore(inputs);
     final creditReadiness = LoanReadiness.creditReadinessScore(inputs);
-    final kcbMet = LoanReadiness.kcbRequirementsMet(inputs);
+    final bankMet = LoanReadiness.bankRequirementsMet(inputs);
     final flags = LoanReadiness.redFlags(inputs);
 
-    final kcbTotal = LoanReadiness.kcbRequirements(inputs).length;
+    final bankTotal = LoanReadiness.bankRequirements(inputs).length;
     final text = Theme.of(context).textTheme;
 
     return LayoutBuilder(
@@ -76,7 +78,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
         final scores = [
           _ScoreCard(label: 'Business health', score: businessHealth, compact: !wide),
           _ScoreCard(label: 'Credit readiness', score: creditReadiness, compact: !wide),
-          _KcbCard(met: kcbMet.length, total: kcbTotal),
+          _BankChecklistCard(met: bankMet.length, total: bankTotal),
         ];
         final facts = TourAnchor(id: TourAnchors.facts, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -285,8 +287,8 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) => old.value != value || old.color != color;
 }
 
-class _KcbCard extends StatelessWidget {
-  const _KcbCard({required this.met, required this.total});
+class _BankChecklistCard extends StatelessWidget {
+  const _BankChecklistCard({required this.met, required this.total});
 
   final int met;
   final int total;
@@ -302,7 +304,7 @@ class _KcbCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('KCB MSME checklist', style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
+            Text(Lender.checklist, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
             const SizedBox(height: Space.md),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -563,7 +565,7 @@ class _EditableFactsState extends ConsumerState<_EditableFacts> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save financial facts: $e')),
+          SnackBar(content: Text('Could not save financial facts: ${userMessage(e)}')),
         );
       }
     } finally {

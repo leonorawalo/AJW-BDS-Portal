@@ -9,6 +9,7 @@ import '../models/email_contact.dart';
 import '../providers/email_providers.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/user_message.dart';
 
 /// "Write email", sent from the user's own Gmail. Either about an
 /// enterprise ([enterpriseId]: recipients picked from its contacts,
@@ -109,7 +110,7 @@ class _ComposeEmailDialogState extends ConsumerState<_ComposeEmailDialog> {
     } on GoogleReconnectNeededException {
       setState(() => _error = 'Reconnect Google once (Sessions tab) to allow sending email, then try again.');
     } catch (e) {
-      setState(() => _error = '$e'.replaceFirst('Exception: ', ''));
+      setState(() => _error = userMessage(e));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

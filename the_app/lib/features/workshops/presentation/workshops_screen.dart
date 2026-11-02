@@ -18,6 +18,7 @@ import '../models/workshop.dart';
 import '../providers/workshop_providers.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 String _day(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
@@ -184,7 +185,7 @@ class _NewWorkshopDialogState extends ConsumerState<_NewWorkshopDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: ${userMessage(e)}')));
       }
     }
   }

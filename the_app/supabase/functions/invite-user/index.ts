@@ -35,22 +35,17 @@
 // are provided automatically.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const admin = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const ROLES = ['Enterprise Owner', 'Consultant', 'Administrator'];
 const SPECIALIZATIONS = ['Legal', 'Accounting', 'Marketing'];
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -101,8 +96,7 @@ function validate(input: Input): string | null {
   return null;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const authHeader = req.headers.get('Authorization');
@@ -114,6 +108,8 @@ Deno.serve(async (req) => {
   if (callerError || !caller.user) return json({ error: 'Not signed in' }, 401);
   const { data: isAdmin } = await userClient.rpc('is_admin');
   if (!isAdmin) return json({ error: 'Only an Administrator can invite users' }, 403);
+  const limited = await rateLimited(`invite-user:${caller.user.id}`, 50, 3600);
+  if (limited) return limited;
   if (!appUrl()) return json({ error: 'APP_URL secret is not set' }, 500);
 
   let input: Input;
@@ -199,7 +195,7 @@ Deno.serve(async (req) => {
         return json({ status: 'sent', user_id: existing.id });
       }
       const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email: input.email });
-      if (error) return json({ error: error.message }, 500);
+      if (error) return serverError(error);
       return json({
         status: 'link',
         user_id: existing.id,
@@ -235,7 +231,6 @@ Deno.serve(async (req) => {
       link: setPasswordLink(data.properties.hashed_token, 'invite'),
     });
   } catch (e) {
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return serverError(e);
   }
 });

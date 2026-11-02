@@ -17,6 +17,8 @@ import '../../../core/widgets/ajw_loader.dart';
 import '../../visits/presentation/visits_tab.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../email/presentation/inbox_tab.dart';
+import '../../chat/presentation/enterprise_chat_tab.dart';
 
 /// The Admin's home for a single enterprise. The loan-readiness Dashboard
 /// leads (the programme's purpose), then Tasks, Recommendations,
@@ -37,6 +39,8 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
     ShellSection('documents', 'Documents', Icons.folder_outlined),
     ShellSection('files', 'Google files', Icons.drive_file_move_outline),
     ShellSection('sessions', 'Sessions', Icons.event_outlined),
+    ShellSection('emails', 'Emails', Icons.mail_outline),
+    ShellSection('chat', 'Chat', Icons.forum_outlined),
     ShellSection('details', 'Details', Icons.info_outline),
   ];
 
@@ -89,6 +93,8 @@ class EnterpriseWorkspaceScreen extends ConsumerWidget {
             'files' => FilesTab(enterpriseId: enterpriseId),
             'visits' => VisitsTab(enterpriseId: enterpriseId),
             'sessions' => SessionsTab(enterpriseId: enterpriseId),
+            'emails' => InboxTab(enterpriseId: enterpriseId),
+            'chat' => EnterpriseChatTab(enterpriseId: enterpriseId),
             'details' => EnterpriseDetailsTab(enterprise: enterprise),
             _ => AssessmentDashboardTab(enterpriseId: enterpriseId, readOnly: false),
           };

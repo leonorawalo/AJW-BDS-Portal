@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/google_connection.dart';
 import '../providers/calendar_providers.dart';
+import '../../../core/user_message.dart';
 
 /// Connect / disconnect the signed-in user's own Google account: used for
 /// meetings (Calendar + Meet, free/busy) and exports (Docs/Sheets/Slides).
@@ -46,7 +47,7 @@ class _GoogleCalendarConnectionCardState extends ConsumerState<GoogleCalendarCon
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$failureMessage: $e')),
+          SnackBar(content: Text('$failureMessage: ${userMessage(e)}')),
         );
       }
     } finally {

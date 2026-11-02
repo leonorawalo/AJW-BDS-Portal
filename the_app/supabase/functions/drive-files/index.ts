@@ -20,6 +20,7 @@
 // returned in not_shared rather than failing the whole request.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { rateLimited, serve, serverError } from '../_shared/http.ts';
 import {
   accessTokenFor,
   ensureEnterpriseFolder,
@@ -35,16 +36,10 @@ const MIME: Record<string, string> = {
   slides: 'application/vnd.google-apps.presentation',
 };
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -111,8 +106,7 @@ async function shareWith(token: string, fileId: string, emails: string[]) {
   return { shared, notShared };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const authHeader = req.headers.get('Authorization');
@@ -123,6 +117,8 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
   if (userError || !userData.user) return json({ error: 'Not signed in' }, 401);
   const userId = userData.user.id;
+  const limited = await rateLimited(`drive-files:${userId}`, 60, 3600);
+  if (limited) return limited;
 
   let input: { action?: string; enterprise_id?: string; kind?: string; title?: string; file_id?: string };
   try {
@@ -196,7 +192,6 @@ Deno.serve(async (req) => {
   } catch (e) {
     if (e instanceof NotConnectedError) return json({ error: 'not_connected' }, 412);
     if (e instanceof ReconnectNeededError) return json({ error: 'reconnect_needed' }, 412);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return serverError(e);
   }
 });

@@ -34,8 +34,8 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # Not used by the app's own code, but a dependency draws Cupertino
+  # icons; without it the web build warns that their font is missing.
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.2
   go_router: ^14.2.0
@@ -46,10 +46,12 @@ dependencies:
   pdfx: ^2.6.0
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.4
-  fl_chart: ^1.1.1
   pdf: ^3.13.1
   printing: ^5.15.1
   http: ^1.6.0
+  # Draws the QR code for setting up two-step verification (already used
+  # by the pdf package, so nothing new is downloaded).
+  barcode: ^2.2.9
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +76,11 @@ flutter:
     # Supabase URL + anon key, read by main() via flutter_dotenv. Removing
     # this line makes web/Android boot fail (see ConfigErrorApp).
     - .env
+    # Font licences (SIL OFL requires them to travel with the fonts): shown
+    # under Settings and privacy -> Credits and licences.
+    - assets/fonts/OFL-Poppins.txt
+    - assets/fonts/OFL-Livvic.txt
+    - assets/fonts/OFL-WorkSans.txt
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

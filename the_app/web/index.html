@@ -1,19 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script>
-    // Old-style links (/#/set-password?..., /#/admin/users) become clean
-    // addresses (/set-password?..., /admin/users) before the app starts,
-    // so invite and reset emails keep working. The emails keep the #/ form
-    // on purpose: what follows # is never sent to any server, which is the
-    // safe place for a one-time token. See DO_NOT_BREAK.md section 3.
-    (function () {
-      var h = window.location.hash;
-      if (h.indexOf('#/') === 0) {
-        window.history.replaceState(null, '', h.slice(1));
-      }
-    })();
-  </script>
+  <!-- Turns old /#/... links into clean addresses and removes the old
+       service worker, before anything else loads (web/boot.js). -->
+  <script src="boot.js"></script>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
@@ -82,19 +72,7 @@
     <div class="ajw-dots" aria-hidden="true"><span></span><span></span><span></span></div>
     <div id="ajw-splash-slow">This is taking a while on this connection. Please keep the page open.</div>
   </div>
-  <script>
-    (function () {
-      var splash = document.getElementById('ajw-splash');
-      var slow = setTimeout(function () {
-        document.getElementById('ajw-splash-slow').style.visibility = 'visible';
-      }, 15000);
-      window.addEventListener('flutter-first-frame', function () {
-        clearTimeout(slow);
-        splash.classList.add('hide');
-        setTimeout(function () { splash.remove(); }, 400);
-      }, { once: true });
-    })();
-  </script>
+  <script src="splash.js"></script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -103,27 +81,7 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script>
-    // Remove the old Flutter service worker that kept a stale copy of the
-    // app in the browser. If this page was served by it, reload once so
-    // the current version loads (no loop: after unregistering there is no
-    // controller any more). See DO_NOT_BREAK.md section 5.
-    (function () {
-      if (!('serviceWorker' in navigator)) return;
-      var servedByWorker = !!navigator.serviceWorker.controller;
-      navigator.serviceWorker.getRegistrations().then(function (regs) {
-        return Promise.all(regs.map(function (r) { return r.unregister(); }));
-      }).then(function () {
-        if (!window.caches) return;
-        return caches.keys().then(function (keys) {
-          return Promise.all(keys.filter(function (k) { return k.indexOf('flutter') === 0; })
-            .map(function (k) { return caches.delete(k); }));
-        });
-      }).then(function () {
-        if (servedByWorker) window.location.reload();
-      });
-    })();
-  </script>
+  <script src="cookie-consent.js" defer></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

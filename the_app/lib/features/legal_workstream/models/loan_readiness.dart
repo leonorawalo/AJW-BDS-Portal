@@ -1,4 +1,5 @@
 import '../../enterprises/models/enterprise.dart';
+import '../../../core/lender.dart';
 
 /// Every ToR task title the scores below depend on. The dashboard asks the
 /// server which of these are completed (completed_loan_readiness_tasks),
@@ -150,10 +151,11 @@ class LoanReadiness {
     return score;
   }
 
-  /// The published KCB MSME loan criteria this app can check. States how
-  /// many are met today; never a prediction of approval (KCB decides with
-  /// its own internal model).
-  static List<(bool, String)> kcbRequirements(LoanReadinessInputs i) {
+  /// Published bank criteria for micro, small and medium enterprise (MSME)
+  /// loans that this app can check. States how many are met today; never
+  /// a prediction of approval (the bank decides with its own internal
+  /// model). The bank's name, if any, lives in Lender (lib/core/lender.dart).
+  static List<(bool, String)> bankRequirements(LoanReadinessInputs i) {
     return [
       (i.isRegistered, 'Registered business'),
       (i.yearsInOperation != null && i.yearsInOperation! >= 2, '2+ years operating'),
@@ -167,8 +169,8 @@ class LoanReadiness {
     ];
   }
 
-  static List<String> kcbRequirementsMet(LoanReadinessInputs i) =>
-      [for (final (met, label) in kcbRequirements(i)) if (met) label];
+  static List<String> bankRequirementsMet(LoanReadinessInputs i) =>
+      [for (final (met, label) in bankRequirements(i)) if (met) label];
 
   /// Each task-based factor: (done, label, which ToR task does it), in
   /// score order, Business Health first. "Why is my score X", for the
@@ -206,7 +208,7 @@ class LoanReadiness {
       if (!i.hasSixMonthsBankStatements) 'Less than 6 months of consistent bank statements',
       if (!i.hasCollateral) 'No collateral currently documented',
       if (i.annualTurnover != null && i.annualTurnover! > 5000000 && !i.hasAuditedAccounts)
-        "Turnover exceeds KSh 5M but no audited accounts (KCB asks for 3 years' books above this level)",
+        "Turnover exceeds KSh 5M but no audited accounts (${Lender.inSentence} asks for 3 years' books above this level)",
       if (i.yearsInOperation != null && i.yearsInOperation! < 2) 'Less than 2 years of operating history',
     ];
   }

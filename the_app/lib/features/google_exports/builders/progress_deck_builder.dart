@@ -5,12 +5,13 @@ import '../../legal_workstream/models/task.dart';
 import '../models/deck_slide.dart';
 import '../models/enterprise_export_data.dart';
 import 'export_formatting.dart';
+import '../../../core/lender.dart';
 
 /// The progress summary deck (google-export adds the title slide first).
 /// Task progress covers only the disciplines the exporting user can see.
 List<DeckSlide> buildProgressDeck(EnterpriseExportData d) {
   final i = d.inputs;
-  final kcb = LoanReadiness.kcbRequirements(i);
+  final bank = LoanReadiness.bankRequirements(i);
   final flags = LoanReadiness.redFlags(i);
 
   final byDiscipline = <String, List<WorkstreamTask>>{};
@@ -30,8 +31,8 @@ List<DeckSlide> buildProgressDeck(EnterpriseExportData d) {
       flags.isEmpty ? 'No red flags' : 'Red flags: ${flags.join('; ')}',
     ]),
     DeckSlide(
-      title: 'KCB requirements: ${kcb.where((r) => r.$1).length} of ${kcb.length} met',
-      bullets: [for (final (met, label) in kcb) '${met ? '✓' : '✗'} $label'],
+      title: '${Lender.requirements}: ${bank.where((r) => r.$1).length} of ${bank.length} met',
+      bullets: [for (final (met, label) in bank) '${met ? '✓' : '✗'} $label'],
     ),
     DeckSlide(title: 'Task progress', bullets: [
       if (byDiscipline.isEmpty) 'No tasks yet.',

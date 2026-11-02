@@ -2,7 +2,8 @@
 //
 // Triggered by a Database Webhook (configured in the Supabase dashboard,
 // NOT in a committed migration: see setup notes handed to the developer
-// separately) on INSERT to `consultant_assignments` and `tasks`. Resolves
+// separately) on INSERT to `consultant_assignments` and `tasks`, and by
+// calendar-sessions (same secret header) when a meeting is booked. Resolves
 // who should be notified, looks up their device_tokens, and sends a push
 // via the FCM HTTP v1 API using a Firebase service account.
 //
@@ -159,6 +160,41 @@ async function resolveTarget(payload: WebhookPayload): Promise<NotificationTarge
       userIds,
       title: scoreRelevant ? 'Loan readiness improved' : 'Task completed',
       body: `"${record.title}" completed on ${enterprise.business_name}.`,
+    };
+  }
+
+  // Not a Database Webhook: calendar-sessions posts this itself once a
+  // meeting's participants are saved (a webhook on the session row would
+  // fire before the participants exist).
+  if (table === 'consultation_sessions' && type === 'INSERT') {
+    const { data: people } = await supabase
+      .from('session_participants')
+      .select('user_id')
+      .eq('session_id', record.id as string);
+    const userIds = (people ?? []).map((p) => p.user_id as string).filter((id) => id !== record.organizer_id);
+    if (userIds.length === 0) return null;
+    const { data: organizer } = await supabase
+      .from('users')
+      .select('first_name, last_name')
+      .eq('id', record.organizer_id as string)
+      .maybeSingle();
+    const who = organizer ? `${organizer.first_name} ${organizer.last_name}` : 'Someone';
+    const startsAt = new Date(record.starts_at as string);
+    const startingNow = startsAt.getTime() - Date.now() < 10 * 60_000;
+    const when = startsAt.toLocaleString('en-GB', {
+      timeZone: 'Africa/Nairobi',
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return {
+      userIds,
+      title: startingNow ? 'Meeting starting now' : 'New meeting scheduled',
+      body: startingNow
+        ? `${who} started "${record.title}". Open the Sessions tab to join.`
+        : `${who} invited you to "${record.title}" on ${when}.`,
     };
   }
 

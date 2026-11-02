@@ -78,6 +78,17 @@ edge-functions.txt
 !web/legal.css
 !web/oauth/google-callback.html
 !web/download.html
+!web/data-protection.html
+!web/cookies.html
+!web/refund.html
+!web/unsubscribe.html
+!web/unsubscribe.js
+!web/cookie-consent.js
+!web/boot.js
+!web/splash.js
+!web/oauth/google-callback.js
+!legal/
+!web/brand/ajw-logo.png
 !supabase/config.toml
 
 # Commercial brand fonts (MyFonts, no confirmed web/app licence): never

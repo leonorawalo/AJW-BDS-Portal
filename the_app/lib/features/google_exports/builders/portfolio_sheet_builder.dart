@@ -1,6 +1,7 @@
 import '../models/portfolio_row.dart';
 import '../models/sheet_tab.dart';
 import 'export_formatting.dart';
+import '../../../core/lender.dart';
 
 const _disciplines = ['Legal', 'Accounting', 'Marketing'];
 
@@ -14,7 +15,7 @@ List<SheetTab> buildPortfolioSheet(List<PortfolioRow> rows) {
         'Going Concern',
         'Business Health (/100)',
         'Credit Readiness (/100)',
-        'KCB requirements met',
+        '${Lender.requirements} met',
         for (final d in _disciplines) '$d consultant',
         'Open tasks',
         'Completed tasks',
@@ -28,7 +29,7 @@ List<SheetTab> buildPortfolioSheet(List<PortfolioRow> rows) {
           r.goingConcern,
           r.businessHealth,
           r.creditReadiness,
-          '${r.kcbMet}/${r.kcbTotal}',
+          '${r.bankMet}/${r.bankTotal}',
           for (final d in _disciplines) r.consultantsByDiscipline[d] ?? '',
           r.openTasks,
           r.completedTasks,

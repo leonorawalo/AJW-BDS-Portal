@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/discipline_style.dart';
 import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -18,6 +19,7 @@ import '../models/task_template.dart';
 import '../providers/legal_workstream_providers.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
+import '../../../core/user_message.dart';
 
 /// An enterprise's tasks. Terms of Reference (ToR) tasks are grouped by
 /// the ToR's two milestones (going concern by month 3, bankable by month
@@ -94,7 +96,7 @@ class _TasksTabState extends ConsumerState<TasksTab> {
     } catch (e) {
       // Not fatal: the list still shows what exists, and the next visit
       // tries again.
-      if (kDebugMode) debugPrint('Ensuring ToR tasks failed: $e');
+      if (kDebugMode) debugPrint('Ensuring ToR tasks failed: ${userMessage(e)}');
     }
   }
 
@@ -133,8 +135,12 @@ class _TasksTabState extends ConsumerState<TasksTab> {
                   'You can also add your own.',
             );
           }
+          // Admin and Owner see each stage split by discipline; a
+          // consultant only has their own tasks, so their list stays flat.
+          final role = ref.watch(currentUserProfileProvider).value?.role;
           return _TaskList(
             tasks: tasks,
+            groupByDiscipline: role != null && role != UserRole.consultant,
             templates: _templates,
             enterpriseId: widget.enterpriseId,
             readOnly: widget.readOnly,
@@ -165,6 +171,7 @@ class _TasksTabState extends ConsumerState<TasksTab> {
 class _TaskList extends StatelessWidget {
   const _TaskList({
     required this.tasks,
+    required this.groupByDiscipline,
     required this.templates,
     required this.enterpriseId,
     required this.readOnly,
@@ -172,6 +179,7 @@ class _TaskList extends StatelessWidget {
   });
 
   final List<WorkstreamTask> tasks;
+  final bool groupByDiscipline;
   final Map<String, TaskTemplate> templates;
   final String enterpriseId;
   final bool readOnly;
@@ -257,20 +265,115 @@ class _TaskList extends StatelessWidget {
                     ],
                   ),
                 ),
-                for (final task in list) ...[
-                  TourAnchor(id: TourAnchors.tasksFirst, child: _TaskCard(
-                    task: task,
-                    showDiscipline: showDiscipline,
-                    onTap: () => context.push('/workstream/enterprises/$enterpriseId/tasks/${task.id}?readOnly=$readOnly'),
-                  )),
-                  const SizedBox(height: Space.sm),
-                ],
+                if (groupByDiscipline) ...[
+                  for (final d in ConsultantSpecialization.values)
+                    _DisciplineGroup(
+                      discipline: d,
+                      tasks: [for (final t in list) if (t.specialization == d.dbValue) t],
+                      cardFor: (t) => _card(context, t, showDiscipline: false),
+                    ),
+                  // Tasks whose consultant has no discipline on file.
+                  for (final task in list.where((t) => consultantSpecializationFromDb(t.specialization) == null)) ...[
+                    _card(context, task, showDiscipline: false),
+                    const SizedBox(height: Space.sm),
+                  ],
+                ] else
+                  for (final task in list) ...[
+                    _card(context, task, showDiscipline: showDiscipline),
+                    const SizedBox(height: Space.sm),
+                  ],
                 const SizedBox(height: Space.xl),
               ],
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+extension on _TaskList {
+  Widget _card(BuildContext context, WorkstreamTask task, {required bool showDiscipline}) => TourAnchor(
+        id: TourAnchors.tasksFirst,
+        child: _TaskCard(
+          task: task,
+          showDiscipline: showDiscipline,
+          onTap: () => context.push('/workstream/enterprises/$enterpriseId/tasks/${task.id}?readOnly=$readOnly'),
+        ),
+      );
+}
+
+/// One discipline's tasks inside a stage, as a collapsible tab whose
+/// header shows the discipline and its progress ("Legal · 4 of 7 done").
+/// Opens by default while something in it is still to do.
+class _DisciplineGroup extends StatelessWidget {
+  const _DisciplineGroup({required this.discipline, required this.tasks, required this.cardFor});
+  final ConsultantSpecialization discipline;
+  final List<WorkstreamTask> tasks;
+  final Widget Function(WorkstreamTask) cardFor;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final done = tasks.where((t) => t.status == TaskStatus.completed).length;
+    final allDone = tasks.isNotEmpty && done == tasks.length;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.sm),
+      child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          // No divider lines above and below an open tab.
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: tasks.isNotEmpty && !allDone,
+            backgroundColor: discipline.tint.withValues(alpha: 0.35),
+            collapsedBackgroundColor: Colors.transparent,
+            iconColor: discipline.accent,
+            collapsedIconColor: AppColors.charcoalSoft,
+            leading: CircleAvatar(
+              radius: 18,
+              backgroundColor: discipline.tint,
+              child: Icon(discipline.icon, size: 20, color: discipline.accent),
+            ),
+            title: Text(
+              discipline.label,
+              style: text.titleSmall?.copyWith(color: discipline.accent, fontWeight: FontWeight.w700),
+            ),
+            // The default arrow stays as the trailing widget, so the
+            // progress bar sits under the count instead.
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tasks.isEmpty ? 'No tasks in this stage' : '${discipline.label} · $done of ${tasks.length} done',
+                  style: text.bodySmall,
+                ),
+                if (tasks.isNotEmpty) ...[
+                  const SizedBox(height: Space.xs),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: done / tasks.length,
+                      minHeight: 5,
+                      color: discipline.accent,
+                      backgroundColor: discipline.tint,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            enabled: tasks.isNotEmpty,
+            childrenPadding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
+            children: [
+              for (final t in tasks) ...[
+                cardFor(t),
+                const SizedBox(height: Space.sm),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -313,7 +416,7 @@ class _TaskCard extends StatelessWidget {
             children: [
               Icon(
                 completed ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: completed ? AppColors.successGreen : AppColors.lightGray,
+                color: completed ? AppColors.successGreen : AppColors.notDoneMark,
               ),
               const SizedBox(width: Space.md),
               Expanded(
@@ -392,7 +495,7 @@ class _NewTaskDialogState extends ConsumerState<_NewTaskDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add the task: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add the task: ${userMessage(e)}')));
       }
     }
   }
