@@ -16,7 +16,7 @@ How people get into the AJW BAGS Portal, how long they stay in, and what each ro
      - Required: the Terms of Service and Privacy Policy in their current versions, and confirming 18 or over. Both boxes start unticked.
      - Optional: programme emails.
      - The answers are kept in `user_consents`. A new document version asks again.
-  2. Two-step verification for the roles in `mfaRequiredRoles` (Administrator, Enterprise Owner). It uses an authenticator app (Time-based One-Time Password, TOTP). Another Administrator can reset it (`manage-users` `reset_mfa`).
+  2. Two-step verification for the roles in `mfaRequiredRoles`. **Currently none**: AJW decided on 3 Nov 2026 that everyone signs in with a password only. The gate stays in the code so roles can be added back in one line. It uses an authenticator app (Time-based One-Time Password, TOTP). Another Administrator can reset it (`manage-users` `reset_mfa`).
   3. Automatic sign-out after 30 minutes without activity (`InactivityLogout`), with a warning one minute before.
 
 ## 2. Sessions

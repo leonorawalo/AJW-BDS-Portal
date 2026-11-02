@@ -2,8 +2,8 @@
 title: Data Protection Notice
 page: data-protection.html
 version: "2.0"
-last_updated: 2026-10-17
-effective_date: "[EFFECTIVE DATE]"
+last_updated: 2026-11-03
+effective_date: "3 November 2026"
 draft: true
 ---
 
@@ -13,8 +13,7 @@ This short notice explains how {{registeredName}} ("AJW", "we") handles personal
 
 {{registeredName}} is the data controller.
 
-- Registration with the Office of the Data Protection Commissioner (ODPC): {{odpcRegistration}}
-- Data protection officer: {{dataProtectionContact}}
+- Data protection contact: [{{dataProtectionContact}}](mailto:{{dataProtectionContact}})
 - Email: [{{email}}](mailto:{{email}})
 
 ## What we collect
@@ -50,4 +49,4 @@ You can:
 - ask for corrections, or for your data to be deleted;
 - object to processing, or withdraw your consent.
 
-Use **Settings and privacy** in the portal's menu. We answer requests to access your data within 7 days, and requests to correct or delete it within 14 days. You may also complain to the ODPC ([www.odpc.go.ke](https://www.odpc.go.ke)).
+Use **Settings and privacy** in the portal's menu. We answer requests to access your data within 7 days, and requests to correct or delete it within 14 days. You may also complain to the Office of the Data Protection Commissioner (ODPC) ([www.odpc.go.ke](https://www.odpc.go.ke)).

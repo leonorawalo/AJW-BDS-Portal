@@ -1,13 +1,11 @@
 {
   "_comment": "AJW Africa's business details: the ONE place they are kept. Shown in the web footer, the legal pages, the app's About and contact section and email footers. After editing, run: node scripts/build_legal.js (the deploy check fails if you forget). Values in [BRACKETS] are placeholders AJW must replace.",
-  "registeredName": "[AJW REGISTERED NAME]",
+  "registeredName": "Apprentice Job Work Africa",
   "tradingName": "AJW Africa",
   "programmeName": "Business Advancement and Growth Services (BAGS) programme",
-  "registrationNumber": "[REGISTRATION NUMBER]",
-  "physicalAddress": "[PHYSICAL ADDRESS]",
+  "physicalAddress": "Block D, Merchant Square, Riverside Drive, Nairobi",
   "email": "ajw.bags.portal@gmail.com",
-  "phone": "[PHONE NUMBER]",
-  "dataProtectionContact": "[DATA PROTECTION OFFICER CONTACT]",
-  "odpcRegistration": "[ODPC REGISTRATION NUMBER]",
+  "phone": "+254 716 523 556",
+  "dataProtectionContact": "ajw.bags.portal@gmail.com",
   "website": "https://portal.ajwafrica.org"
 }

@@ -2,15 +2,13 @@
 // Do not edit: change legal/business.json and run `node scripts/build_legal.js`.
 
 export const BUSINESS = {
-  "registeredName": "[AJW REGISTERED NAME]",
+  "registeredName": "Apprentice Job Work Africa",
   "tradingName": "AJW Africa",
   "programmeName": "Business Advancement and Growth Services (BAGS) programme",
-  "registrationNumber": "[REGISTRATION NUMBER]",
-  "physicalAddress": "[PHYSICAL ADDRESS]",
+  "physicalAddress": "Block D, Merchant Square, Riverside Drive, Nairobi",
   "email": "ajw.bags.portal@gmail.com",
-  "phone": "[PHONE NUMBER]",
-  "dataProtectionContact": "[DATA PROTECTION OFFICER CONTACT]",
-  "odpcRegistration": "[ODPC REGISTRATION NUMBER]",
+  "phone": "+254 716 523 556",
+  "dataProtectionContact": "ajw.bags.portal@gmail.com",
   "website": "https://portal.ajwafrica.org"
 } as const;
 
@@ -20,7 +18,7 @@ export function emailFooter(): string {
   return [
     '--',
     `${BUSINESS.registeredName} (${BUSINESS.tradingName}) · ${BUSINESS.programmeName}`,
-    `Registration ${BUSINESS.registrationNumber} · ${BUSINESS.physicalAddress}`,
+    `${BUSINESS.physicalAddress}`,
     `${BUSINESS.email} · ${BUSINESS.phone} · ${BUSINESS.website}`,
   ].join('\n');
 }

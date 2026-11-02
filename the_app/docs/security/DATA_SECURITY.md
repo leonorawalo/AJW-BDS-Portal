@@ -42,7 +42,6 @@ Sensitivity: **High** = identity, financial or legal documents and private messa
 - **Access:**
   - RLS on every table, with least-privilege grants (AUTH.md);
   - private buckets with 5-minute signed links;
-  - two-step verification for Administrators and Owners;
   - 30-minute idle sign-out.
 - **Access logging:**
   - every document upload, view and download;

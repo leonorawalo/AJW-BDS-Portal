@@ -4,7 +4,7 @@ page: about.html
 browser_title: About
 subtitle: Business Advancement and Growth Services · AJW Africa
 version: "1.1"
-last_updated: 2026-10-17
+last_updated: 2026-11-03
 ---
 
 The AJW BAGS Portal is the working tool for AJW Africa's Business Advancement and Growth Services (BAGS) programme. It supports micro, small and medium enterprises in Kenya working towards becoming a **Going Concern** and **loan ready**. It brings together the enterprise, its assigned business consultants (Legal, Accounting and Marketing) and AJW's programme administrators in one place.
@@ -40,7 +40,6 @@ Read how we handle personal data and Google user data in our [Privacy Policy](pr
 | | |
 |---|---|
 | Registered name | {{registeredName}} |
-| Registration number | {{registrationNumber}} |
 | Physical address | {{physicalAddress}} |
 | Email | [{{email}}](mailto:{{email}}) |
 | Phone | {{phone}} |

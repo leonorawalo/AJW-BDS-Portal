@@ -14,10 +14,11 @@ import '../providers/auth_providers.dart';
 import '../../../core/widgets/security_gates.dart';
 import '../../../core/user_message.dart';
 
-/// Roles that must use two-step verification: they can see every
-/// enterprise (Admins) or their own business's identity documents
-/// (Owners). Change it here only.
-const mfaRequiredRoles = {UserRole.administrator, UserRole.enterpriseOwner};
+/// Roles that must use two-step verification. Empty: AJW decided on
+/// 3 Nov 2026 that everyone signs in with a password only. To turn it
+/// back on, add roles here (e.g. UserRole.administrator); nothing else
+/// needs to change. Change it here only.
+const mfaRequiredRoles = <UserRole>{};
 
 final mfaRepositoryProvider = Provider<MfaRepository>((ref) => MfaRepository(ref.watch(supabaseClientProvider)));
 

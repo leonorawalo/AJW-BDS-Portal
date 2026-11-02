@@ -88,7 +88,7 @@ function footerHtml() {
       <a href="refund.html">Refund Policy</a> · <a href="data-protection.html">Data Protection Notice</a> ·
       <a href="#" data-cookie-settings>Cookie settings</a>
     </p>
-    <p>${b.registeredName} · Registration ${b.registrationNumber} · ${b.physicalAddress} ·
+    <p>${b.registeredName} · ${b.physicalAddress} ·
       <a href="mailto:${b.email}">${b.email}</a> · ${b.phone}</p>
   </footer>`;
 }
@@ -208,7 +208,7 @@ export function emailFooter(): string {
   return [
     '--',
     \`\${BUSINESS.registeredName} (\${BUSINESS.tradingName}) · \${BUSINESS.programmeName}\`,
-    \`Registration \${BUSINESS.registrationNumber} · \${BUSINESS.physicalAddress}\`,
+    \`\${BUSINESS.physicalAddress}\`,
     \`\${BUSINESS.email} · \${BUSINESS.phone} · \${BUSINESS.website}\`,
   ].join('\\n');
 }

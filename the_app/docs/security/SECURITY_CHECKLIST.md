@@ -37,7 +37,7 @@ Shortcuts:
 | B1 | Every screen except login, forgot password and set password needs a signed-in user | `_publicPaths` in `app_router.dart`; open `/admin` signed out → sent to `/login` |
 | B2 | A role can't open another role's screens by address | sign in as a consultant, type `/admin/users` → sent home |
 | B3 | Administrator-only Edge Functions refuse others | call `manage-users` and `invite-user` with a consultant's token → 403 |
-| B4 | Two-step verification enforced for Administrators and Owners | sign in as each → asked to set up or enter a code |
+| B4 | Two-step verification: switched off by AJW (3 Nov 2026), `mfaRequiredRoles` is empty | sign in as each role → straight in after the password |
 | B5 | Session times out after 30 idle minutes | leave the app idle → warning at 29 minutes, signed out at 30 |
 | B6 | Password policy matches Supabase (8+, mixed case, digits, symbols) | Supabase → Authentication → Policies; `password_rules_test.dart` |
 | B7 | Self sign-up is off; Google sign-in can't create accounts | Supabase setting; migration `20260928100000` |

@@ -249,7 +249,6 @@ class _BusinessDetailsTable extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     const rows = <(String, String)>[
       ('Registered name', BusinessDetails.registeredName),
-      ('Registration number', BusinessDetails.registrationNumber),
       ('Physical address', BusinessDetails.physicalAddress),
       ('Email', BusinessDetails.email),
       ('Phone', BusinessDetails.phone),

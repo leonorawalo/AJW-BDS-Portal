@@ -19,7 +19,7 @@ class LegalDocuments {
     title: 'Privacy Policy',
     url: 'https://portal.ajwafrica.org/privacy.html',
     version: '2.0',
-    lastUpdated: '2026-10-17',
+    lastUpdated: '2026-11-03',
   );
 
   static const termsOfService = LegalDocument(
@@ -33,7 +33,7 @@ class LegalDocuments {
     title: 'Data Protection Notice',
     url: 'https://portal.ajwafrica.org/data-protection.html',
     version: '2.0',
-    lastUpdated: '2026-10-17',
+    lastUpdated: '2026-11-03',
   );
 
   static const cookiePolicy = LegalDocument(
@@ -54,7 +54,7 @@ class LegalDocuments {
     title: 'About and contact',
     url: 'https://portal.ajwafrica.org/about.html',
     version: '1.1',
-    lastUpdated: '2026-10-17',
+    lastUpdated: '2026-11-03',
   );
 
   static const all = [privacyPolicy, termsOfService, dataProtectionNotice, cookiePolicy, refundPolicy, aboutAndContact];
@@ -64,14 +64,12 @@ class LegalDocuments {
 /// [BRACKETS] are placeholders AJW has not supplied yet.
 class BusinessDetails {
   BusinessDetails._();
-  static const registeredName = '[AJW REGISTERED NAME]';
+  static const registeredName = 'Apprentice Job Work Africa';
   static const tradingName = 'AJW Africa';
   static const programmeName = 'Business Advancement and Growth Services (BAGS) programme';
-  static const registrationNumber = '[REGISTRATION NUMBER]';
-  static const physicalAddress = '[PHYSICAL ADDRESS]';
+  static const physicalAddress = 'Block D, Merchant Square, Riverside Drive, Nairobi';
   static const email = 'ajw.bags.portal@gmail.com';
-  static const phone = '[PHONE NUMBER]';
-  static const dataProtectionContact = '[DATA PROTECTION OFFICER CONTACT]';
-  static const odpcRegistration = '[ODPC REGISTRATION NUMBER]';
+  static const phone = '+254 716 523 556';
+  static const dataProtectionContact = 'ajw.bags.portal@gmail.com';
   static const website = 'https://portal.ajwafrica.org';
 }

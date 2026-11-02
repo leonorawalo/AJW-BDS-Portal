@@ -3,7 +3,7 @@ title: Terms of Service
 page: terms.html
 version: "2.0"
 last_updated: 2026-10-17
-effective_date: "[EFFECTIVE DATE]"
+effective_date: "3 November 2026"
 draft: true
 ---
 
@@ -21,7 +21,7 @@ You must be 18 or older. There is no public sign-up.
 
 ## 2. Your account
 
-- Your account is personal. Do not share your password, your two-step verification codes or your invite link.
+- Your account is personal. Do not share your password or your invite link.
 - Keep your contact details up to date, and tell AJW at once if you think someone else has used your account.
 - You are responsible for what is done through your account.
 

@@ -2,8 +2,8 @@
 title: Privacy Policy
 page: privacy.html
 version: "2.0"
-last_updated: 2026-10-17
-effective_date: "[EFFECTIVE DATE]"
+last_updated: 2026-11-03
+effective_date: "3 November 2026"
 draft: true
 ---
 
@@ -15,10 +15,8 @@ Kenya's Data Protection Act, 2019 (the Act) applies to the portal. It is enforce
 
 {{registeredName}} is the data controller for the portal.
 
-- Registration number: {{registrationNumber}}
-- Registration with the ODPC: {{odpcRegistration}}
 - Address: {{physicalAddress}}
-- Data protection officer: {{dataProtectionContact}}
+- Data protection contact: [{{dataProtectionContact}}](mailto:{{dataProtectionContact}})
 - Email: [{{email}}](mailto:{{email}})
 
 ## 2. Information we collect
@@ -86,7 +84,7 @@ When you connect Google, the portal's server stores a Google refresh token so it
 | Calculating loan-readiness scores and producing programme reports | Legitimate interests of AJW and its programme partners in measuring the programme, and the programme agreement |
 | Sending notifications and emails you or your programme team started | Performance of the programme agreement |
 | Optional programme news and updates by email | Your consent (you can withdraw it at any time) |
-| Keeping the portal secure: access control, activity records, two-step verification | Legitimate interests, and our duty to keep personal data secure |
+| Keeping the portal secure: access control and activity records | Legitimate interests, and our duty to keep personal data secure |
 | Answering requests under the Act and keeping records required by law | Legal obligation |
 
 Loan-readiness scores are calculated automatically from completed tasks. They are guidance for the programme team and the enterprise. They are not a credit decision, and no decision about you is made by automated means alone.
@@ -132,7 +130,6 @@ Your data may therefore be stored or processed outside Kenya. We transfer it onl
 - Data travels over encrypted connections and is encrypted at rest by our providers.
 - The database checks each person's role on every request.
 - Documents are stored privately and opened through links that expire within 5 minutes. Every view, upload and download is logged.
-- Administrators and enterprise owners must use two-step verification.
 - Inactive sessions sign out after 30 minutes.
 
 No system is perfectly secure. If a breach puts your personal data at risk, we will tell the ODPC within 72 hours of becoming aware of it, and tell you without undue delay, as section 43 of the Act requires.

@@ -118,3 +118,10 @@ Checked the app code (`lib/`), the public web pages (`web/*.html`) and the legal
 - **Hidden fees:** none. The portal takes no payments, and the About page and Refund Policy say so.
 - **Fake reviews and testimonials:** none in the app, the web pages or the seed data. No ratings, client logos or invented success stories. Success stories are entered by Administrators about real enterprises.
 - **Unsupported claims:** none found. No "guaranteed", "100% secure" or "trusted by thousands" wording. The loan-readiness scores say they are "guidance, not a credit decision", and the Terms do not promise uninterrupted access. The "100%" figures in task descriptions are the programme's own targets from the Terms of Reference (ToR), not claims.
+
+## 9. AJW decisions (3 November 2026)
+
+- **Two-step verification switched off for every role** (items 21 and 22 closed). `mfaRequiredRoles` is empty, so everyone signs in with a password only. The Privacy Policy and Terms no longer mention it. Add a role back in `mfa_gate.dart` to turn it on again. Accepted risk: a stolen password alone now opens an account.
+- **Business details supplied:** Apprentice Job Work Africa, Block D, Merchant Square, Riverside Drive, +254 716 523 556. There is no registration number, so it was removed from the pages. The data protection contact is the portal email, because a data protection officer is optional under section 24 of the Act.
+- **Effective date** of the legal pages set to 3 November 2026, the day they went live.
+- The deploy on 3 November used the web build from 16 October, because Flutter was not on the terminal's PATH. Rebuild with `C:\Users\user\flutter\bin\flutter build web --release` before the next hosting deploy.

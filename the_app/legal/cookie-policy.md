@@ -3,7 +3,7 @@ title: Cookie Policy
 page: cookies.html
 version: "1.0"
 last_updated: 2026-10-17
-effective_date: "[EFFECTIVE DATE]"
+effective_date: "3 November 2026"
 draft: true
 ---
 
