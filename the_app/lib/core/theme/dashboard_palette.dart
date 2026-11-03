@@ -8,8 +8,10 @@ import 'app_colors.dart';
 /// drift. Every value comes from [AppColors]; change a dashboard's look
 /// here, nowhere else.
 ///
-/// - Admin and Owner: AJW brand (red into charcoal).
+/// - Admin and Owner: AJW brand, one colour family (red into charcoal).
 /// - Legal: one accent, deep teal. Accounting: one accent, warm amber.
+/// - On every dashboard red flags and overdue warnings stay red: the one
+///   extra colour, because it carries a warning.
 /// - Marketing: a lively multi-colour palette (doesn't have to be AJW's).
 class DashboardPalette {
   const DashboardPalette({
@@ -31,9 +33,17 @@ class DashboardPalette {
 
   Color accentAt(int i) => accents[i % accents.length];
 
+  /// The role's main colour (rings, bars, stripes).
+  Color get accent => accents.first;
+
+  /// The darkest shade: text and numbers in the role's colour (readable on
+  /// white and on the colour's own light wash).
+  Color get deep => gradient.first;
+
   static const brand = DashboardPalette(
     gradient: [AppColors.brandRedDeep, AppColors.brandRed, AppColors.charcoal],
-    accents: [AppColors.brandRed, AppColors.charcoal, AppColors.successGreen, AppColors.brandRedDeep],
+    // Monochrome: AJW red and its shades, with charcoal as the neutral.
+    accents: [AppColors.brandRed, AppColors.brandRedDeep, AppColors.charcoal],
     shapeColors: [Colors.white, AppColors.brandRedTint],
   );
 

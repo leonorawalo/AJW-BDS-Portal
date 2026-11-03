@@ -12,7 +12,7 @@ import '../../../core/widgets/ajw_loader.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/greeting_header.dart';
-import '../../../core/widgets/status_chip.dart';
+import '../../../core/widgets/dashboard_card.dart';
 import '../../portfolio/presentation/programme_clock_card.dart';
 import '../../tutorial/models/tour_catalog.dart';
 import '../../tutorial/presentation/tour_anchor.dart';
@@ -70,20 +70,41 @@ class AssessmentDashboardTab extends ConsumerWidget {
     final flags = LoanReadiness.redFlags(inputs);
 
     final bankTotal = LoanReadiness.bankRequirements(inputs).length;
-    final text = Theme.of(context).textTheme;
+    final palette = ref.watch(dashboardPaletteProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 900;
         final scores = [
-          _ScoreCard(label: 'Business health', score: businessHealth, compact: !wide),
-          _ScoreCard(label: 'Credit readiness', score: creditReadiness, compact: !wide),
-          _BankChecklistCard(met: bankMet.length, total: bankTotal),
+          _ScoreCard(
+            label: 'Business health',
+            score: businessHealth,
+            compact: !wide,
+            accent: palette.accentAt(0),
+            deep: palette.deep,
+            entranceIndex: 1,
+          ),
+          _ScoreCard(
+            label: 'Credit readiness',
+            score: creditReadiness,
+            compact: !wide,
+            accent: palette.accentAt(1),
+            deep: palette.deep,
+            entranceIndex: 2,
+          ),
+          _BankChecklistCard(
+            met: bankMet.length,
+            total: bankTotal,
+            accent: palette.accentAt(2),
+            deep: palette.deep,
+            entranceIndex: 3,
+          ),
         ];
         final facts = TourAnchor(id: TourAnchors.facts, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SectionHeader(
+              accent: palette.accent,
               title: 'Business facts',
               subtitle: readOnly
                   ? 'Kept up to date by your consultant.'
@@ -95,11 +116,12 @@ class AssessmentDashboardTab extends ConsumerWidget {
         final drivers = TourAnchor(id: TourAnchors.drivers, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _SectionHeader(
+            _SectionHeader(
+              accent: palette.accent,
               title: "What's driving these scores",
               subtitle: 'Updates by itself as tasks are completed. Nothing to fill in here.',
             ),
-            _DerivedFromTasksList(inputs: inputs),
+            _DerivedFromTasksList(inputs: inputs, accent: palette.accent, deep: palette.deep),
           ],
         ));
 
@@ -113,7 +135,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
                   if (showGreeting) GreetingHeader(summary: enterprise.businessName),
                   TourAnchor(id: TourAnchors.clock, child: ProgrammeClockCard(enterprise: enterprise)),
                   const SizedBox(height: Space.xl),
-                  Text('Loan readiness', style: text.titleLarge),
+                  AccentHeading('Loan readiness', accent: palette.accent),
                   const SizedBox(height: Space.md),
                   if (wide)
                     TourAnchor(id: TourAnchors.scores, child: IntrinsicHeight(
@@ -142,7 +164,7 @@ class AssessmentDashboardTab extends ConsumerWidget {
                     scores[2],
                   ],
                   const SizedBox(height: Space.lg),
-                  _RedFlagsList(flags: flags),
+                  Entrance(index: 4, child: _RedFlagsList(flags: flags, accent: palette.accent)),
                   const SizedBox(height: Space.xxl),
                   if (wide)
                     Row(
@@ -169,93 +191,106 @@ class AssessmentDashboardTab extends ConsumerWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
+  const _SectionHeader({required this.title, required this.subtitle, required this.accent});
   final String title;
   final String subtitle;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: Space.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: text.titleLarge),
-          const SizedBox(height: 2),
-          Text(subtitle, style: text.bodySmall),
-        ],
-      ),
+      child: AccentHeading(title, subtitle: subtitle, accent: accent),
     );
   }
 }
 
-/// Score out of 100 as a ring, with its band (Strong / Developing / Weak).
-/// The colour never carries meaning alone: the band is also written out,
-/// with an icon.
+/// Score out of 100 as a ring in the role's colour, with its band
+/// (Strong / Developing / Weak) written out with an icon, so the band never
+/// depends on colour.
 class _ScoreCard extends StatelessWidget {
-  const _ScoreCard({required this.label, required this.score, this.compact = false});
+  const _ScoreCard({
+    required this.label,
+    required this.score,
+    required this.accent,
+    required this.deep,
+    this.compact = false,
+    this.entranceIndex = 0,
+  });
 
   final String label;
   final double score;
+  final Color accent;
+  final Color deep;
+  final int entranceIndex;
 
   /// Ring above the band instead of beside it (two cards across a phone).
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final (Color color, IconData icon, String bandLabel, StatusTone tone) = switch (score) {
-      >= 70 => (AppColors.successGreen, Icons.check_circle, 'Strong', StatusTone.success),
-      >= 40 => (AppColors.pendingAmber, Icons.trending_up, 'Developing', StatusTone.warning),
-      _ => (AppColors.errorRed, Icons.error_outline, 'Weak', StatusTone.danger),
+    final (IconData icon, String bandLabel) = switch (score) {
+      >= 70 => (Icons.check_circle, 'Strong'),
+      >= 40 => (Icons.trending_up, 'Developing'),
+      _ => (Icons.error_outline, 'Weak'),
     };
     final text = Theme.of(context).textTheme;
+    final still = reduceMotion(context);
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
-            const SizedBox(height: Space.md),
-            Builder(
-              builder: (context) {
-                final ring = SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: score / 100),
-                    duration: const Duration(milliseconds: 900),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, _) => CustomPaint(
-                      painter: _RingPainter(value: value, color: color),
-                      child: Center(child: Text(score.toStringAsFixed(0), style: text.headlineMedium)),
-                    ),
-                  ),
-                );
-                final band = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StatusChip(bandLabel, tone: tone, icon: icon),
-                    const SizedBox(height: Space.xs),
-                    Text('out of 100', style: text.bodySmall),
-                  ],
-                );
-                // Side by side when there's room; stacked in a narrow card
-                // (two cards across a phone).
-                if (compact) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [ring, const SizedBox(height: Space.md), band],
-                  );
-                }
-                return Row(children: [ring, const SizedBox(width: Space.lg), Expanded(child: band)]);
-              },
+    final ring = SizedBox(
+      width: 76,
+      height: 76,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: score / 100),
+        duration: still ? Duration.zero : const Duration(milliseconds: 1100),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, _) => CustomPaint(
+          painter: _RingPainter(value: value, color: accent),
+          child: Center(
+            child: Text(
+              (value * 100).round().toString(),
+              style: text.headlineMedium?.copyWith(color: deep, fontWeight: FontWeight.w700),
             ),
-          ],
+          ),
         ),
+      ),
+    );
+    final band = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: deep),
+              const SizedBox(width: 4),
+              Text(bandLabel, style: text.labelMedium?.copyWith(color: deep, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+        const SizedBox(height: Space.xs),
+        Text('out of 100', style: text.bodySmall),
+      ],
+    );
+
+    return DashboardCard(
+      accent: accent,
+      entranceIndex: entranceIndex,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
+          const SizedBox(height: Space.md),
+          // Side by side when there's room; stacked in a narrow card (two
+          // cards across a phone).
+          if (compact) ...[ring, const SizedBox(height: Space.md), band]
+          else Row(children: [ring, const SizedBox(width: Space.lg), Expanded(child: band)]),
+        ],
       ),
     );
   }
@@ -268,19 +303,28 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const stroke = 7.0;
+    const stroke = 8.0;
     final rect = (Offset.zero & size).deflate(stroke / 2);
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..color = AppColors.surfaceSunken;
+      ..color = color.withValues(alpha: 0.14);
+    canvas.drawArc(rect, 0, 6.2832, false, track);
+    if (value <= 0) return;
+    final sweep = 6.2832 * value.clamp(0.0, 1.0);
+    // The arc deepens along its length: lighter at the start, full colour
+    // at the tip.
     final arc = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
-      ..color = color;
-    canvas.drawArc(rect, 0, 6.2832, false, track);
-    if (value > 0) canvas.drawArc(rect, -1.5708, 6.2832 * value.clamp(0.0, 1.0), false, arc);
+      ..shader = SweepGradient(
+        startAngle: 0,
+        endAngle: sweep < 0.01 ? 0.01 : sweep,
+        colors: [color.withValues(alpha: 0.55), color],
+        transform: const GradientRotation(-1.5708),
+      ).createShader(rect);
+    canvas.drawArc(rect, -1.5708, sweep, false, arc);
   }
 
   @override
@@ -288,60 +332,57 @@ class _RingPainter extends CustomPainter {
 }
 
 class _BankChecklistCard extends StatelessWidget {
-  const _BankChecklistCard({required this.met, required this.total});
+  const _BankChecklistCard({
+    required this.met,
+    required this.total,
+    required this.accent,
+    required this.deep,
+    this.entranceIndex = 0,
+  });
 
   final int met;
   final int total;
+  final Color accent;
+  final Color deep;
+  final int entranceIndex;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final ratio = total == 0 ? 0.0 : met / total;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(Lender.checklist, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
-            const SizedBox(height: Space.md),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('$met', style: text.displaySmall),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4, left: 4),
-                  child: Text('of $total met', style: text.bodyMedium?.copyWith(color: AppColors.charcoalSoft)),
-                ),
-              ],
-            ),
-            const SizedBox(height: Space.md),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: ratio),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) => LinearProgressIndicator(
-                  value: value,
-                  minHeight: 8,
-                  backgroundColor: AppColors.surfaceSunken,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.brandRed),
-                ),
+    return DashboardCard(
+      accent: accent,
+      entranceIndex: entranceIndex,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(Lender.checklist, style: text.titleSmall?.copyWith(color: AppColors.charcoalSoft)),
+          const SizedBox(height: Space.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              CountUp(met, style: text.displaySmall?.copyWith(color: deep, fontWeight: FontWeight.w700)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4, left: 4),
+                child: Text('of $total met', style: text.bodyMedium?.copyWith(color: AppColors.charcoalSoft)),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: Space.md),
+          AccentBar(value: ratio, accent: accent),
+        ],
       ),
     );
   }
 }
 
 class _RedFlagsList extends StatelessWidget {
-  const _RedFlagsList({required this.flags});
+  const _RedFlagsList({required this.flags, required this.accent});
 
   final List<String> flags;
+
+  /// Only for the all-clear state; red flags themselves stay red.
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -353,7 +394,7 @@ class _RedFlagsList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
           child: Row(
             children: [
-              const Icon(Icons.verified_outlined, color: AppColors.successGreen, size: 22),
+              Icon(Icons.verified_outlined, color: accent, size: 22),
               const SizedBox(width: Space.md),
               Text('No red flags right now.', style: text.bodyMedium),
             ],
@@ -411,50 +452,62 @@ class _RedFlagsList extends StatelessWidget {
 /// outstanding, task-derived ones: which ToR task completing it would
 /// satisfy, so "why is my score X" is never a mystery.
 class _DerivedFromTasksList extends StatelessWidget {
-  const _DerivedFromTasksList({required this.inputs});
+  const _DerivedFromTasksList({required this.inputs, required this.accent, required this.deep});
 
   final LoanReadinessInputs inputs;
+  final Color accent;
+  final Color deep;
 
   @override
   Widget build(BuildContext context) {
     final rows = LoanReadiness.drivers(inputs);
     final text = Theme.of(context).textTheme;
 
-    // Read-only status rows, not checkboxes: the colour says done or not,
-    // and nothing here looks tappable. Completing the named task in Tasks
-    // is what turns a row green.
+    // Read-only status rows, not checkboxes: nothing here looks tappable.
+    // Done rows are washed in the role's colour with a tick; completing the
+    // named task in Tasks is what turns a row done.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < rows.length; i++) ...[
           if (i > 0) const SizedBox(height: Space.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
-            decoration: BoxDecoration(
-              color: rows[i].$1 ? AppColors.successGreen.withValues(alpha: 0.10) : AppColors.surfaceSunken,
-              borderRadius: BorderRadius.circular(Radii.md),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(rows[i].$2, style: text.bodyMedium?.copyWith(fontWeight: AppFonts.bodyStrong)),
-                      const SizedBox(height: 2),
-                      Text(rows[i].$3, style: text.bodySmall),
-                    ],
+          Entrance(
+            index: 5 + i,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md),
+              decoration: BoxDecoration(
+                color: rows[i].$1 ? accent.withValues(alpha: 0.10) : AppColors.surface,
+                borderRadius: BorderRadius.circular(Radii.md),
+                border: Border.all(color: rows[i].$1 ? accent.withValues(alpha: 0.35) : AppColors.hairline),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    rows[i].$1 ? Icons.check_circle : Icons.radio_button_unchecked,
+                    size: 20,
+                    color: rows[i].$1 ? accent : AppColors.notDoneMark,
                   ),
-                ),
-                const SizedBox(width: Space.md),
-                Text(
-                  rows[i].$1 ? 'Done' : 'Not yet',
-                  style: text.labelMedium?.copyWith(
-                    color: rows[i].$1 ? AppColors.successGreen : AppColors.charcoalSoft,
-                    fontWeight: AppFonts.bodyStrong,
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(rows[i].$2, style: text.bodyMedium?.copyWith(fontWeight: AppFonts.bodyStrong)),
+                        const SizedBox(height: 2),
+                        Text(rows[i].$3, style: text.bodySmall),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: Space.md),
+                  Text(
+                    rows[i].$1 ? 'Done' : 'Not yet',
+                    style: text.labelMedium?.copyWith(
+                      color: rows[i].$1 ? deep : AppColors.charcoalSoft,
+                      fontWeight: AppFonts.bodyStrong,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

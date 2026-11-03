@@ -86,6 +86,31 @@ class GreetingHeader extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Who the dashboard belongs to: "Administrator",
+                          // "Enterprise Owner", or the consultant's type
+                          // ("Legal Consultant"), the same label as the
+                          // profile badge in the top bar.
+                          if (profile != null) ...[
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: 3),
+                                child: Text(
+                                  profile.roleDisplayLabel,
+                                  style: text.labelMedium?.copyWith(
+                                    color: onBanner,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: Space.sm),
+                          ],
                           Text(
                             profile == null ? greetingFor(now) : '${greetingFor(now)}, ${profile.firstName}',
                             style: (phone ? text.headlineMedium : text.headlineLarge)?.copyWith(color: onBanner),

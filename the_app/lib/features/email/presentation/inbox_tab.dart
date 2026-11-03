@@ -57,6 +57,20 @@ class _InboxTabState extends ConsumerState<InboxTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Answer from the saved Google connection first (a quick database
+    // read): without Gmail read access there's no point waking the
+    // gmail-inbox function and calling Google just to be told no.
+    final connection = ref.watch(myGoogleConnectionProvider);
+    if (connection.isLoading) return const AjwLoadingView();
+    if (!connection.hasError) {
+      final conn = connection.value;
+      if (conn == null) {
+        return _ErrorState(error: const GoogleNotConnectedException(), enterpriseId: widget.enterpriseId, onRetry: _refresh);
+      }
+      if (!conn.canReadEmail) {
+        return _ErrorState(error: const GmailReadNotGrantedException(), enterpriseId: widget.enterpriseId, onRetry: _refresh);
+      }
+    }
     final inbox = ref.watch(enterpriseInboxProvider(widget.enterpriseId));
     return inbox.when(
       loading: () => const AjwLoadingView(),
