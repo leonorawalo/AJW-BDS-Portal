@@ -2,9 +2,8 @@
 title: Cookie Policy
 page: cookies.html
 version: "1.0"
-last_updated: 2026-10-17
+last_updated: 2026-11-03
 effective_date: "3 November 2026"
-draft: true
 ---
 
 This policy lists everything the **AJW BAGS Portal** website stores in your browser, and why. The list is based on what the portal's code actually does. It covers the website only. The Android app keeps its sign-in in the phone's private app storage, which other apps cannot read.

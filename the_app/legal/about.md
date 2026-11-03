@@ -27,7 +27,7 @@ Access is by invitation only. AJW Africa's programme administrators create accou
 
 ## Cost
 
-The portal is free for programme participants and takes no payments. See our [Refund Policy](refund.html).
+The portal is free for programme participants and takes no payments. See our [Payments and Refund Policy](refund.html).
 
 ## Your data
 

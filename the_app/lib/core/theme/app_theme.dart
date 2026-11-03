@@ -132,6 +132,20 @@ UnderlineInputBorder _inputBorder(Color color, [double width = 1]) => UnderlineI
       borderSide: color == Colors.transparent ? BorderSide.none : BorderSide(color: color, width: width),
     );
 
+/// A clear outline on the button that has keyboard focus (Tab key), for
+/// people who use the portal without a mouse (WCAG 2.1, 2.4.7 "Focus
+/// visible"). It appears ONLY while someone is moving around with the
+/// keyboard: mouse and touch users never see it, so the look of the app
+/// doesn't change for them.
+bool _keyboardFocused(Set<WidgetState> states) =>
+    states.contains(WidgetState.focused) && FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+
+const _focusRingSide = BorderSide(color: AppColors.charcoal, width: 2);
+
+/// [otherwise] is the button's normal border (null = none).
+WidgetStateProperty<BorderSide?> _focusRing([BorderSide? otherwise]) =>
+    WidgetStateProperty.resolveWith((states) => _keyboardFocused(states) ? _focusRingSide : otherwise);
+
 final ThemeData ajwLightTheme = ThemeData(
   useMaterial3: true,
   colorScheme: _colorScheme,
@@ -141,6 +155,10 @@ final ThemeData ajwLightTheme = ThemeData(
   canvasColor: AppColors.canvas,
   dividerColor: AppColors.hairline,
   splashFactory: InkSparkle.splashFactory,
+  // The keyboard-focus highlight on list rows, checkboxes and menu items
+  // (only shown while using the keyboard). A little stronger than
+  // Material's default so it can be seen on the canvas background.
+  focusColor: AppColors.charcoal.withValues(alpha: 0.16),
   pageTransitionsTheme: const PageTransitionsTheme(
     builders: {
       TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -206,7 +224,7 @@ final ThemeData ajwLightTheme = ThemeData(
       padding: _buttonPadding,
       shape: _roundedMd,
       textStyle: _t(AppFonts.body, 15, AppFonts.bodyStrong),
-    ),
+    ).copyWith(side: _focusRing()),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
@@ -217,17 +235,16 @@ final ThemeData ajwLightTheme = ThemeData(
       padding: _buttonPadding,
       shape: _roundedMd,
       textStyle: _t(AppFonts.body, 15, AppFonts.bodyStrong),
-    ),
+    ).copyWith(side: _focusRing()),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: AppColors.charcoal,
-      side: const BorderSide(color: Color(0xFFCFC8C2)),
       minimumSize: _buttonSize,
       padding: _buttonPadding,
       shape: _roundedMd,
       textStyle: _t(AppFonts.body, 15, AppFonts.bodyStrong),
-    ),
+    ).copyWith(side: _focusRing(const BorderSide(color: Color(0xFFCFC8C2)))),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
@@ -236,8 +253,9 @@ final ThemeData ajwLightTheme = ThemeData(
       foregroundColor: AppColors.brandRedDeep,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm)),
       textStyle: _t(AppFonts.body, 14, AppFonts.bodyStrong),
-    ),
+    ).copyWith(side: _focusRing()),
   ),
+  iconButtonTheme: IconButtonThemeData(style: ButtonStyle(side: _focusRing())),
   floatingActionButtonTheme: FloatingActionButtonThemeData(
     backgroundColor: AppColors.brandRed,
     foregroundColor: Colors.white,

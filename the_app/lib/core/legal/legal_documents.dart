@@ -18,21 +18,21 @@ class LegalDocuments {
   static const privacyPolicy = LegalDocument(
     title: 'Privacy Policy',
     url: 'https://portal.ajwafrica.org/privacy.html',
-    version: '2.0',
+    version: '2.1',
     lastUpdated: '2026-11-03',
   );
 
   static const termsOfService = LegalDocument(
     title: 'Terms of Service',
     url: 'https://portal.ajwafrica.org/terms.html',
-    version: '2.0',
-    lastUpdated: '2026-10-17',
+    version: '2.1',
+    lastUpdated: '2026-11-03',
   );
 
   static const dataProtectionNotice = LegalDocument(
     title: 'Data Protection Notice',
     url: 'https://portal.ajwafrica.org/data-protection.html',
-    version: '2.0',
+    version: '2.1',
     lastUpdated: '2026-11-03',
   );
 
@@ -40,14 +40,14 @@ class LegalDocuments {
     title: 'Cookie Policy',
     url: 'https://portal.ajwafrica.org/cookies.html',
     version: '1.0',
-    lastUpdated: '2026-10-17',
+    lastUpdated: '2026-11-03',
   );
 
   static const refundPolicy = LegalDocument(
-    title: 'Refund Policy',
+    title: 'Payments and Refund Policy',
     url: 'https://portal.ajwafrica.org/refund.html',
-    version: '1.0',
-    lastUpdated: '2026-10-17',
+    version: '1.1',
+    lastUpdated: '2026-11-03',
   );
 
   static const aboutAndContact = LegalDocument(
@@ -72,4 +72,13 @@ class BusinessDetails {
   static const phone = '+254 716 523 556';
   static const dataProtectionContact = 'ajw.bags.portal@gmail.com';
   static const website = 'https://portal.ajwafrica.org';
+}
+
+/// Whether the portal takes, holds or pays out money (legal/payments.json).
+/// Any payment feature must be hidden unless this is true. It can only be
+/// true once the Refund Policy is written for payments (the build checks)
+/// and docs/compliance/COMPLIANCE_REGISTER.md section B is complete.
+class Payments {
+  Payments._();
+  static const enabled = false;
 }

@@ -37,8 +37,10 @@ class PrivacyNotice {
     ),
     (
       'Where it is stored',
-      'With our service providers Supabase (in the European Union) and Google. The Privacy Policy '
-          'lists them and the safeguards for transfers outside Kenya.',
+      'With our service providers Supabase (in the European Union) and Google, so outside Kenya. '
+          'Because some records are sensitive personal data under the Act (for example property or family '
+          'details), we ask for your consent to this below. The Privacy Policy lists the providers and the '
+          'safeguards.',
     ),
     (
       'Your rights',

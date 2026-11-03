@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
@@ -34,7 +35,13 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
     final repo = ref.read(documentRepositoryProvider);
     repo.logAccess(widget.document.id, download: !(widget.document.isPdf || widget.document.isImage));
     try {
-      if (widget.document.isPdf) {
+      if (widget.document.isPdf && kIsWeb) {
+        // On the web the in-app PDF viewer (pdfx) needs Mozilla's pdf.js,
+        // which the site doesn't load (and the Content-Security-Policy
+        // would block). Every browser has a good PDF viewer of its own, so
+        // the web opens PDFs there through a 5-minute link instead.
+        _signedUrl = await repo.getDownloadUrl(widget.document.storagePath);
+      } else if (widget.document.isPdf) {
         final bytes = await repo.downloadBytes(widget.document.storagePath);
         _pdfController = PdfControllerPinch(document: PdfDocument.openData(bytes));
       } else if (widget.document.isImage) {
@@ -80,11 +87,33 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen> {
       );
     }
     if (_signedUrl != null) {
+      final isWebPdf = widget.document.isPdf;
       return Center(
-        child: FilledButton.icon(
-          icon: const Icon(Icons.open_in_new),
-          label: const Text('Open in browser'),
-          onPressed: () => launchUrl(Uri.parse(_signedUrl!), mode: LaunchMode.externalApplication),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isWebPdf) ...[
+                const Text(
+                  'This PDF opens in a new browser tab.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+              ],
+              FilledButton.icon(
+                icon: const Icon(Icons.open_in_new),
+                label: Text(isWebPdf ? 'Open PDF' : 'Open in browser'),
+                onPressed: () => launchUrl(Uri.parse(_signedUrl!), mode: LaunchMode.externalApplication),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'For security, this link works for 5 minutes. Come back here for a new one.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       );
     }

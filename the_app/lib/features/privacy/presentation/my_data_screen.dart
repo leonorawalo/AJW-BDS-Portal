@@ -16,6 +16,9 @@ import '../models/data_request.dart';
 import '../../user_management/providers/user_management_providers.dart';
 import '../providers/privacy_providers.dart';
 import '../../../core/user_message.dart';
+import '../../../core/phone_number.dart';
+import '../../auth/providers/auth_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 /// "Settings and privacy": the person's rights under the Kenya Data
 /// Protection Act, 2019 (download a copy of their data, ask for a
@@ -54,6 +57,15 @@ class MyDataScreen extends ConsumerWidget {
                   style: text.bodyMedium,
                 ),
                 const SizedBox(height: Space.lg),
+                section('Your contact details', [
+                  Text(
+                    'Your phone number is optional. AJW administrators and the people you work with in the '
+                    'programme can see it, so they can call you.',
+                    style: text.bodySmall,
+                  ),
+                  const SizedBox(height: Space.sm),
+                  const _PhoneNumberTile(),
+                ]),
                 section('Download my data', [
                   Text(
                     'A file (JSON, a standard format other systems can read) with your profile and everything '
@@ -200,6 +212,113 @@ class MyDataScreen extends ConsumerWidget {
 /// Optional programme emails (news, updates, reminders). Off unless the
 /// person turns it on; every change is kept in the consent history.
 /// Account and security emails are always sent.
+/// Shows the person's own phone number with Add / Change / Remove.
+class _PhoneNumberTile extends ConsumerWidget {
+  const _PhoneNumberTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phone = ref.watch(currentUserProfileProvider).value?.phoneNumber;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.phone_outlined),
+      title: Text(phone == null ? 'No phone number added' : PhoneNumber.display(phone)),
+      trailing: Wrap(
+        spacing: Space.xs,
+        children: [
+          if (phone != null)
+            TextButton(
+              onPressed: () => _save(context, ref, null),
+              child: const Text('Remove'),
+            ),
+          OutlinedButton(
+            onPressed: () => _edit(context, ref, phone),
+            child: Text(phone == null ? 'Add' : 'Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref, String? current) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => _PhoneNumberDialog(initial: current == null ? '' : PhoneNumber.display(current)),
+    );
+    if (result == null || !context.mounted) return;
+    await _save(context, ref, result);
+  }
+
+  Future<void> _save(BuildContext context, WidgetRef ref, String? phone) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authRepositoryProvider).updateMyPhoneNumber(phone);
+      ref.invalidate(currentUserProfileProvider);
+      messenger.showSnackBar(SnackBar(content: Text(phone == null ? 'Phone number removed.' : 'Phone number saved.')));
+    } on PostgrestException catch (e) {
+      // 23505: users.phone_number is unique.
+      messenger.showSnackBar(SnackBar(
+        content: Text(e.code == '23505'
+            ? 'That number is already on another account. Check it, or ask an AJW administrator.'
+            : 'Could not save your phone number. Try again.'),
+      ));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not save your phone number. Try again.')));
+    }
+  }
+}
+
+class _PhoneNumberDialog extends StatefulWidget {
+  const _PhoneNumberDialog({required this.initial});
+  final String initial;
+
+  @override
+  State<_PhoneNumberDialog> createState() => _PhoneNumberDialogState();
+}
+
+class _PhoneNumberDialogState extends State<_PhoneNumberDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final normalised = PhoneNumber.normalise(_controller.text);
+    if (normalised == null) {
+      setState(() => _error = 'Enter a number like 0712 345 678 or +254 712 345 678.');
+      return;
+    }
+    Navigator.pop(context, normalised);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Your phone number'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: TextInputType.phone,
+        autofillHints: const [AutofillHints.telephoneNumber],
+        decoration: InputDecoration(
+          labelText: 'Phone number',
+          hintText: '0712 345 678',
+          errorText: _error,
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: _submit, child: const Text('Save')),
+      ],
+    );
+  }
+}
+
 class _ProgrammeEmailsSwitch extends ConsumerStatefulWidget {
   const _ProgrammeEmailsSwitch();
 

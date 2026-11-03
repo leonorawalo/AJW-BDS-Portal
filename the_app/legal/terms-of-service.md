@@ -1,10 +1,9 @@
 ---
 title: Terms of Service
 page: terms.html
-version: "2.0"
-last_updated: 2026-10-17
+version: "2.1"
+last_updated: 2026-11-03
 effective_date: "3 November 2026"
-draft: true
 ---
 
 These terms apply to the **AJW BAGS Portal** ("the portal"), provided by {{registeredName}} (trading as {{tradingName}}, "AJW", "we") for participants in its {{programmeName}}. By using the portal you agree to them. Read them together with our [Privacy Policy](privacy.html).
@@ -43,7 +42,7 @@ Emails you send through the portal are sent from your own Gmail account, and you
 
 ## 4. Your content
 
-You keep ownership of the documents and information you upload. You allow AJW, the enterprise's assigned consultants and its owner to use them to deliver and report on the programme, as described in the Privacy Policy.
+You keep ownership of the documents and information you upload. If you upload information about other people (for example employees, family members or workshop attendees), you confirm you are entitled to share it for the programme. You allow AJW, the enterprise's assigned consultants and its owner to use them to deliver and report on the programme, as described in the Privacy Policy.
 
 ## 5. Confidentiality between enterprises
 
@@ -63,7 +62,7 @@ Connecting Google is optional. When you do, meetings, files and emails are creat
 
 ## 9. Fees
 
-The portal is free to use for programme participants. See our [Refund Policy](refund.html).
+The portal is free to use for programme participants. See our [Payments and Refund Policy](refund.html).
 
 ## 10. Availability and changes
 
@@ -81,9 +80,9 @@ The portal is provided to support the programme. To the extent the law allows, A
 
 When these terms change in substance, we update their version and date. The portal then asks you to accept them again before you continue.
 
-## 14. Governing law
+## 14. Disputes and governing law
 
-These terms are governed by the laws of Kenya, and the courts of Kenya have jurisdiction.
+If you have a complaint about the portal, tell AJW first at the contact below. We will try to resolve it with you in good faith within 30 days. These terms are governed by the laws of Kenya, and the courts of Kenya have jurisdiction. Complaints about personal data can also go to the Office of the Data Protection Commissioner (ODPC), as the Privacy Policy explains.
 
 ## 15. Contact
 

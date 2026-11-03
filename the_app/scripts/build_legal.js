@@ -34,6 +34,10 @@ const SITE = 'https://portal.ajwafrica.org';
 const business = JSON.parse(fs.readFileSync(path.join(root, 'legal', 'business.json'), 'utf8'));
 delete business._comment;
 
+// The payments switch (legal/payments.json). See its _comment.
+const payments = JSON.parse(fs.readFileSync(path.join(root, 'legal', 'payments.json'), 'utf8'));
+if (typeof payments.takesPayments !== 'boolean') throw new Error('legal/payments.json: "takesPayments" must be true or false');
+
 const escapeHtml = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -73,6 +77,20 @@ for (const page of ['about.html', 'privacy.html', 'terms.html', 'cookies.html', 
   if (!byPage[page]) throw new Error(`legal/: no document for ${page}`);
 }
 
+// Payments can't be switched on without a Refund Policy written for them,
+// and the Refund Policy can't claim payments that don't exist.
+{
+  const covers = byPage['refund.html'].meta.covers_payments === 'true';
+  if (covers !== payments.takesPayments) {
+    throw new Error(
+      payments.takesPayments
+        ? 'legal/payments.json says the portal takes payments, but legal/refund-policy.md is not written for them '
+          + '(covers_payments: "true"). Complete docs/compliance/COMPLIANCE_REGISTER.md section B first.'
+        : 'legal/refund-policy.md says covers_payments: "true", but legal/payments.json says the portal takes no payments.',
+    );
+  }
+}
+
 const NAV = [
   ['about.html', 'About'],
   ['privacy.html', 'Privacy'],
@@ -85,7 +103,7 @@ function footerHtml() {
     <p>
       © ${b.tradingName} · <a href="about.html">About and contact</a> · <a href="privacy.html">Privacy Policy</a> ·
       <a href="terms.html">Terms of Service</a> · <a href="cookies.html">Cookie Policy</a> ·
-      <a href="refund.html">Refund Policy</a> · <a href="data-protection.html">Data Protection Notice</a> ·
+      <a href="refund.html">Payments and Refund Policy</a> · <a href="data-protection.html">Data Protection Notice</a> ·
       <a href="#" data-cookie-settings>Cookie settings</a>
     </p>
     <p>${b.registeredName} · ${b.physicalAddress} ·
@@ -191,6 +209,15 @@ function dartFile() {
   lines.push('class BusinessDetails {');
   lines.push('  BusinessDetails._();');
   for (const [k, v] of Object.entries(business)) lines.push(`  static const ${k} = ${dartString(v)};`);
+  lines.push('}');
+  lines.push('');
+  lines.push('/// Whether the portal takes, holds or pays out money (legal/payments.json).');
+  lines.push('/// Any payment feature must be hidden unless this is true. It can only be');
+  lines.push('/// true once the Refund Policy is written for payments (the build checks)');
+  lines.push('/// and docs/compliance/COMPLIANCE_REGISTER.md section B is complete.');
+  lines.push('class Payments {');
+  lines.push('  Payments._();');
+  lines.push(`  static const enabled = ${payments.takesPayments};`);
   lines.push('}');
   lines.push('');
   return lines.join('\n');

@@ -69,6 +69,7 @@ class UserProfile {
     required this.role,
     required this.status,
     this.specialization,
+    this.phoneNumber,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -83,6 +84,7 @@ class UserProfile {
       role: userRoleFromName(roleName),
       status: map['status'] as String,
       specialization: consultantSpecializationFromDb(map['specialization'] as String?),
+      phoneNumber: map['phone_number'] as String?,
     );
   }
 
@@ -93,6 +95,10 @@ class UserProfile {
   final UserRole role;
   final String status;
   final ConsultantSpecialization? specialization;
+
+  /// Optional; each person adds or changes their own in Settings and
+  /// privacy (stored as +254712345678, see PhoneNumber.normalise).
+  final String? phoneNumber;
 
   bool get isSuspended => status == 'suspended';
 

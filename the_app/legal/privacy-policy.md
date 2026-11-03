@@ -1,10 +1,9 @@
 ---
 title: Privacy Policy
 page: privacy.html
-version: "2.0"
+version: "2.1"
 last_updated: 2026-11-03
 effective_date: "3 November 2026"
-draft: true
 ---
 
 This policy explains how the **AJW BAGS Portal** ("the portal", "we", "us"), operated by {{registeredName}} (trading as {{tradingName}}) for its {{programmeName}}, collects, uses, stores and shares personal data. It includes how we handle information received from Google when you choose to connect your Google account.
@@ -22,7 +21,7 @@ Kenya's Data Protection Act, 2019 (the Act) applies to the portal. It is enforce
 ## 2. Information we collect
 
 ### Account information
-Your name, email address, role (administrator, consultant or enterprise owner) and, for consultants, your specialisation (Legal, Accounting or Marketing). AJW programme administrators create accounts by invitation. The portal does not collect your phone number for your account.
+Your name, email address, role (administrator, consultant or enterprise owner) and, for consultants, your specialisation (Legal, Accounting or Marketing). AJW programme administrators create accounts by invitation. You may add your phone number in **Settings and privacy** (optional); AJW administrators and the people you work with in the programme can then see it.
 
 ### Programme information
 Details of the enterprises in the programme:
@@ -49,7 +48,13 @@ For programme workshops, the names, phone numbers and business names of attendee
 A record of key actions, for accountability and security. Examples: a consultant being assigned, a task being completed, a document being uploaded, opened or downloaded. Only programme administrators can see these records.
 
 ### Consent records
-What you agreed to (the Terms of Service, this policy, that you are 18 or over, and optional programme emails), with the version and the time.
+What you agreed to (the Terms of Service, that you read this policy, consent to storage outside Kenya, that you are 18 or over, and optional programme emails), with the version and the time.
+
+### Sensitive personal data
+Some programme records can include **sensitive personal data** as the Act defines it, mainly **property details** (for example assets, bank statements and title documents of a sole proprietor) and **family details** (for example a family member named in a success story). We use it only to deliver the programme, protect it as described in section 8, and store it outside Kenya only with your consent (section 6).
+
+### What you must provide
+Your name, email address and role are needed to create your account. For enterprises, the business details and documents in the programme checklist are needed to deliver the programme; without them we cannot assess or support the business. Connecting Google and receiving programme emails are optional.
 
 ## 3. Google user data
 
@@ -80,10 +85,13 @@ When you connect Google, the portal's server stores a Google refresh token so it
 
 | Purpose | Lawful basis under the Act |
 |---|---|
-| Running the BAGS programme: tracking each enterprise's progress, assigning consultants, managing tasks, documents and meetings | Performance of the programme agreement with the enterprise, and your consent |
+| Running the BAGS programme for an enterprise: tracking its progress, assigning consultants, managing tasks, documents and meetings | Performance of the programme agreement with the enterprise (section 30(1)(b)(i) of the Act) |
+| Working with consultants and AJW staff in the portal | The engagement or employment contract with AJW, and AJW's legitimate interests in running the programme |
+| Storing sensitive personal data outside Kenya (section 6) | Your consent, as section 49 of the Act requires |
 | Calculating loan-readiness scores and producing programme reports | Legitimate interests of AJW and its programme partners in measuring the programme, and the programme agreement |
 | Sending notifications and emails you or your programme team started | Performance of the programme agreement |
 | Optional programme news and updates by email | Your consent (you can withdraw it at any time) |
+| Workshop attendance lists | AJW's legitimate interests in running and reporting on the programme. AJW tells attendees at the workshop how their details are used. |
 | Keeping the portal secure: access control and activity records | Legitimate interests, and our duty to keep personal data secure |
 | Answering requests under the Act and keeping records required by law | Legal obligation |
 
@@ -111,16 +119,26 @@ We use these providers to run the portal. They process data on our behalf, under
 | Google (Gmail) | Delivers invitation and password-reset emails | Google's global network |
 | Google (gstatic.com) | Delivers the website's graphics engine and fallback fonts to your browser | Google's global network |
 
-Your data may therefore be stored or processed outside Kenya. We transfer it only with appropriate safeguards, as sections 48 to 50 of the Act require: the providers' contractual data protection commitments, and the security measures described below. [LAWYER TO CONFIRM: the transfer basis AJW relies on, and whether the ODPC must be notified of it.]
+Your data is therefore stored and processed outside Kenya. Hosting data with a cloud provider abroad counts as a transfer under the Act, so we transfer it only:
+
+- with **appropriate safeguards** (section 48): each provider's data processing terms, including standard contractual clauses, and the security measures in section 8;
+- for **sensitive personal data**, also with **your consent** (section 49), which the portal asks for before you use it;
+- after a written assessment of each transfer, as the ODPC's Guidance Notes for Cross-border Data Transfers ask. We keep it up to date and show it to the ODPC on request.
+
+Our providers may not use your data for their own purposes.
 
 ## 7. How long we keep it
 
 | Data | How long |
 |---|---|
-| Account and programme records | For the programme, and afterwards for as long as AJW's reporting and legal obligations require. [AJW RETENTION SCHEDULE] |
-| Chat messages | Until deleted, or for the retention period an administrator sets in the portal |
-| Completed or refused data requests | For the retention period an administrator sets |
-| Activity records (audit log) | Kept permanently for accountability. When someone's data is deleted, their name and email in it are replaced by "a deleted user". |
+| Enterprise programme records (business details, tasks, comments, visit notes, recommendations, meetings, reports, success stories) | While the enterprise is in the programme, then 7 years after it leaves (for programme audits and reporting, in line with common practice for financial and audit records in Kenya). Then deleted or anonymised. |
+| Uploaded documents (licences, certificates, identity, tax and bank documents) | While the enterprise is in the programme, then 3 years after it leaves. Then deleted. |
+| User accounts | While you take part. When you leave the programme your account is closed, and your personal details are deleted or anonymised 1 year later. Records you worked on stay, with your name replaced by "a deleted user". |
+| Workshop attendance lists | 3 years after the workshop |
+| Chat messages | 2 years |
+| Completed or refused data requests | 2 years after they are closed |
+| Consent records | As long as your account exists, then 7 years, as proof of what you agreed to |
+| Activity records (audit log) | 7 years. When someone's data is deleted earlier, their name and email in it are replaced by "a deleted user". |
 | Google credentials | Until you disconnect Google |
 | Device notification tokens | Until you sign out on that device, or your account is suspended |
 

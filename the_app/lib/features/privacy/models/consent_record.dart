@@ -1,8 +1,9 @@
 import '../../../core/legal/legal_documents.dart';
 
 /// What a person can agree to (user_consents.purpose, migration
-/// 20261016100000). The first three are required to use the portal.
-enum ConsentPurpose { termsOfService, privacyPolicy, age18OrOver, programmeEmails }
+/// 20261016100000; sensitiveDataTransfer added by 20261103100000). All but
+/// programmeEmails are required to use the portal.
+enum ConsentPurpose { termsOfService, privacyPolicy, age18OrOver, programmeEmails, sensitiveDataTransfer }
 
 extension ConsentPurposeX on ConsentPurpose {
   String get dbValue => switch (this) {
@@ -10,6 +11,7 @@ extension ConsentPurposeX on ConsentPurpose {
         ConsentPurpose.privacyPolicy => 'privacy_policy',
         ConsentPurpose.age18OrOver => 'age_18_or_over',
         ConsentPurpose.programmeEmails => 'programme_emails',
+        ConsentPurpose.sensitiveDataTransfer => 'sensitive_data_transfer',
       };
 
   static ConsentPurpose? fromDb(String v) {
@@ -23,6 +25,8 @@ extension ConsentPurposeX on ConsentPurpose {
   String get currentVersion => switch (this) {
         ConsentPurpose.termsOfService => LegalDocuments.termsOfService.version,
         ConsentPurpose.privacyPolicy => LegalDocuments.privacyPolicy.version,
+        // Explained in the Privacy Policy, so a new policy version asks again.
+        ConsentPurpose.sensitiveDataTransfer => LegalDocuments.privacyPolicy.version,
         _ => '',
       };
 }
@@ -56,11 +60,13 @@ class ConsentStatus {
     return a != null && a.granted && a.version == p.currentVersion;
   }
 
-  /// Terms and Privacy Policy accepted in their current versions, and
-  /// confirmed 18 or over.
+  /// Terms accepted and Privacy Policy read in their current versions,
+  /// consent to storing sensitive data outside Kenya (section 49 of the
+  /// Act) given under the current policy, and confirmed 18 or over.
   bool get isComplete =>
       _agreed(ConsentPurpose.termsOfService) &&
       _agreed(ConsentPurpose.privacyPolicy) &&
+      _agreed(ConsentPurpose.sensitiveDataTransfer) &&
       _agreed(ConsentPurpose.age18OrOver);
 
   bool get programmeEmails => answers[ConsentPurpose.programmeEmails]?.granted ?? false;

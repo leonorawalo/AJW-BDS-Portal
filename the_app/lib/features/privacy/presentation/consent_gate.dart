@@ -11,8 +11,10 @@ import '../models/privacy_notice.dart';
 import '../providers/privacy_providers.dart';
 import '../../../core/widgets/security_gates.dart';
 
-/// Before anything else, everyone accepts the current Terms of Service and
-/// Privacy Policy and confirms they are 18 or over. Programme emails are a
+/// Before anything else, everyone accepts the current Terms of Service,
+/// confirms they have read the Privacy Policy, consents to sensitive
+/// personal data being stored outside Kenya (section 49 of the Kenya Data
+/// Protection Act, 2019) and confirms they are 18 or over. Programme emails are a
 /// separate, optional choice. Nothing is ticked in advance, and saying no
 /// is one tap ("Don't agree and sign out"). Every answer is kept in
 /// user_consents with the document version; a new version asks again.
@@ -26,6 +28,7 @@ class ConsentGate extends ConsumerStatefulWidget {
 
 class _ConsentGateState extends ConsumerState<ConsentGate> {
   bool _termsAndPrivacy = false;
+  bool _transfer = false;
   bool _adult = false;
   bool _programmeEmails = false;
   bool _saving = false;
@@ -41,6 +44,7 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
       await repo.recordAnswers({
         ConsentPurpose.termsOfService: true,
         ConsentPurpose.privacyPolicy: true,
+        ConsentPurpose.sensitiveDataTransfer: true,
         ConsentPurpose.age18OrOver: true,
         ConsentPurpose.programmeEmails: _programmeEmails,
       });
@@ -64,11 +68,13 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
 
     return standaloneScreen('consent', _ConsentScreen(
       termsAndPrivacy: _termsAndPrivacy,
+      transfer: _transfer,
       adult: _adult,
       programmeEmails: _programmeEmails,
       saving: _saving,
       error: _error,
       onTermsAndPrivacy: (v) => setState(() => _termsAndPrivacy = v),
+      onTransfer: (v) => setState(() => _transfer = v),
       onAdult: (v) => setState(() => _adult = v),
       onProgrammeEmails: (v) => setState(() => _programmeEmails = v),
       onAccept: _accept,
@@ -79,21 +85,25 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
 class _ConsentScreen extends ConsumerWidget {
   const _ConsentScreen({
     required this.termsAndPrivacy,
+    required this.transfer,
     required this.adult,
     required this.programmeEmails,
     required this.saving,
     required this.error,
     required this.onTermsAndPrivacy,
+    required this.onTransfer,
     required this.onAdult,
     required this.onProgrammeEmails,
     required this.onAccept,
   });
   final bool termsAndPrivacy;
+  final bool transfer;
   final bool adult;
   final bool programmeEmails;
   final bool saving;
   final String? error;
   final ValueChanged<bool> onTermsAndPrivacy;
+  final ValueChanged<bool> onTransfer;
   final ValueChanged<bool> onAdult;
   final ValueChanged<bool> onProgrammeEmails;
   final VoidCallback onAccept;
@@ -106,7 +116,8 @@ class _ConsentScreen extends ConsumerWidget {
           label: Text('Read the ${doc.title}'),
           onPressed: () => launchUrl(Uri.parse(doc.url), mode: LaunchMode.externalApplication),
         );
-    final canAccept = termsAndPrivacy && adult && !saving;
+    final allRequired = termsAndPrivacy && transfer && adult;
+    final canAccept = allRequired && !saving;
     return Scaffold(
       appBar: AppBar(title: const Text('Your data and privacy')),
       body: Center(
@@ -145,8 +156,25 @@ class _ConsentScreen extends ConsumerWidget {
                   value: termsAndPrivacy,
                   onChanged: (v) => onTermsAndPrivacy(v ?? false),
                   title: Text(
-                    'I agree to the Terms of Service (version ${LegalDocuments.termsOfService.version}) and the '
-                    'Privacy Policy (version ${LegalDocuments.privacyPolicy.version}).',
+                    'I agree to the Terms of Service (version ${LegalDocuments.termsOfService.version}) and '
+                    'I have read the Privacy Policy (version ${LegalDocuments.privacyPolicy.version}).',
+                  ),
+                ),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: transfer,
+                  onChanged: (v) => onTransfer(v ?? false),
+                  title: const Text(
+                    'I consent to my personal data, including sensitive personal data such as property and '
+                    "family details, being stored and processed outside Kenya by the portal's service providers "
+                    '(Supabase in the European Union, and Google), with the safeguards described in the '
+                    'Privacy Policy.',
+                  ),
+                  subtitle: const Text(
+                    'Section 49 of the Kenya Data Protection Act, 2019 requires this consent. The portal cannot '
+                    'run without these providers. You can withdraw it at any time by asking for your data to be '
+                    'deleted in Settings and privacy.',
                   ),
                 ),
                 CheckboxListTile(
@@ -182,10 +210,10 @@ class _ConsentScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                if (!termsAndPrivacy || !adult) ...[
+                if (!allRequired) ...[
                   const SizedBox(height: Space.sm),
                   Text(
-                    'Tick both required boxes to continue.',
+                    'Tick all three required boxes to continue.',
                     style: text.bodySmall,
                     textAlign: TextAlign.end,
                   ),

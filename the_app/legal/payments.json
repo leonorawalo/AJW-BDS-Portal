@@ -1,0 +1,4 @@
+{
+  "_comment": "Does the portal take, hold or pay out money? Today: no. Before switching this to true, complete section B of docs/compliance/COMPLIANCE_REGISTER.md, then rewrite legal/refund-policy.md with real refund terms and set its front matter `covers_payments: \"true\"`. The build (node scripts/build_legal.js) and therefore every hosting deploy fails if this switch and the Refund Policy disagree. App code for any payment feature must check Payments.enabled (generated into lib/core/legal/legal_documents.dart).",
+  "takesPayments": false
+}

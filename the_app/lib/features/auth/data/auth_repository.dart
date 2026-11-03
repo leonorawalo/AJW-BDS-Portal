@@ -109,10 +109,29 @@ class AuthRepository {
     await _client.auth.updateUser(UserAttributes(data: {'google_connection_kept': connectedEmail}));
   }
 
-  Future<void> setPassword(String password) {
-    return _client.auth.updateUser(
+  /// Saves the signed-in person's own phone number (null removes it). The
+  /// database lets people change only their name and phone number on
+  /// their own row (restrict_non_admin_user_updates).
+  Future<void> updateMyPhoneNumber(String? phoneNumber) async {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) throw StateError('Not signed in');
+    await _client.from('users').update({'phone_number': phoneNumber}).eq('id', id);
+  }
+
+  /// Sets a new password, then signs out every OTHER device and browser
+  /// (this one stays signed in), so an old session can't outlive a
+  /// password change. Their sign-in ends at the latest when their current
+  /// access token expires (about an hour).
+  Future<void> setPassword(String password) async {
+    await _client.auth.updateUser(
       UserAttributes(password: password, data: {'needs_password': false}),
     );
+    try {
+      await _client.auth.signOut(scope: SignOutScope.others);
+    } catch (_) {
+      // The password is already changed; a failure here must not undo or
+      // hide that. The other sessions then end when they next expire.
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) {

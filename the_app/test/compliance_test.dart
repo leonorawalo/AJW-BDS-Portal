@@ -19,9 +19,14 @@ ConsentAnswer _answer(ConsentPurpose p, {bool granted = true, String? version}) 
 
 void main() {
   group('ConsentStatus', () {
-    test('needs Terms, Privacy Policy and 18 or over, in the current versions', () {
+    test('needs Terms, Privacy Policy, transfer consent and 18 or over, in the current versions', () {
       final all = {
-        for (final p in [ConsentPurpose.termsOfService, ConsentPurpose.privacyPolicy, ConsentPurpose.age18OrOver])
+        for (final p in [
+          ConsentPurpose.termsOfService,
+          ConsentPurpose.privacyPolicy,
+          ConsentPurpose.sensitiveDataTransfer,
+          ConsentPurpose.age18OrOver,
+        ])
           p: _answer(p),
       };
       expect(ConsentStatus(all).isComplete, isTrue);
@@ -40,6 +45,7 @@ void main() {
       final status = ConsentStatus({
         ConsentPurpose.termsOfService: _answer(ConsentPurpose.termsOfService, version: '1.0-old'),
         ConsentPurpose.privacyPolicy: _answer(ConsentPurpose.privacyPolicy),
+        ConsentPurpose.sensitiveDataTransfer: _answer(ConsentPurpose.sensitiveDataTransfer),
         ConsentPurpose.age18OrOver: _answer(ConsentPurpose.age18OrOver),
       });
       expect(status.isComplete, isFalse);

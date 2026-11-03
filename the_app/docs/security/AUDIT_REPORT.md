@@ -37,7 +37,7 @@
 | 22 | Two-step verification is enforced in the app, not yet by database policies (`aal2`) | Medium | Open: do it after everyone has enrolled (2026-10-08 report, item 4) | |
 | 23 | Password change doesn't sign out other devices | Low | Open: `signOut(scope: others)` after a change; a behaviour change for AJW to approve | |
 | 24 | The documents bucket doesn't restrict content types (old APK 1.2.1 uploads without one) | Low | Open: set `allowed_mime_types` once every phone runs the next APK. The new content check covers the app side. | |
-| 25 | The PDF viewer on the **web** needs pdf.js, which is not loaded in `web/index.html`, so PDFs open with "Could not load this document" on the web (Android works) | Low (existing bug) | Open: not caused by this change; fix by adding pdf.js (and its domain to the Content-Security-Policy), or open PDFs in a new tab on the web | code reading only, **not verified in a browser** |
+| 25 | (Fixed 3 Nov 2026, see section 10) The PDF viewer on the **web** needs pdf.js, which is not loaded in `web/index.html`, so PDFs open with "Could not load this document" on the web (Android works) | Low (existing bug) | Open: not caused by this change; fix by adding pdf.js (and its domain to the Content-Security-Policy), or open PDFs in a new tab on the web | code reading only, **not verified in a browser** |
 | 26 | Material's default keyboard focus highlight is faint on some buttons | Low (accessibility) | Open: a stronger focus ring needs a theme change for every button type; not done to avoid restyling the app without approval | |
 | 27 | Major package updates available (go_router 14 → 18, Firebase 4 → 5, file_picker 12 → 13, flutter_dotenv 5 → 6) | Low | Open: each has breaking changes; update one at a time on a branch with a full test. Minor and patch updates were applied (flutter_riverpod 3.4.3, supabase_flutter 2.18.3, url_launcher 6.3.3, file_picker 12.3.0). | `flutter pub outdated` |
 
@@ -125,3 +125,23 @@ Checked the app code (`lib/`), the public web pages (`web/*.html`) and the legal
 - **Business details supplied:** Apprentice Job Work Africa, Block D, Merchant Square, Riverside Drive, +254 716 523 556. There is no registration number, so it was removed from the pages. The data protection contact is the portal email, because a data protection officer is optional under section 24 of the Act.
 - **Effective date** of the legal pages set to 3 November 2026, the day they went live.
 - The deploy on 3 November used the web build from 16 October, because Flutter was not on the terminal's PATH. Rebuild with `C:\Users\user\flutter\bin\flutter build web --release` before the next hosting deploy.
+
+## 10. Fixes and decisions (3 November 2026, second pass)
+
+- **Consent checkboxes didn't respond (bug, fixed).** `standaloneScreen()` built its page once (`onGenerateRoute`), so ticks never showed and "Agree and continue" stayed disabled. It now uses the Navigator `pages` list, which redraws on every change. This also fixes the same latent bug in the two-step verification screens.
+- **Sign out other devices on a password change (item 23): done.** `setPassword()` calls `signOut(scope: others)`.
+- **PDFs on the web (item 25): fixed.** The web now opens PDFs in the browser's own viewer through the 5-minute link. Android keeps the in-app viewer.
+- **Major package updates (item 27): declined by AJW.** Stay on the current versions while the app works.
+- **Legal review.**
+  - New required consent to store sensitive personal data outside Kenya: section 49(1) of the Act, plus the ODPC Guidance Notes for Cross-border Data Transfers (September 2026). Recorded as `sensitive_data_transfer` (migration `20261103100000`).
+  - "Agree to the Privacy Policy" became "have read" it.
+  - Lawful bases corrected: contract for enterprises; contract or legitimate interests for consultants and staff; consent only where it is genuinely needed.
+  - New sections: sensitive data, and what must be provided.
+  - Retention schedule filled in.
+  - Disputes clause and third-party-data clause added to the Terms.
+  - Draft banners removed.
+  - Privacy Policy, Data Protection Notice and Terms are now version 2.1, so everyone is asked once more.
+- **Still for AJW:**
+  - Write the transfer assessment the Privacy Policy promises (section 6).
+  - Tell workshop attendees how their details are used.
+  - Delete records when their retention period ends. Only chat and closed requests have an in-app clean-up; the rest is manual until a scheduled job is built. Nothing is due before late 2027.
