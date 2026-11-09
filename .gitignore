@@ -19,3 +19,6 @@ test_logins*.txt
 
 # Original starter app (replaced by the_app); kept locally, not in git.
 /ajw_bds_app_flutter_v1/
+
+AJW_BDS_Portal_Build_Checklist.md
+ToR BAGS.pdf
